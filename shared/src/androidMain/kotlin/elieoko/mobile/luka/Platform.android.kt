@@ -1,4 +1,4 @@
-package elieoko.mobile.luka.core
+package elieoko.mobile.luka
 
 import android.os.Build
 
