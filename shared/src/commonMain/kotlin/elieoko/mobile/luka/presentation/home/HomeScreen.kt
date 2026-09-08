@@ -1,10 +1,16 @@
 package elieoko.mobile.luka.presentation.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,243 +22,250 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.NorthEast
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.TrendingUp
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.Whatshot
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import elieoko.mobile.luka.domain.model.CongoCatalog
-import elieoko.mobile.luka.domain.model.JobOffer
-import elieoko.mobile.luka.presentation.components.PulseDot
-import elieoko.mobile.luka.presentation.components.RedHeroGradient
-import elieoko.mobile.luka.presentation.theme.LukaGold
+import elieoko.mobile.luka.domain.model.PlatformAd
+import elieoko.mobile.luka.presentation.components.FilterStrip
+import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.imageByName
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.abs
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
+fun HomeScreen(
+    onSeeAllOffers: () -> Unit,
+    onOpenNews: () -> Unit,
+    onOpenTrends: () -> Unit,
+    onOpenOrientation: () -> Unit,
+    viewModel: HomeViewModel,
+) {
     val state by viewModel.state.collectAsState()
-    val feed = state.feed
-    val profile = state.profile
     val uriHandler = LocalUriHandler.current
-    val regionName = CongoCatalog.regions.firstOrNull { it.id == profile?.regionId }?.name ?: "RDC"
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(tween(400)) + slideInVertically { it / 12 },
     ) {
-        item {
-            Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    PulseDot()
-                    Spacer(Modifier.width(8.dp))
-                    Text("Analyses infinies actives", color = LukaRed, style = MaterialTheme.typography.labelLarge)
+        Column(
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp),
+        ) {
+            HomeHeader(firstName = state.profile?.firstName().orEmpty())
+            FilterStrip(
+                filters = state.filters,
+                onRegion = viewModel::onRegion,
+                onCity = viewModel::onCity,
+                onProfession = viewModel::onProfession,
+            )
+            HomeQuickRow(
+                onNews = onOpenNews,
+                onTrends = onOpenTrends,
+                onOpenOrientation = onOpenOrientation,
+            )
+            SectionTitle(
+                title = "Offres pour toi",
+                action = "Voir tout",
+                onAction = onSeeAllOffers,
+            )
+            Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                state.previewOffers.forEachIndexed { index, offer ->
+                    OfferCard(offer, index) {
+                        runCatching { uriHandler.openUri(offer.applyUrl) }
+                    }
                 }
-                Spacer(Modifier.height(8.dp))
-                Text("Bonjour ${profile?.displayName ?: ""}", style = MaterialTheme.typography.headlineMedium)
-                Text("Offres pour ${profile?.profession?.title ?: "toi"} · $regionName", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(14.dp))
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = viewModel::onQuery,
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                    placeholder = { Text("Offre, entreprise, ville…") },
-                    shape = RoundedCornerShape(18.dp),
-                    singleLine = true,
+            }
+            if (state.previewOffers.isEmpty()) {
+                Text(
+                    "Aucune offre pour ces filtres. Change de ville ou de métier.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
+            SectionTitle(title = "Pubs partenaires")
+            AdsCarousel(state.feed?.ads.orEmpty())
+            Spacer(Modifier.height(12.dp))
         }
-        item {
-            AnimatedVisibility(state.liveOffer != null) {
-                val live = state.liveOffer
-                if (live != null) {
-                    Surface(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = LukaRed,
-                        shape = RoundedCornerShape(18.dp),
-                    ) {
-                        Text(
-                            "Nouvelle offre STOMP · ${live.title} chez ${live.company}",
-                            color = Color.White,
-                            modifier = Modifier.padding(16.dp),
-                        )
-                    }
-                }
-            }
+    }
+}
+
+private fun elieoko.mobile.luka.domain.model.UserProfile.firstName(): String =
+    displayName.substringBefore(" ").ifBlank { displayName }
+
+@Composable
+private fun HomeHeader(firstName: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Bonjour $firstName", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(
+                "L’emploi vient à toi. 5 pistes, puis tout voir.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        if (feed?.topProfession != null) {
-            item {
-                Surface(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    color = LukaMist,
-                    shape = RoundedCornerShape(22.dp),
-                ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.TrendingUp, contentDescription = null, tint = LukaRed)
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text("Métier le plus demandé en RDC", style = MaterialTheme.typography.labelLarge, color = LukaRed)
-                            Text(
-                                "${feed.topProfession.profession.title} · ${feed.topProfession.openings} ouvertures · ${feed.topProfession.trend}",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
-                    }
-                }
-            }
+        IconButton(onClick = {}) {
+            Icon(Icons.Outlined.NotificationsNone, contentDescription = "Alertes")
         }
-        item {
-            SectionTitle("Offres trouvées")
-        }
-        items(feed?.offers.orEmpty(), key = { it.id }) { offer ->
-            OfferCard(offer) { uriHandler.openUri(offer.applyUrl) }
-        }
-        item { SectionTitle("Pubs & nouveautés Luka") }
-        item {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(feed?.ads.orEmpty()) { ad ->
-                    Box(
-                        Modifier
-                            .width(260.dp)
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(22.dp)),
-                    ) {
-                        Image(painterResource(imageByName(ad.imageName)), ad.title, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        RedHeroGradient(Modifier.fillMaxSize())
-                        Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-                            Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge)
-                            Text(ad.subtitle, color = Color.White.copy(0.9f), style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-        }
-        items(feed?.news.orEmpty()) { news ->
-            Row(
-                Modifier
-                    .padding(horizontal = 20.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable { uriHandler.openUri(news.url) }
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Image(
-                    painterResource(imageByName(news.imageName)),
-                    news.title,
-                    Modifier.size(72.dp).clip(RoundedCornerShape(14.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text(news.source, color = LukaRed, style = MaterialTheme.typography.labelLarge)
-                    Text(news.title, style = MaterialTheme.typography.titleMedium)
-                    Text(news.excerpt, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-                }
-            }
-        }
-        item { SectionTitle("Luka t’oriente") }
-        items(feed?.orientation.orEmpty()) { path ->
-            Surface(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface,
-            ) {
-                Row(Modifier.padding(14.dp)) {
-                    Image(
-                        painterResource(imageByName(path.imageName)),
-                        path.title,
-                        Modifier.size(88.dp).clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop,
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text("${path.domain} · ${path.duration}", color = LukaGold, style = MaterialTheme.typography.labelLarge)
-                        Text(path.title, style = MaterialTheme.typography.titleMedium)
-                        Text(path.why, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Suite : ${path.nextStep}", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-        }
-        item {
-            Row(
-                Modifier.padding(horizontal = 20.dp).horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                feed?.stats.orEmpty().forEach { stat ->
-                    Surface(shape = RoundedCornerShape(16.dp), color = LukaMist) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text("${stat.sharePercent} %", color = LukaRed, style = MaterialTheme.typography.titleLarge)
-                            Text(stat.profession.title, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
+    }
+}
+
+@Composable
+private fun HomeQuickRow(
+    onNews: () -> Unit,
+    onTrends: () -> Unit,
+    onOpenOrientation: () -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        QuickTile("Nouveautés", "Numérique", Icons.Outlined.Bolt, onNews, Modifier.weight(1f))
+        QuickTile("Tendances", "Demandés", Icons.Outlined.Whatshot, onTrends, Modifier.weight(1f))
+        QuickTile("Orientation", "Pistes", Icons.Outlined.Explore, onOpenOrientation, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun QuickTile(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val pulse by rememberInfiniteTransition(label = "q").animateFloat(
+        initialValue = 0.98f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
+        label = "qs",
+    )
+    Column(
+        modifier
+            .scale(pulse)
+            .clip(RoundedCornerShape(18.dp))
+            .background(LukaMist)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(icon, contentDescription = null, tint = LukaRed)
+        Spacer(Modifier.height(6.dp))
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun SectionTitle(title: String, action: String? = null, onAction: (() -> Unit)? = null) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        if (action != null && onAction != null) {
+            TextButton(onClick = onAction) {
+                Text(action, color = LukaRed, fontWeight = FontWeight.Bold)
+                Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = LukaRed)
             }
         }
     }
 }
 
 @Composable
-private fun SectionTitle(text: String) {
-    Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 20.dp))
-}
-
-@Composable
-private fun OfferCard(offer: JobOffer, onOpen: () -> Unit) {
-    Surface(
-        modifier = Modifier.padding(horizontal = 20.dp).clickable(onClick = onOpen),
-        shape = RoundedCornerShape(22.dp),
-        shadowElevation = 1.dp,
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = offer.companyLogoUrl,
-                    contentDescription = offer.company,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).background(LukaMist),
+private fun AdsCarousel(ads: List<PlatformAd>) {
+    if (ads.isEmpty()) return
+    val pager = rememberPagerState(pageCount = { ads.size })
+    LaunchedEffect(ads.size) {
+        while (true) {
+            delay(3800)
+            pager.animateScrollToPage((pager.currentPage + 1) % ads.size)
+        }
+    }
+    Column {
+        HorizontalPager(
+            state = pager,
+            contentPadding = PaddingValues(horizontal = 28.dp),
+            pageSpacing = 14.dp,
+            modifier = Modifier.fillMaxWidth().height(200.dp),
+        ) { page ->
+            val ad = ads[page]
+            val pageOffset = (pager.currentPage - page) + pager.currentPageOffsetFraction
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .scale(1f - abs(pageOffset).coerceAtMost(1f) * 0.08f)
+                    .clip(RoundedCornerShape(24.dp)),
+            ) {
+                Image(
+                    painterResource(imageByName(ad.imageName)),
+                    ad.title,
+                    Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(offer.title, style = MaterialTheme.typography.titleMedium)
-                    Text("${offer.company} · ${offer.city}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000))),
+                    ),
+                )
+                Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                    Text("PUBLICITÉ", color = Color.White.copy(0.7f), style = MaterialTheme.typography.labelSmall)
+                    Text(ad.title, color = Color.White, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+                    Text(ad.subtitle, color = Color.White.copy(0.85f), style = MaterialTheme.typography.bodySmall)
                 }
-                Icon(Icons.Rounded.NorthEast, contentDescription = "Ouvrir l’offre", tint = LukaRed)
             }
-            Spacer(Modifier.height(10.dp))
-            Text(offer.summary, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(10.dp))
-            Text("${offer.contract} · ${offer.salary}", color = LukaRed, style = MaterialTheme.typography.labelLarge)
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(top = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            ads.indices.forEach { i ->
+                Box(
+                    Modifier
+                        .padding(horizontal = 3.dp)
+                        .size(width = if (pager.currentPage == i) 18.dp else 7.dp, height = 7.dp)
+                        .clip(CircleShape)
+                        .background(if (pager.currentPage == i) LukaRed else MaterialTheme.colorScheme.outlineVariant),
+                )
+            }
         }
     }
 }

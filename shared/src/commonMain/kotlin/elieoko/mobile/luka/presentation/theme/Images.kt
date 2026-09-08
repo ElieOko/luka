@@ -10,6 +10,9 @@ import luka.shared.generated.resources.avatar_jean
 import luka.shared.generated.resources.avatar_patrick
 import luka.shared.generated.resources.hero_career
 import luka.shared.generated.resources.onboarding_city
+import luka.shared.generated.resources.onboarding_kinshasa_1
+import luka.shared.generated.resources.onboarding_kinshasa_2
+import luka.shared.generated.resources.onboarding_kinshasa_3
 import luka.shared.generated.resources.onboarding_learn
 import luka.shared.generated.resources.onboarding_team
 import luka.shared.generated.resources.orientation_digital
@@ -21,13 +24,13 @@ import luka.shared.generated.resources.profession_security
 import luka.shared.generated.resources.profession_software
 import org.jetbrains.compose.resources.DrawableResource
 
-fun Profession.image(): DrawableResource = when (this) {
-    Profession.SOFTWARE_ENGINEERING -> Res.drawable.profession_software
-    Profession.CYBER_SECURITY -> Res.drawable.profession_security
-    Profession.MANAGEMENT -> Res.drawable.profession_management
-    Profession.FINANCE -> Res.drawable.profession_finance
-    Profession.HUMAN_RESOURCES -> Res.drawable.profession_hr
-    Profession.OTHER -> Res.drawable.profession_other
+fun Profession.image(): DrawableResource = when (imageName) {
+    "profession_software" -> Res.drawable.profession_software
+    "profession_security" -> Res.drawable.profession_security
+    "profession_management" -> Res.drawable.profession_management
+    "profession_finance" -> Res.drawable.profession_finance
+    "profession_hr" -> Res.drawable.profession_hr
+    else -> Res.drawable.profession_other
 }
 
 fun imageByName(name: String): DrawableResource = when (name) {
@@ -39,6 +42,7 @@ fun imageByName(name: String): DrawableResource = when (name) {
     "profession_management" -> Res.drawable.profession_management
     "profession_hr" -> Res.drawable.profession_hr
     "profession_other" -> Res.drawable.profession_other
+    "profession_software" -> Res.drawable.profession_software
     "onboarding_learn" -> Res.drawable.onboarding_learn
     "avatar_grace" -> Res.drawable.avatar_grace
     "avatar_patrick" -> Res.drawable.avatar_patrick
@@ -47,5 +51,8 @@ fun imageByName(name: String): DrawableResource = when (name) {
     "hero_career" -> Res.drawable.hero_career
     "onboarding_city" -> Res.drawable.onboarding_city
     "onboarding_team" -> Res.drawable.onboarding_team
+    "onboarding_kinshasa_1" -> Res.drawable.onboarding_kinshasa_1
+    "onboarding_kinshasa_2" -> Res.drawable.onboarding_kinshasa_2
+    "onboarding_kinshasa_3" -> Res.drawable.onboarding_kinshasa_3
     else -> Res.drawable.hero_career
 }

@@ -92,6 +92,10 @@ class SessionRepositoryImpl(
         )
     }
 
+    override suspend fun saveCv(fileName: String, mimeType: String) = update {
+        it.copy(cvFileName = fileName, cvMime = mimeType)
+    }
+
     override suspend fun resetDemo() {
         pushNotifier.logout()
         dataStore.edit { it.clear() }
@@ -120,6 +124,8 @@ class SessionRepositoryImpl(
             prefs[Keys.analysis] = profile.analysisLaunched
             prefs[Keys.welcome] = profile.welcomeSeen
             prefs[Keys.visible] = profile.visibleToRecruiters
+            prefs[Keys.cvName] = profile.cvFileName
+            prefs[Keys.cvMime] = profile.cvMime
         }
     }
 
@@ -145,6 +151,8 @@ class SessionRepositoryImpl(
                 analysisLaunched = this[Keys.analysis] ?: false,
                 welcomeSeen = this[Keys.welcome] ?: false,
                 visibleToRecruiters = this[Keys.visible] ?: false,
+                cvFileName = this[Keys.cvName].orEmpty(),
+                cvMime = this[Keys.cvMime].orEmpty(),
             ),
         )
     }
@@ -172,6 +180,8 @@ class SessionRepositoryImpl(
         val analysis = booleanPreferencesKey("analysis")
         val welcome = booleanPreferencesKey("welcome")
         val visible = booleanPreferencesKey("visible")
+        val cvName = stringPreferencesKey("cvName")
+        val cvMime = stringPreferencesKey("cvMime")
         val pendingValue = stringPreferencesKey("pendingValue")
         val pendingChannel = stringPreferencesKey("pendingChannel")
     }

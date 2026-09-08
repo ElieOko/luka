@@ -14,6 +14,8 @@ data class UserProfile(
     val analysisLaunched: Boolean,
     val welcomeSeen: Boolean,
     val visibleToRecruiters: Boolean,
+    val cvFileName: String = "",
+    val cvMime: String = "",
 )
 
 data class UserSession(

@@ -52,14 +52,14 @@ class CatalogRepositoryImpl(
         offerStream.observe().onEach { database.offerDao().upsert(it.toEntity()) }
 
     override suspend fun seedIfNeeded() {
-        if (database.metaDao().get("seeded")?.value == "true") return
+        if (database.metaDao().get("seeded")?.value == "v2") return
         database.offerDao().upsert(FakeCatalog.offers.map { it.toEntity() })
         database.adDao().upsert(FakeCatalog.ads.map { it.toEntity() })
         database.newsDao().upsert(FakeCatalog.news.map { it.toEntity() })
         database.professionalDao().upsert(FakeCatalog.professionals.map { it.toEntity() })
         database.orientationDao().upsert(FakeCatalog.orientation.map { it.toEntity() })
         database.demandDao().upsert(FakeCatalog.stats.map { it.toEntity() })
-        database.metaDao().put(MetaEntity("seeded", "true"))
+        database.metaDao().put(MetaEntity("seeded", "v2"))
     }
 
     override fun plans(): List<SubscriptionPlan> = FakeCatalog.plans

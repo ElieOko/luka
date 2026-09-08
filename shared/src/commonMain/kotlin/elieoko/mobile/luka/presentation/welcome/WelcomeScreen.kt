@@ -1,10 +1,9 @@
 package elieoko.mobile.luka.presentation.welcome
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,31 +13,36 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.components.RedHeroGradient
 import elieoko.mobile.luka.presentation.theme.LukaRed
+import kotlinx.coroutines.launch
 import luka.shared.generated.resources.Res
-import luka.shared.generated.resources.onboarding_city
-import luka.shared.generated.resources.onboarding_learn
-import luka.shared.generated.resources.onboarding_team
+import luka.shared.generated.resources.onboarding_kinshasa_1
+import luka.shared.generated.resources.onboarding_kinshasa_2
+import luka.shared.generated.resources.onboarding_kinshasa_3
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
@@ -51,23 +55,26 @@ private data class WelcomePage(
 @Composable
 fun WelcomeScreen(onStart: () -> Unit) {
     val pages = listOf(
-        WelcomePage(Res.drawable.onboarding_team, "L’emploi vient à toi.", "Luka trouve les opportunités pour des millions de jeunes qui ne savent pas où chercher."),
-        WelcomePage(Res.drawable.onboarding_learn, "Un métier. Une direction.", "Tu choisis une voie — ingénierie, sécurité, finance — Luka analyse le Congo pour toi."),
-        WelcomePage(Res.drawable.onboarding_city, "La RDC d’abord.", "Kinshasa, Lubumbashi, Goma… les offres arrivent, avec le lien pour postuler."),
+        WelcomePage(Res.drawable.onboarding_kinshasa_1, "L’emploi vient à toi.", "Kinshasa, le boulevard, les taxis jaunes — Luka trouve les offres pour des millions de jeunes qui ne savent pas où chercher."),
+        WelcomePage(Res.drawable.onboarding_kinshasa_2, "Les sièges recrutent.", "Banques, telcos, mines : glisse, choisis un métier, Luka analyse la RDC pour toi."),
+        WelcomePage(Res.drawable.onboarding_kinshasa_3, "La RDC d’abord.", "Kinshasa, Lubumbashi, Goma… les liens d’offres arrivent. L’opportunité vient à toi."),
     )
-    var index by remember { mutableIntStateOf(0) }
-    val page = pages[index]
+    val pager = rememberPagerState(pageCount = { pages.size })
+    val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxSize()) {
-        AnimatedContent(
-            targetState = page,
-            transitionSpec = { fadeIn() + slideInHorizontally { it / 3 } togetherWith fadeOut() + slideOutHorizontally { -it / 3 } },
-            label = "welcome",
-        ) { current ->
+        HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
+            val offset = (pager.currentPage - page) + pager.currentPageOffsetFraction
             Image(
-                painterResource(current.image),
-                contentDescription = current.title,
-                modifier = Modifier.fillMaxSize(),
+                painterResource(pages[page].image),
+                contentDescription = pages[page].title,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationX = offset * 80f
+                        scaleX = 1.08f
+                        scaleY = 1.08f
+                    },
                 contentScale = ContentScale.Crop,
             )
         }
@@ -75,30 +82,45 @@ fun WelcomeScreen(onStart: () -> Unit) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .statusBarsPadding(),
         ) {
-            LukaLogo(light = true)
-            Column {
-                Text(page.title, color = Color.White, style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
-                Spacer(Modifier.height(12.dp))
-                Text(page.body, color = Color.White.copy(alpha = 0.88f), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
-                Spacer(Modifier.height(20.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LukaLogo(Modifier.padding(24.dp), light = true)
+            Spacer(Modifier.weight(1f))
+            AnimatedContent(
+                targetState = pager.currentPage,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "welcome-copy",
+                modifier = Modifier.padding(horizontal = 24.dp),
+            ) { pageIndex ->
+                val page = pages[pageIndex]
+                Column {
+                    Text(page.title, color = Color.White, style = MaterialTheme.typography.headlineLarge)
+                    Spacer(Modifier.height(12.dp))
+                    Text(page.body, color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+            Column(Modifier.padding(horizontal = 24.dp)) {
+                Spacer(Modifier.height(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     pages.indices.forEach { i ->
+                        val selected = pager.currentPage == i
+                        val width by animateDpAsState(if (selected) 22.dp else 8.dp)
                         Box(
                             Modifier
-                                .size(if (i == index) 22.dp else 8.dp, 8.dp)
+                                .width(width)
+                                .height(8.dp)
                                 .clip(CircleShape)
-                                .background(if (i == index) LukaRed else Color.White.copy(alpha = 0.45f)),
+                                .background(if (selected) LukaRed else Color.White.copy(alpha = 0.45f)),
                         )
                     }
                 }
-                Spacer(Modifier.height(20.dp))
+            }
+            BottomCtaBar {
                 LukaPrimaryButton(
-                    text = if (index == pages.lastIndex) "Créer mon compte" else "Continuer",
+                    text = if (pager.currentPage == pages.lastIndex) "Créer mon compte" else "Continuer",
                     onClick = {
-                        if (index == pages.lastIndex) onStart() else index++
+                        if (pager.currentPage == pages.lastIndex) onStart()
+                        else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                     },
                 )
             }
