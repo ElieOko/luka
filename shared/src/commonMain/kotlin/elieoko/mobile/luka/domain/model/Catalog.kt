@@ -67,6 +67,51 @@ data class DemandStat(
     val trend: String,
 )
 
+enum class OrientationPersona(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val lens: String,
+    val resultTitle: String,
+) {
+    PUPIL(
+        "eleve",
+        "Élève",
+        "Je suis au secondaire",
+        "études",
+        "Au niveau national, voici les études supérieures les plus demandées",
+    ),
+    STUDENT(
+        "etudiant",
+        "Étudiant",
+        "Je cherche un premier emploi",
+        "emploi",
+        "Au niveau national, voici ce que les chiffres disent de l’emploi après les études",
+    ),
+    EMPLOYEE(
+        "employe",
+        "Employé",
+        "Je veux un autre emploi",
+        "reconversion",
+        "Au niveau national, voici les autres emplois vers lesquels les salariés basculent",
+    ),
+    EMPLOYER(
+        "employeur",
+        "Employeur",
+        "Je cherche où investir",
+        "investissement",
+        "Au niveau national, voici les domaines où investir en RDC",
+    ),
+}
+
+data class NationalInsight(
+    val persona: OrientationPersona,
+    val rank: Int,
+    val label: String,
+    val sharePercent: Int,
+    val detail: String,
+)
+
 data class SubscriptionPlan(
     val id: String,
     val name: String,

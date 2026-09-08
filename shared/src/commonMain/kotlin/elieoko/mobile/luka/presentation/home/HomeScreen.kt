@@ -1,10 +1,6 @@
 package elieoko.mobile.luka.presentation.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -30,20 +26,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.Whatshot
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +57,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.domain.model.PlatformAd
-import elieoko.mobile.luka.presentation.components.FilterStrip
+import elieoko.mobile.luka.presentation.components.FilterBottomSheet
+import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
@@ -65,6 +67,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onSeeAllOffers: () -> Unit,
@@ -75,6 +78,20 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
+    var showFilters by rememberSaveable { mutableStateOf(false) }
+    val isFree = state.profile?.planId.isNullOrBlank() || state.profile?.planId == "starter"
+
+    if (showFilters) {
+        FilterBottomSheet(
+            filters = state.filters,
+            query = state.query,
+            onQuery = viewModel::onQuery,
+            onCity = viewModel::onCity,
+            onProfession = viewModel::onProfession,
+            onDismiss = { showFilters = false },
+        )
+    }
+
     AnimatedVisibility(
         visible = true,
         enter = fadeIn(tween(400)) + slideInVertically { it / 12 },
@@ -84,14 +101,13 @@ fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp),
+                .padding(bottom = LukaBottomNavHeight + 16.dp),
         ) {
-            HomeHeader(firstName = state.profile?.firstName().orEmpty())
-            FilterStrip(
-                filters = state.filters,
-                onRegion = viewModel::onRegion,
-                onCity = viewModel::onCity,
-                onProfession = viewModel::onProfession,
+            HomeHeader(
+                firstName = state.profile?.firstName().orEmpty(),
+                isFree = isFree,
+                filterActive = !state.filters.isEmpty || state.query.isNotBlank(),
+                onSearch = { showFilters = true },
             )
             HomeQuickRow(
                 onNews = onOpenNews,
@@ -129,12 +145,29 @@ private fun elieoko.mobile.luka.domain.model.UserProfile.firstName(): String =
     displayName.substringBefore(" ").ifBlank { displayName }
 
 @Composable
-private fun HomeHeader(firstName: String) {
+private fun HomeHeader(
+    firstName: String,
+    isFree: Boolean,
+    filterActive: Boolean,
+    onSearch: () -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
+            if (isFree) {
+                Surface(color = LukaMist, shape = RoundedCornerShape(99.dp)) {
+                    Text(
+                        "Gratuit",
+                        color = LukaRed,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+            }
             Text("Bonjour $firstName", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(
                 "L’emploi vient à toi. 5 pistes, puis tout voir.",
@@ -142,8 +175,19 @@ private fun HomeHeader(firstName: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        IconButton(onClick = {}) {
-            Icon(Icons.Outlined.NotificationsNone, contentDescription = "Alertes")
+        IconButton(onClick = onSearch) {
+            Box {
+                Icon(Icons.Outlined.Search, contentDescription = "Recherche et filtres", tint = LukaRed)
+                if (filterActive) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(LukaRed),
+                    )
+                }
+            }
         }
     }
 }
@@ -158,9 +202,9 @@ private fun HomeQuickRow(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        QuickTile("Nouveautés", "Numérique", Icons.Outlined.Bolt, onNews, Modifier.weight(1f))
-        QuickTile("Tendances", "Demandés", Icons.Outlined.Whatshot, onTrends, Modifier.weight(1f))
-        QuickTile("Orientation", "Pistes", Icons.Outlined.Explore, onOpenOrientation, Modifier.weight(1f))
+        QuickTile("Nouveautés", "Presse tech", Icons.AutoMirrored.Outlined.MenuBook, onNews, Modifier.weight(1f))
+        QuickTile("Tendances", "Demandés", Icons.AutoMirrored.Outlined.ShowChart, onTrends, Modifier.weight(1f))
+        QuickTile("Orientation", "Chiffres", Icons.Outlined.School, onOpenOrientation, Modifier.weight(1f))
     }
 }
 
@@ -172,15 +216,8 @@ private fun QuickTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pulse by rememberInfiniteTransition(label = "q").animateFloat(
-        initialValue = 0.98f,
-        targetValue = 1.02f,
-        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
-        label = "qs",
-    )
     Column(
         modifier
-            .scale(pulse)
             .clip(RoundedCornerShape(18.dp))
             .background(LukaMist)
             .clickable(onClick = onClick)

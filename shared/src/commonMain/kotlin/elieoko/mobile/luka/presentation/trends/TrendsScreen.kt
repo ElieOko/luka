@@ -17,7 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Whatshot
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import org.koin.compose.viewmodel.koinViewModel
@@ -45,7 +46,7 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
     val feed by viewModel.feed.collectAsState()
     val stats = feed?.stats.orEmpty()
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
+        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = LukaBottomNavHeight + 16.dp),
     ) {
         Box(
             Modifier
@@ -54,7 +55,7 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 .background(Brush.verticalGradient(listOf(Color(0xFF1A0A0C), LukaRed))),
         ) {
             Column(Modifier.padding(24.dp).align(Alignment.BottomStart)) {
-                Icon(Icons.Outlined.Whatshot, contentDescription = null, tint = Color(0xFFFFB4A8))
+                Icon(Icons.AutoMirrored.Outlined.ShowChart, contentDescription = null, tint = Color(0xFFFFB4A8))
                 Text("Tendances", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 Text("Les métiers les plus demandés cette semaine", color = Color.White.copy(0.85f))
             }
@@ -74,7 +75,7 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("${index + 1}", color = LukaRed, fontWeight = FontWeight.Black, modifier = Modifier.width(28.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("${item.profession.emoji}  ${item.profession.title}", fontWeight = FontWeight.Bold)
+                        Text(item.profession.title, fontWeight = FontWeight.Bold)
                         Text(
                             "${item.openings} ouvertures · ${item.sharePercent} % · ${item.trend}",
                             style = MaterialTheme.typography.bodySmall,

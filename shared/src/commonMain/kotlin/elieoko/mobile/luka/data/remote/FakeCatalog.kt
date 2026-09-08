@@ -2,8 +2,10 @@ package elieoko.mobile.luka.data.remote
 
 import elieoko.mobile.luka.domain.model.DemandStat
 import elieoko.mobile.luka.domain.model.JobOffer
+import elieoko.mobile.luka.domain.model.NationalInsight
 import elieoko.mobile.luka.domain.model.NewsItem
 import elieoko.mobile.luka.domain.model.OrientationPath
+import elieoko.mobile.luka.domain.model.OrientationPersona
 import elieoko.mobile.luka.domain.model.PlatformAd
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.model.Professional
@@ -122,14 +124,14 @@ object FakeCatalog {
     )
 
     val news = listOf(
-        NewsItem("n1", "Kinshasa concentre 48 % des offres tech", "Les telcos et banques digitalisent plus vite que le reste du pays.", "Luka Insights", "onboarding_kinshasa_1", ago(1), "https://luka.cd/news/kinshasa-tech"),
-        NewsItem("n2", "La cybersécurité, métier le plus sous-tendu", "Moins de 400 profils formés pour plus de 1 200 postes ouverts.", "Luka Lab", "profession_security", ago(3), "https://luka.cd/news/cyber"),
-        NewsItem("n3", "Fibre et 5G : Airtel et Vodacom accélèrent", "Les déploiements créent des postes radio, data et commercial B2B.", "Luka Connect", "onboarding_kinshasa_2", ago(2), "https://luka.cd/news/fibre"),
-        NewsItem("n4", "L’IA arrive dans le scoring M-Pesa", "Les banques cherchent des profils data qui parlent Lingala et SQL.", "Luka Plus", "profession_software", ago(4), "https://luka.cd/news/ia"),
-        NewsItem("n5", "Solaire à Goma : mini-grids et techniciens", "L’énergie décentralisée recrute plus vite que le diesel.", "Luka Orient", "onboarding_kinshasa_3", ago(5), "https://luka.cd/news/solaire"),
-        NewsItem("n6", "UX pour le low-tech", "Les wallets congolais ont besoin de designers qui comprennent USSD.", "Luka Design", "profession_other", ago(6), "https://luka.cd/news/ux"),
-        NewsItem("n7", "Les jeunes du Kivu se forment en ligne", "Goma et Bukavu voient émerger des hubs numériques.", "Luka Orient", "onboarding_learn", ago(7), "https://luka.cd/news/kivu"),
-        NewsItem("n8", "Finance : les fintechs recrutent des comptables data", "Le couple Excel + SQL devient un standard à Kinshasa.", "Luka Plus", "profession_finance", ago(8), "https://luka.cd/news/fintech"),
+        NewsItem("n1", "What does GPT-5 mean for real work?", "Les modèles généralistes changent l’emploi du savoir — pas seulement Silicon Valley.", "MIT Technology Review", "onboarding_kinshasa_1", ago(1), "https://www.technologyreview.com"),
+        NewsItem("n2", "Show HN : outils open-source pour le scoring crédit", "La communauté discute des stacks que les fintechs africaines peuvent vraiment tourner.", "Hacker News", "profession_software", ago(2), "https://news.ycombinator.com"),
+        NewsItem("n3", "The solar mini-grid boom is a jobs story", "Décentraliser l’énergie crée plus de techniciens que de centrales.", "MIT Technology Review", "onboarding_kinshasa_3", ago(3), "https://www.technologyreview.com"),
+        NewsItem("n4", "Why USSD still beats the app in emerging markets", "Les wallets congolais restent sur le canal que tout le monde a déjà.", "Ars Technica", "profession_other", ago(4), "https://arstechnica.com"),
+        NewsItem("n5", "Ask HN : former des SOC sans diplômes US", "Les banques du Sud cherchent des analystes, pas des certifications hors de prix.", "Hacker News", "profession_security", ago(5), "https://news.ycombinator.com"),
+        NewsItem("n6", "Africa’s fibre buildout, mapped", "Radio, data et commercial B2B : les opérateurs accélèrent plus vite que les écoles.", "Wired", "onboarding_kinshasa_2", ago(6), "https://www.wired.com"),
+        NewsItem("n7", "Low-tech UX is the next design frontier", "Les interfaces qui marchent à 2G valent plus qu’un dribbble shot.", "The Verge", "profession_other", ago(7), "https://www.theverge.com"),
+        NewsItem("n8", "Who gets hired when AI writes the first draft?", "Comptables data, PM terrain, électriciens : les métiers qui restent humains.", "MIT Technology Review", "profession_finance", ago(8), "https://www.technologyreview.com"),
     )
 
     val professionals = listOf(
@@ -164,4 +166,37 @@ object FakeCatalog {
         DemandStat(Profession.MANAGEMENT, 480, 5, "+6 %"),
         DemandStat(Profession.HUMAN_RESOURCES, 320, 4, "+3 %"),
     )
+
+    val orientationInsights = listOf(
+        NationalInsight(OrientationPersona.PUPIL, 1, "Génie informatique & réseaux", 24, "Licence / master à Kinshasa et Lubumbashi : le plus de débouchés."),
+        NationalInsight(OrientationPersona.PUPIL, 2, "Électricité & énergies", 18, "BTS / licence pro SNEL, solaire et maintenance industrielle."),
+        NationalInsight(OrientationPersona.PUPIL, 3, "Mines & géologie", 16, "Haut-Katanga et Lualaba recrutent dès le diplôme."),
+        NationalInsight(OrientationPersona.PUPIL, 4, "Médecine & santé publique", 14, "Hôpitaux et ONG, surtout dans l’Est."),
+        NationalInsight(OrientationPersona.PUPIL, 5, "Finance & gestion", 12, "Banques et fintechs : comptabilité + un peu de data."),
+        NationalInsight(OrientationPersona.PUPIL, 6, "Droit des affaires", 9, "OHADA, mines, compliance — Lubumbashi et Gombe."),
+        NationalInsight(OrientationPersona.PUPIL, 7, "Agronomie", 7, "Agribusiness et chaînes de valeur, hors capitale."),
+        NationalInsight(OrientationPersona.STUDENT, 1, "Développeur / data junior", 22, "Telcos et banques prennent les profils qui livrent un projet."),
+        NationalInsight(OrientationPersona.STUDENT, 2, "Technicien électricien", 18, "Postes HT/BT et solaire plus nombreux que les bureaux."),
+        NationalInsight(OrientationPersona.STUDENT, 3, "Analyste finance / crédit", 14, "Premiers CDI dans les banques de Gombe et Lubumbashi."),
+        NationalInsight(OrientationPersona.STUDENT, 4, "Commercial B2B (fibre, mines)", 13, "Les opérateurs paient la terrain + prime."),
+        NationalInsight(OrientationPersona.STUDENT, 5, "Infirmier / coordination santé", 12, "ONG et cliniques, CDD souvent mieux packagés."),
+        NationalInsight(OrientationPersona.STUDENT, 6, "Logistique last-mile", 11, "E-commerce Kinshasa — Lubumbashi, peu de diplôme exigé."),
+        NationalInsight(OrientationPersona.STUDENT, 7, "Assistant RH / recrutement", 10, "Sourcing campus, un métier encore rare."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 1, "Data & tableurs avancés", 21, "Le passage Excel → SQL ouvre plus que le titre actuel."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 2, "Cybersécurité opérationnelle", 18, "Les SOC des banques manquent de profils reconvertis."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 3, "Chef de projet digital", 16, "Les telcos cherchent des ops qui comprennent le terrain."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 4, "Énergie solaire", 15, "Techniciens tertiaires vers mini-grids et SAV."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 5, "Product / UX low-tech", 14, "Wallets USSD : les designers métier sont rares."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 6, "Formation & académie interne", 9, "Les grandes entreprises internalisent le upskilling."),
+        NationalInsight(OrientationPersona.EMPLOYEE, 7, "Indépendant / freelance tech", 7, "Missions courtes, surtout à Kinshasa."),
+        NationalInsight(OrientationPersona.EMPLOYER, 1, "Fintech & mobile money", 23, "Paiement, crédit PME, agents : le plus fort ROI talent."),
+        NationalInsight(OrientationPersona.EMPLOYER, 2, "Mini-grids solaires", 19, "Est et hinterland : demande d’équipement + formation."),
+        NationalInsight(OrientationPersona.EMPLOYER, 3, "Logistique e-commerce", 16, "Entrepôts et last-mile Kinshasa / Lubumbashi."),
+        NationalInsight(OrientationPersona.EMPLOYER, 4, "Formation numérique", 14, "L’offre de bootcamps sérieux reste trop faible."),
+        NationalInsight(OrientationPersona.EMPLOYER, 5, "Services aux mines", 13, "Maintenance, HSE, data de production."),
+        NationalInsight(OrientationPersona.EMPLOYER, 6, "Santé privée & labs", 9, "Cliniques urbaines et diagnostics."),
+        NationalInsight(OrientationPersona.EMPLOYER, 7, "Agribusiness structuré", 6, "Chaîne froide et transformation, pas seulement la ferme."),
+    )
+
+    fun insightsFor(persona: OrientationPersona) = orientationInsights.filter { it.persona == persona }
 }

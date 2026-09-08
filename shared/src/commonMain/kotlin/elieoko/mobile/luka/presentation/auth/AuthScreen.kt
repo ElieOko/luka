@@ -18,11 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.OtpBoxes
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -63,14 +65,11 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
                     singleLine = true,
                 )
             } else {
-                OutlinedTextField(
+                Text("Code à 6 chiffres", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
+                OtpBoxes(
                     value = state.otp,
                     onValueChange = viewModel::onOtp,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Code à 6 chiffres") },
-                    shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
                 )
             }
             AnimatedVisibility(state.error != null) {

@@ -73,7 +73,7 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                 Spacer(Modifier.height(12.dp))
                 Surface(color = LukaMist, shape = RoundedCornerShape(18.dp)) {
                     Column(Modifier.padding(14.dp)) {
-                        Text("${selected.emoji}  ${selected.title}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(selected.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(selected.tagline, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -101,7 +101,7 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                         FilterChip(
                             selected = selected,
                             onClick = { viewModel.selectProfession(profession) },
-                            label = { Text("${profession.emoji}  ${profession.title}") },
+                            label = { Text(profession.title) },
                             modifier = Modifier.scale(scale),
                             shape = RoundedCornerShape(22.dp),
                             colors = FilterChipDefaults.filterChipColors(
