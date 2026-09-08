@@ -7,8 +7,10 @@ import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.model.UserProfile
 import elieoko.mobile.luka.domain.model.UserSession
 import elieoko.mobile.luka.domain.usecase.FeedPolicy
+import elieoko.mobile.luka.domain.usecase.OfferFilters
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
+import elieoko.mobile.luka.domain.usecase.applyFilters
 import elieoko.mobile.luka.data.remote.FakeCatalog
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -75,6 +77,20 @@ class LukaDomainTest {
         assertEquals(AuthChannel.PHONE, RequestOtpUseCase.parseIdentifier("+243810000000").channel)
         assertEquals(AuthChannel.EMAIL, RequestOtpUseCase.parseIdentifier("grace@luka.cd").channel)
         assertFails { RequestOtpUseCase.parseIdentifier("12") }
+    }
+
+    @Test
+    fun offerFiltersByRegionCityAndProfession() {
+        val offers = FakeCatalog.offers
+        val kinshasa = offers.applyFilters(OfferFilters(regionId = "kinshasa"))
+        assertTrue(kinshasa.isNotEmpty())
+        assertTrue(kinshasa.all { it.regionId == "kinshasa" })
+        val goma = offers.applyFilters(OfferFilters(city = "Goma"))
+        assertTrue(goma.all { it.city.equals("Goma", true) })
+        val elec = offers.applyFilters(OfferFilters(professionId = Profession.ELECTRICITY.id))
+        assertEquals(1, elec.size)
+        assertEquals("Électricien industriel", elec.first().title)
+        assertEquals(5, offers.take(5).size)
     }
 
     @Test

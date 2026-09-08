@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import kotlinx.coroutines.delay
@@ -81,10 +82,12 @@ fun AnalysisScreen(viewModel: SetupViewModel = koinViewModel()) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(20.dp))
-        LukaPrimaryButton(
-            text = if (state.launching) "Analyse en cours…" else "Lancer les analyses infinies",
-            onClick = viewModel::launch,
-            enabled = !state.launching && !state.launched,
-        )
+        BottomCtaBar {
+            LukaPrimaryButton(
+                text = if (state.launching) "Analyse en cours…" else "Lancer les analyses infinies",
+                onClick = viewModel::launch,
+                enabled = !state.launching && !state.launched,
+            )
+        }
     }
 }

@@ -16,5 +16,6 @@ interface SessionRepository {
     suspend fun markAnalysisLaunched()
     suspend fun updateProfile(displayName: String, bio: String)
     suspend fun selectPlan(planId: String, extraProfessionIds: List<String>)
+    suspend fun saveCv(fileName: String, mimeType: String)
     suspend fun resetDemo()
 }

@@ -74,6 +74,14 @@ class ProfileViewModel(
         }
     }
 
+    fun saveCv(document: elieoko.mobile.luka.core.CvDocument) {
+        viewModelScope.launch {
+            runCatching { sessions.saveCv(document.fileName, document.mimeType) }
+                .onSuccess { draft.update { it.copy(message = "CV ${document.fileName} enregistré") } }
+                .onFailure { error -> draft.update { it.copy(message = error.message) } }
+        }
+    }
+
     fun resetDemo() {
         viewModelScope.launch { sessions.resetDemo() }
     }

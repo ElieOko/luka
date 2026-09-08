@@ -2,14 +2,13 @@ package elieoko.mobile.luka.presentation.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import org.koin.compose.viewmodel.koinViewModel
@@ -32,11 +32,9 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .safeContentPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .statusBarsPadding(),
     ) {
-        Column {
+        Column(Modifier.weight(1f).padding(24.dp)) {
             LukaLogo()
             Spacer(Modifier.height(28.dp))
             Text(
@@ -76,23 +74,21 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
                 )
             }
             AnimatedVisibility(state.error != null) {
-                Text(
-                    state.error.orEmpty(),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 12.dp),
-                )
+                Text(state.error.orEmpty(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
             }
         }
-        LukaPrimaryButton(
-            text = when {
-                state.loading -> "Un instant…"
-                state.step == AuthUiState.Step.Identifier -> "Recevoir le code"
-                else -> "Continuer"
-            },
-            onClick = {
-                if (state.step == AuthUiState.Step.Identifier) viewModel.submitIdentifier() else viewModel.submitOtp()
-            },
-            enabled = !state.loading,
-        )
+        BottomCtaBar {
+            LukaPrimaryButton(
+                text = when {
+                    state.loading -> "Un instant…"
+                    state.step == AuthUiState.Step.Identifier -> "Recevoir le code"
+                    else -> "Continuer"
+                },
+                onClick = {
+                    if (state.step == AuthUiState.Step.Identifier) viewModel.submitIdentifier() else viewModel.submitOtp()
+                },
+                enabled = !state.loading,
+            )
+        }
     }
 }

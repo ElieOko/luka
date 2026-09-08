@@ -25,6 +25,7 @@ import elieoko.mobile.luka.domain.usecase.SelectPlanUseCase
 import elieoko.mobile.luka.domain.usecase.UpdateProfileUseCase
 import elieoko.mobile.luka.domain.usecase.VerifyOtpUseCase
 import elieoko.mobile.luka.presentation.auth.AuthViewModel
+import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.profile.ProfileViewModel
 import elieoko.mobile.luka.presentation.root.RootViewModel
@@ -78,5 +79,6 @@ val lukaModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::SetupViewModel)
     viewModelOf(::HomeViewModel)
+    viewModelOf(::ExploreViewModel)
     viewModelOf(::ProfileViewModel)
 }
