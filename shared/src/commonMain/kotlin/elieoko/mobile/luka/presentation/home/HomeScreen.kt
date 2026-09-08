@@ -60,10 +60,14 @@ import elieoko.mobile.luka.domain.model.PlatformAd
 import elieoko.mobile.luka.presentation.components.FilterBottomSheet
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.OfferCard
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.imageByName
 import kotlinx.coroutines.delay
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.onboarding_kinshasa_1
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 
@@ -96,13 +100,14 @@ fun HomeScreen(
         visible = true,
         enter = fadeIn(tween(400)) + slideInVertically { it / 12 },
     ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = LukaBottomNavHeight + 16.dp),
-        ) {
+        PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Soft) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = LukaBottomNavHeight + 16.dp),
+            ) {
             HomeHeader(
                 firstName = state.profile?.firstName().orEmpty(),
                 isFree = isFree,
@@ -137,6 +142,7 @@ fun HomeScreen(
             SectionTitle(title = "Pubs partenaires")
             AdsCarousel(state.feed?.ads.orEmpty())
             Spacer(Modifier.height(12.dp))
+            }
         }
     }
 }

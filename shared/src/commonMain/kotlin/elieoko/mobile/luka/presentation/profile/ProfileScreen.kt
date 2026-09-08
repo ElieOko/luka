@@ -42,9 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.rememberCvPicker
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.onboarding_kinshasa_1
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -55,6 +59,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
     val planId = profile?.planId
     val isFree = planId.isNullOrBlank() || planId == "starter"
 
+    PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Soft) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = LukaBottomNavHeight + 24.dp),
@@ -118,6 +123,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 Text("Réinitialiser la démo", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    }
     }
 }
 

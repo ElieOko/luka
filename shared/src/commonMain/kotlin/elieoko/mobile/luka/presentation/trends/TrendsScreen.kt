@@ -37,22 +37,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.theme.LukaRed
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.onboarding_kinshasa_2
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
     val feed by viewModel.feed.collectAsState()
     val stats = feed?.stats.orEmpty()
+    PageBackdrop(Res.drawable.onboarding_kinshasa_2, tone = PageBackdropTone.Cinematic) {
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = LukaBottomNavHeight + 16.dp),
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(160.dp)
-                .background(Brush.verticalGradient(listOf(Color(0xFF1A0A0C), LukaRed))),
+                .height(160.dp),
         ) {
             Column(Modifier.padding(24.dp).align(Alignment.BottomStart)) {
                 Icon(Icons.AutoMirrored.Outlined.ShowChart, contentDescription = null, tint = Color(0xFFFFB4A8))
@@ -92,5 +96,6 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 )
             }
         }
+    }
     }
 }
