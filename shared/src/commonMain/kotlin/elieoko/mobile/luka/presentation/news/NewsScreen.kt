@@ -40,9 +40,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.imageByName
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.onboarding_kinshasa_2
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Clock
@@ -53,6 +57,7 @@ import kotlin.time.ExperimentalTime
 fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
     val feed by viewModel.feed.collectAsState()
     val items = feed?.news.orEmpty()
+    PageBackdrop(Res.drawable.onboarding_kinshasa_2, tone = PageBackdropTone.Cinematic) {
     Column(
         Modifier
             .fillMaxSize()
@@ -63,8 +68,7 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(188.dp)
-                .background(Brush.verticalGradient(listOf(LukaRed, Color(0xFF7A1020)))),
+                .height(188.dp),
         ) {
             Column(Modifier.padding(24.dp).align(Alignment.BottomStart)) {
                 Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
@@ -113,6 +117,7 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 }
             }
         }
+    }
     }
 }
 

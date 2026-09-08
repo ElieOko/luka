@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.renderComposeScene
 import androidx.compose.ui.text.font.FontWeight
@@ -34,11 +35,14 @@ import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.data.remote.FakeCatalog
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.PulseDot
 import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.LukaTheme
+import elieoko.mobile.luka.presentation.theme.imageByName
 import elieoko.mobile.luka.presentation.welcome.WelcomeScreen
 import org.jetbrains.skia.EncodedImageFormat
 import java.io.File
@@ -51,6 +55,7 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
+    shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }
 
@@ -126,6 +131,28 @@ private fun HomeShot() {
                     Text("Pubs en carrousel horizontal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OrientationShot() {
+    PageBackdrop(imageByName("onboarding_kinshasa_3"), tone = PageBackdropTone.Cinematic) {
+        Column(Modifier.fillMaxSize().padding(20.dp)) {
+            Text("Orientation", color = Color.White, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(8.dp))
+            Text("Élève, étudiant, employé ou employeur ?", color = Color.White.copy(0.85f))
+            Spacer(Modifier.height(18.dp))
+            listOf("Élève" to "Je suis au secondaire", "Étudiant" to "Je cherche un premier emploi").forEach { (title, sub) ->
+                Column(
+                    Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(20.dp)).background(Color.White.copy(0.14f)).padding(16.dp),
+                ) {
+                    Text(title, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(sub, color = Color.White.copy(0.85f))
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            LukaPrimaryButton("Lancer l’analyse", {}, Modifier.padding(bottom = 112.dp))
         }
     }
 }

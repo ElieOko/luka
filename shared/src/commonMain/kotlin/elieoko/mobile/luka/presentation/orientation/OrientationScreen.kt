@@ -11,7 +11,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -41,32 +41,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.NationalInsight
 import elieoko.mobile.luka.domain.model.OrientationPersona
-import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
-import elieoko.mobile.luka.presentation.theme.LukaMist
+import elieoko.mobile.luka.presentation.components.PageBackdrop
+import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.theme.LukaRed
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.onboarding_kinshasa_3
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun OrientationScreen(viewModel: OrientationViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
-    when (state.phase) {
-        OrientationPhase.Pick -> PersonaPick(
-            selected = state.persona,
-            onSelect = viewModel::select,
-            onLaunch = viewModel::analyze,
-        )
-        OrientationPhase.Analyzing -> AnalysisPulse(persona = state.persona)
-        OrientationPhase.Results -> ResultsPane(
-            persona = state.persona,
-            insights = state.insights,
-            onReset = viewModel::reset,
-        )
+    PageBackdrop(Res.drawable.onboarding_kinshasa_3, tone = PageBackdropTone.Cinematic) {
+        when (state.phase) {
+            OrientationPhase.Pick -> PersonaPick(
+                selected = state.persona,
+                onSelect = viewModel::select,
+                onLaunch = viewModel::analyze,
+            )
+            OrientationPhase.Analyzing -> AnalysisPulse(persona = state.persona)
+            OrientationPhase.Results -> ResultsPane(
+                persona = state.persona,
+                insights = state.insights,
+                onReset = viewModel::reset,
+            )
+        }
     }
 }
 
@@ -81,14 +87,13 @@ private fun PersonaPick(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-                .padding(bottom = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            Text("Orientation", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
+            Text("Orientation", color = Color.White, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Informatif, comme les offres : on analyse le marché national selon qui tu es. Élève, étudiant, employé ou employeur ?",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                "Informatif, comme les offres : on analyse le marché national selon qui tu es.",
+                color = Color.White.copy(0.85f),
             )
             Spacer(Modifier.height(18.dp))
             OrientationPersona.entries.forEach { persona ->
@@ -98,20 +103,24 @@ private fun PersonaPick(
                         .fillMaxWidth()
                         .padding(bottom = 10.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (active) LukaRed else LukaMist)
-                        .border(1.dp, if (active) LukaRed else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                        .background(if (active) LukaRed else Color.White.copy(alpha = 0.14f))
+                        .border(1.dp, Color.White.copy(if (active) 0f else 0.22f), RoundedCornerShape(20.dp))
                         .clickable { onSelect(persona) }
                         .padding(16.dp),
                 ) {
-                    Text(persona.title, color = if (active) androidx.compose.ui.graphics.Color.White else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                    Text(persona.subtitle, color = if (active) androidx.compose.ui.graphics.Color.White.copy(0.9f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(persona.title, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(persona.subtitle, color = Color.White.copy(0.88f))
                 }
             }
         }
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, bottom = 68.dp, top = 8.dp),
+        ) {
             LukaPrimaryButton("Lancer l’analyse", onLaunch, enabled = selected != null)
         }
-        Spacer(Modifier.height(LukaBottomNavHeight))
     }
 }
 
@@ -125,11 +134,16 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
         label = "pulse",
     )
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().padding(24.dp).padding(bottom = LukaBottomNavHeight),
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(24.dp)
+            .padding(bottom = 68.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(24.dp))
-        Text("Analyse nationale", style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
+        Text("Analyse nationale", color = Color.White, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(
             when (persona) {
@@ -139,7 +153,7 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
                 OrientationPersona.EMPLOYER -> "Lecture des domaines où investir…"
                 null -> "Scan du marché congolais…"
             },
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(0.85f),
             textAlign = TextAlign.Center,
         )
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -148,7 +162,7 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
                 for (i in 1..4) {
                     val radius = size.minDimension / 8 * i * (0.65f + pulse * 0.55f)
                     drawCircle(
-                        color = LukaRed.copy(alpha = (1f - pulse) * 0.45f / i),
+                        color = Color.White.copy(alpha = (1f - pulse) * 0.45f / i),
                         radius = radius,
                         center = center,
                         style = Stroke(width = 4f),
@@ -157,15 +171,14 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
                 drawCircle(LukaRed, radius = 18f, center = center)
             }
         }
-        Text("INS, telcos, mines, banques — chiffres indicatifs.", color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(24.dp))
+        Text("INS, telcos, mines, banques — chiffres indicatifs.", color = Color.White.copy(0.75f), textAlign = TextAlign.Center)
     }
 }
 
 @Composable
 private fun ResultsPane(
     persona: OrientationPersona?,
-    insights: List<elieoko.mobile.luka.domain.model.NationalInsight>,
+    insights: List<NationalInsight>,
     onReset: () -> Unit,
 ) {
     Column(
@@ -173,14 +186,15 @@ private fun ResultsPane(
             .fillMaxSize()
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = LukaBottomNavHeight + 16.dp),
+            .navigationBarsPadding()
+            .padding(bottom = 80.dp),
     ) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-            Text(persona?.title.orEmpty(), color = LukaRed, fontWeight = FontWeight.Bold)
-            Text(persona?.resultTitle.orEmpty(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(persona?.title.orEmpty(), color = Color.White.copy(0.9f), fontWeight = FontWeight.Bold)
+            Text(persona?.resultTitle.orEmpty(), color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(
                 "À titre informatif. Ce n’est pas une offre, c’est ce que les chiffres disent au Congo.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White.copy(0.8f),
             )
         }
         insights.forEach { item ->
@@ -191,14 +205,14 @@ private fun ResultsPane(
                 Modifier
                     .padding(horizontal = 20.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(Color.White.copy(alpha = 0.12f))
                     .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("${item.rank}", color = LukaRed, fontWeight = FontWeight.Black, modifier = Modifier.width(28.dp))
+                    Text("${item.rank}", color = Color.White, fontWeight = FontWeight.Black, modifier = Modifier.width(28.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(item.label, fontWeight = FontWeight.Bold)
-                        Text("${item.sharePercent} % · ${item.detail}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(item.label, color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("${item.sharePercent} % · ${item.detail}", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(0.75f))
                     }
                 }
                 Spacer(Modifier.height(10.dp))
@@ -206,12 +220,12 @@ private fun ResultsPane(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(99.dp)),
                     color = LukaRed,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    trackColor = Color.White.copy(0.2f),
                 )
             }
         }
         TextButton(onClick = onReset, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("Changer de profil", color = LukaRed, fontWeight = FontWeight.Bold)
+            Text("Changer de profil", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }

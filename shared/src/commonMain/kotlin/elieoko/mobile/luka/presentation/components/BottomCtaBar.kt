@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-val LukaBottomNavHeight = 72.dp
+val LukaBottomNavHeight = 112.dp
 
 @Composable
 fun BottomCtaBar(content: @Composable () -> Unit) {
