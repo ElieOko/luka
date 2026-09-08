@@ -6,7 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,18 +15,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.NorthEast
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,16 +38,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import coil3.compose.AsyncImage
-import elieoko.mobile.luka.domain.model.City
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.JobOffer
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.usecase.OfferFilters
+import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
+import kotlinx.coroutines.delay
 
 @Composable
 fun OfferCard(offer: JobOffer, index: Int = 0, onOpen: () -> Unit) {
@@ -72,42 +75,64 @@ fun OfferCard(offer: JobOffer, index: Int = 0, onOpen: () -> Unit) {
                     Text(offer.title, style = MaterialTheme.typography.titleMedium)
                     Text("${offer.company} · ${offer.city}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Icon(Icons.Rounded.NorthEast, contentDescription = "Ouvrir l’offre", tint = LukaRed)
             }
             Spacer(Modifier.height(10.dp))
             Text(offer.summary, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(10.dp))
-            Text("${offer.profession.emoji}  ${offer.contract} · ${offer.salary}", color = LukaRed, style = MaterialTheme.typography.labelLarge)
+            Text(offer.contract, color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun FilterStrip(
+fun FilterBottomSheet(
     filters: OfferFilters,
-    onRegion: (String?) -> Unit,
+    query: String,
+    onQuery: (String) -> Unit,
     onCity: (String?) -> Unit,
     onProfession: (String?) -> Unit,
+    onDismiss: () -> Unit,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
-    val cities = CongoCatalog.citiesIn(filters.regionId)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 20.dp)) {
-            item { FilterPill("Toutes régions", filters.regionId == null) { onRegion(null) } }
-            items(CongoCatalog.regions) { region ->
-                FilterPill(region.name, filters.regionId == region.id) { onRegion(region.id) }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = LukaCream,
+    ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
+            Text("Recherche", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(
+                "Ville et métier. Les régions, ici, ce sont les villes.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQuery,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Poste, entreprise, ville…") },
+                shape = RoundedCornerShape(18.dp),
+                singleLine = true,
+            )
+            Spacer(Modifier.height(18.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Ville", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { onCity(null) }) { Text("Toutes", color = LukaRed) }
             }
-        }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 20.dp)) {
-            item { FilterPill("Toutes villes", filters.city == null) { onCity(null) } }
-            items(cities) { city: City ->
-                FilterPill(city.name, filters.city == city.name) { onCity(city.name) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CongoCatalog.cities.forEach { city ->
+                    FilterPill(city.name, filters.city == city.name) { onCity(city.name) }
+                }
             }
-        }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 20.dp)) {
-            item { FilterPill("Tous métiers", filters.professionId == null) { onProfession(null) } }
-            items(Profession.entries) { profession ->
-                FilterPill("${profession.emoji} ${profession.title}", filters.professionId == profession.id) {
-                    onProfession(profession.id)
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Métier", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { onProfession(null) }) { Text("Tous", color = LukaRed) }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Profession.entries.forEach { profession ->
+                    FilterPill(profession.title, filters.professionId == profession.id) { onProfession(profession.id) }
                 }
             }
         }

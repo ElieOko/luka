@@ -43,7 +43,7 @@ fun LocationScreen(viewModel: SetupViewModel = koinViewModel()) {
             Text("Où vis-tu ?", style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Pour l’instant, Luka ne propose que des offres en RDC.",
+                "Pour l’instant, Luka ne propose que des offres en RDC. Choisis ta ville.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(20.dp))
@@ -54,32 +54,16 @@ fun LocationScreen(viewModel: SetupViewModel = koinViewModel()) {
                 Text("Pays verrouillé — d’autres arriveront plus tard.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(24.dp))
-            Text("Ta région", style = MaterialTheme.typography.titleLarge)
+            Text("Ta ville", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CongoCatalog.regions.forEach { region ->
-                    FilterPill(region.name, state.selectedRegionId == region.id) { viewModel.selectRegion(region.id) }
-                }
-            }
-            val cities = CongoCatalog.citiesIn(state.selectedRegionId)
-            if (state.selectedRegionId != null && cities.isNotEmpty()) {
-                Spacer(Modifier.height(24.dp))
-                Text("Villes couvertes", style = MaterialTheme.typography.titleLarge)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Tu pourras filtrer par ville sur l’accueil.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(12.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    cities.forEach { city ->
-                        FilterPill(city.name, false) {}
-                    }
+                CongoCatalog.cities.forEach { city ->
+                    FilterPill(city.name, state.selectedCityName == city.name) { viewModel.selectCity(city) }
                 }
             }
         }
         BottomCtaBar {
-            LukaPrimaryButton("Continuer", viewModel::confirmLocation, enabled = state.selectedRegionId != null)
+            LukaPrimaryButton("Continuer", viewModel::confirmLocation, enabled = state.selectedCityName != null)
         }
     }
 }

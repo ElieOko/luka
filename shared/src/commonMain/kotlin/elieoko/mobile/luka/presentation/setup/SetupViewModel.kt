@@ -2,6 +2,7 @@ package elieoko.mobile.luka.presentation.setup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import elieoko.mobile.luka.domain.model.City
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.usecase.CompleteLocationUseCase
 import elieoko.mobile.luka.domain.usecase.CompleteProfessionUseCase
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 data class SetupUiState(
     val selectedProfession: Profession? = null,
     val selectedRegionId: String? = null,
+    val selectedCityName: String? = null,
     val launching: Boolean = false,
     val launched: Boolean = false,
     val error: String? = null,
@@ -39,7 +41,9 @@ class SetupViewModel(
         }
     }
 
-    fun selectRegion(id: String) = _state.update { it.copy(selectedRegionId = id, error = null) }
+    fun selectCity(city: City) = _state.update {
+        it.copy(selectedRegionId = city.regionId, selectedCityName = city.name, error = null)
+    }
 
     fun confirmLocation() {
         val regionId = _state.value.selectedRegionId ?: return

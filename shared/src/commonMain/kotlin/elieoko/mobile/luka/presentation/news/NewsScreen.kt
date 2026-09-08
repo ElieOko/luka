@@ -19,7 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.imageByName
@@ -57,18 +58,21 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
             .fillMaxSize()
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 16.dp),
+            .padding(bottom = LukaBottomNavHeight + 16.dp),
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(168.dp)
+                .height(188.dp)
                 .background(Brush.verticalGradient(listOf(LukaRed, Color(0xFF7A1020)))),
         ) {
             Column(Modifier.padding(24.dp).align(Alignment.BottomStart)) {
-                Icon(Icons.Outlined.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(36.dp))
+                Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
                 Text("Nouveautés numériques", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                Text("Tech, IA, data et outils qui bougent en RDC", color = Color.White.copy(0.85f))
+                Text(
+                    "Les meilleurs articles de MIT Technology Review, Hacker News, Ars Technica, Wired et The Verge — lus pour le marché RDC.",
+                    color = Color.White.copy(0.85f),
+                )
             }
         }
         Spacer(Modifier.height(16.dp))

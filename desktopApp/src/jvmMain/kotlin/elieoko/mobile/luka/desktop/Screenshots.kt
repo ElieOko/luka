@@ -83,7 +83,7 @@ private fun ProfessionShot() {
                 FilterChip(
                     selected = selected,
                     onClick = {},
-                    label = { Text("${profession.emoji}  ${profession.title}") },
+                    label = { Text(profession.title) },
                     shape = RoundedCornerShape(22.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = LukaRed,
@@ -115,7 +115,7 @@ private fun HomeShot() {
                     Text("${offer.company} · ${offer.city}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
                     Text(offer.summary, style = MaterialTheme.typography.bodyMedium)
-                    Text("${offer.profession.emoji}  ${offer.contract} · ${offer.salary}", color = LukaRed, style = MaterialTheme.typography.labelLarge)
+                    Text(offer.contract, color = LukaRed, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

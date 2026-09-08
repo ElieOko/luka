@@ -22,18 +22,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Whatshot
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,42 +75,45 @@ fun MainShell() {
         return
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        bottomBar = {
-            TikTokBottomBar(tab = tab, onTab = { tab = it })
-        },
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
-                when (current) {
-                    MainTab.Home -> HomeScreen(
-                        onSeeAllOffers = { showAllOffers = true },
-                        onOpenNews = { tab = MainTab.News },
-                        onOpenTrends = { tab = MainTab.Trends },
-                        onOpenOrientation = { tab = MainTab.Orientation },
-                        viewModel = homeVm,
-                    )
-                    MainTab.News -> NewsScreen()
-                    MainTab.Trends -> TrendsScreen()
-                    MainTab.Orientation -> OrientationScreen()
-                    MainTab.Profile -> ProfileScreen()
-                }
+    Box(Modifier.fillMaxSize()) {
+        AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+            when (current) {
+                MainTab.Home -> HomeScreen(
+                    onSeeAllOffers = { showAllOffers = true },
+                    onOpenNews = { tab = MainTab.News },
+                    onOpenTrends = { tab = MainTab.Trends },
+                    onOpenOrientation = { tab = MainTab.Orientation },
+                    viewModel = homeVm,
+                )
+                MainTab.News -> NewsScreen()
+                MainTab.Trends -> TrendsScreen()
+                MainTab.Orientation -> OrientationScreen()
+                MainTab.Profile -> ProfileScreen()
             }
         }
+        TikTokBottomBar(
+            tab = tab,
+            onTab = { tab = it },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
 @Composable
-private fun TikTokBottomBar(tab: MainTab, onTab: (MainTab) -> Unit) {
+private fun TikTokBottomBar(
+    tab: MainTab,
+    onTab: (MainTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        Modifier
+        modifier
             .fillMaxWidth()
             .background(TikTokBar)
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .height(56.dp),
     ) {
         Row(
-            Modifier.fillMaxWidth().height(64.dp),
+            Modifier.fillMaxSize().padding(bottom = 4.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             TikTokItem(
@@ -124,16 +126,16 @@ private fun TikTokBottomBar(tab: MainTab, onTab: (MainTab) -> Unit) {
             TikTokItem(
                 selected = tab == MainTab.News,
                 label = "News",
-                outlined = Icons.Outlined.Bolt,
-                filled = Icons.Rounded.Bolt,
+                outlined = Icons.AutoMirrored.Outlined.MenuBook,
+                filled = Icons.AutoMirrored.Rounded.MenuBook,
                 onClick = { onTab(MainTab.News) },
             )
             Spacer(Modifier.weight(1f))
             TikTokItem(
                 selected = tab == MainTab.Orientation,
                 label = "Orientation",
-                outlined = Icons.Outlined.Explore,
-                filled = Icons.Rounded.Explore,
+                outlined = Icons.Outlined.School,
+                filled = Icons.Rounded.School,
                 onClick = { onTab(MainTab.Orientation) },
             )
             TikTokItem(
@@ -146,8 +148,8 @@ private fun TikTokBottomBar(tab: MainTab, onTab: (MainTab) -> Unit) {
         }
         Column(
             Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-14).dp)
+                .align(Alignment.BottomCenter)
+                .offset(y = (-6).dp)
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
@@ -156,8 +158,8 @@ private fun TikTokBottomBar(tab: MainTab, onTab: (MainTab) -> Unit) {
         ) {
             Box(
                 Modifier
-                    .size(52.dp)
-                    .shadow(10.dp, CircleShape)
+                    .size(44.dp)
+                    .shadow(8.dp, CircleShape)
                     .clip(CircleShape)
                     .background(if (tab == MainTab.Trends) Color.White else LukaRed),
                 contentAlignment = Alignment.Center,
@@ -166,16 +168,9 @@ private fun TikTokBottomBar(tab: MainTab, onTab: (MainTab) -> Unit) {
                     if (tab == MainTab.Trends) Icons.Rounded.Whatshot else Icons.Outlined.Whatshot,
                     contentDescription = "Tendances",
                     tint = if (tab == MainTab.Trends) LukaRed else Color.White,
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(22.dp),
                 )
             }
-            Text(
-                "Tendances",
-                color = if (tab == MainTab.Trends) Color.White else TikTokMuted,
-                fontSize = 10.sp,
-                fontWeight = if (tab == MainTab.Trends) FontWeight.Bold else FontWeight.Medium,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-            )
         }
     }
 }
@@ -191,20 +186,20 @@ private fun RowScope.TikTokItem(
     Column(
         Modifier
             .weight(1f)
-            .height(64.dp)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = onClick,
-            ),
+            )
+            .padding(bottom = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Bottom,
     ) {
         Icon(
             if (selected) filled else outlined,
             contentDescription = label,
             tint = if (selected) Color.White else TikTokMuted,
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(22.dp),
         )
         Text(
             label,

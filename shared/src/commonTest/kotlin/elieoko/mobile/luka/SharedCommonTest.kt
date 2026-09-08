@@ -94,6 +94,15 @@ class LukaDomainTest {
     }
 
     @Test
+    fun orientationInsightsMatchPersona() {
+        val pupil = FakeCatalog.insightsFor(elieoko.mobile.luka.domain.model.OrientationPersona.PUPIL)
+        assertTrue(pupil.isNotEmpty())
+        assertTrue(pupil.all { it.persona == elieoko.mobile.luka.domain.model.OrientationPersona.PUPIL })
+        val employer = FakeCatalog.insightsFor(elieoko.mobile.luka.domain.model.OrientationPersona.EMPLOYER)
+        assertTrue(employer.any { it.label.contains("Fintech", true) })
+    }
+
+    @Test
     fun starterPlanLocksToOneProfession() {
         val profile = session(profession = Profession.FINANCE).profile
         val allowed = FeedPolicy.allowedProfessions(profile, FakeCatalog.plans.first { it.id == "starter" })
