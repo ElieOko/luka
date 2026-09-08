@@ -16,6 +16,11 @@ import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 class LukaDomainTest {
+    @Test
+    fun getPlatformHasJvmActual() {
+        assertTrue(getPlatform().name.isNotBlank())
+    }
+
     private val resolve = ResolveDestinationUseCase()
 
     @Test
