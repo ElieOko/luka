@@ -161,8 +161,10 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
+            if (state.feed?.ads.orEmpty().isNotEmpty()) {
             SectionTitle(title = "Pubs partenaires")
             AdsCarousel(state.feed?.ads.orEmpty())
+            }
             Spacer(Modifier.height(12.dp))
             }
             }

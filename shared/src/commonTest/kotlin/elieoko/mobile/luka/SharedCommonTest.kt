@@ -19,6 +19,9 @@ import elieoko.mobile.luka.data.remote.ApiException
 import elieoko.mobile.luka.data.remote.FakeCatalog
 import elieoko.mobile.luka.data.remote.dto.CongoCityDto
 import elieoko.mobile.luka.data.remote.dto.StoredJobOfferDto
+import elieoko.mobile.luka.domain.model.LukaPlans
+import elieoko.mobile.luka.domain.model.OrientationPersona
+import elieoko.mobile.luka.domain.usecase.LiveInsights
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -105,19 +108,29 @@ class LukaDomainTest {
 
     @Test
     fun orientationInsightsMatchPersona() {
-        val pupil = FakeCatalog.insightsFor(elieoko.mobile.luka.domain.model.OrientationPersona.PUPIL)
+        val pupil = LiveInsights.forPersona(OrientationPersona.PUPIL, FakeCatalog.offers)
         assertTrue(pupil.isNotEmpty())
-        assertTrue(pupil.all { it.persona == elieoko.mobile.luka.domain.model.OrientationPersona.PUPIL })
-        val employer = FakeCatalog.insightsFor(elieoko.mobile.luka.domain.model.OrientationPersona.EMPLOYER)
-        assertTrue(employer.any { it.label.contains("Fintech", true) })
+        assertTrue(pupil.all { it.persona == OrientationPersona.PUPIL })
+        val employer = LiveInsights.forPersona(OrientationPersona.EMPLOYER, FakeCatalog.offers)
+        assertTrue(employer.isNotEmpty())
+        assertTrue(employer.all { it.persona == OrientationPersona.EMPLOYER })
+        assertEquals(employer.first().label, LiveInsights.demandFrom(FakeCatalog.offers).first().profession.title)
+    }
+
+    @Test
+    fun demandStatsComeFromLiveOffers() {
+        val stats = LiveInsights.demandFrom(FakeCatalog.offers)
+        assertTrue(stats.isNotEmpty())
+        assertEquals(FakeCatalog.offers.size, stats.sumOf { it.openings })
+        assertTrue(stats.first().openings >= stats.last().openings)
     }
 
     @Test
     fun starterPlanLocksToOneProfession() {
         val profile = session(profession = Profession.FINANCE).profile
-        val allowed = FeedPolicy.allowedProfessions(profile, FakeCatalog.plans.first { it.id == "starter" })
+        val allowed = FeedPolicy.allowedProfessions(profile, LukaPlans.byId("starter"))
         assertEquals(setOf(Profession.FINANCE), allowed)
-        val pro = FeedPolicy.allowedProfessions(profile, FakeCatalog.plans.first { it.id == "pro" })
+        val pro = FeedPolicy.allowedProfessions(profile, LukaPlans.byId("pro"))
         assertTrue(pro.containsAll(Profession.entries))
     }
 
@@ -206,7 +219,7 @@ class LukaDomainTest {
             professionals = emptyList(),
             topProfession = null,
         )
-        val filtered = feed.withPolicy(profile, FakeCatalog.plans.first { it.id == "starter" })
+        val filtered = feed.withPolicy(profile, LukaPlans.byId("starter"))
         assertEquals(FakeCatalog.offers.size, filtered.offers.size)
     }
 

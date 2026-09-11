@@ -171,7 +171,7 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
                 drawCircle(LukaRed, radius = 18f, center = center)
             }
         }
-        Text("INS, telcos, mines, banques — chiffres indicatifs.", color = Color.White.copy(0.75f), textAlign = TextAlign.Center)
+        Text("À partir des offres actuellement ouvertes sur le serveur.", color = Color.White.copy(0.75f), textAlign = TextAlign.Center)
     }
 }
 
@@ -193,8 +193,15 @@ private fun ResultsPane(
             Text(persona?.title.orEmpty(), color = Color.White.copy(0.9f), fontWeight = FontWeight.Bold)
             Text(persona?.resultTitle.orEmpty(), color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(
-                "À titre informatif. Ce n’est pas une offre, c’est ce que les chiffres disent au Congo.",
+                "Chiffres tirés des offres actuellement ouvertes sur Luka.",
                 color = Color.White.copy(0.8f),
+            )
+        }
+        if (insights.isEmpty()) {
+            Text(
+                "Pas encore assez d’offres pour un diagnostic. Tire l’accueil pour rafraîchir.",
+                color = Color.White.copy(0.85f),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             )
         }
         insights.forEach { item ->

@@ -8,17 +8,18 @@ import elieoko.mobile.luka.data.mapper.toEntity
 import elieoko.mobile.luka.data.mapper.toJobOffer
 import elieoko.mobile.luka.data.mapper.toCity
 import elieoko.mobile.luka.data.mapper.toTradeChips
-import elieoko.mobile.luka.data.remote.FakeCatalog
 import elieoko.mobile.luka.data.remote.LukaApi
 import elieoko.mobile.luka.data.remote.OfferStream
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.HomeFeed
 import elieoko.mobile.luka.domain.model.JobOffer
+import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.domain.model.PublicCatalog
 import elieoko.mobile.luka.domain.model.SubscriptionPlan
 import elieoko.mobile.luka.domain.model.TradeChip
 import elieoko.mobile.luka.domain.model.UserProfile
 import elieoko.mobile.luka.domain.repository.CatalogRepository
+import elieoko.mobile.luka.domain.usecase.LiveInsights
 import elieoko.mobile.luka.domain.usecase.withPolicy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -32,27 +33,21 @@ class CatalogRepositoryImpl(
 ) : CatalogRepository {
 
     override fun observeFeed(profile: UserProfile): Flow<HomeFeed> {
-        val plan = plans().first { it.id == profile.planId }
+        val plan = LukaPlans.byId(profile.planId)
         return combine(
-            combine(
-                database.offerDao().observeAll(),
-                database.adDao().observeAll(),
-                database.newsDao().observeAll(),
-            ) { offers, ads, news -> Triple(offers, ads, news) },
-            combine(
-                database.professionalDao().observeAll(),
-                database.orientationDao().observeAll(),
-                database.demandDao().observeAll(),
-            ) { pros, orientation, stats -> Triple(pros, orientation, stats) },
-        ) { first, second ->
-            val demand = second.third.map { it.toDomain() }
+            database.offerDao().observeAll(),
+            database.adDao().observeAll(),
+            database.newsDao().observeAll(),
+        ) { offerRows, ads, news ->
+            val offers = offerRows.map { it.toDomain() }
+            val demand = LiveInsights.demandFrom(offers)
             HomeFeed(
-                offers = first.first.map { it.toDomain() },
-                ads = first.second.map { it.toDomain() },
-                news = first.third.map { it.toDomain() },
+                offers = offers,
+                ads = ads.map { it.toDomain() },
+                news = news.map { it.toDomain() },
                 stats = demand,
-                orientation = second.second.map { it.toDomain() },
-                professionals = second.first.map { it.toDomain() },
+                orientation = emptyList(),
+                professionals = emptyList(),
                 topProfession = demand.maxByOrNull { it.openings },
             ).withPolicy(profile, plan)
         }
@@ -62,14 +57,14 @@ class CatalogRepositoryImpl(
         offerStream.observe().onEach { database.offerDao().upsert(it.toEntity()) }
 
     override suspend fun seedIfNeeded() {
-        if (database.metaDao().get("seeded")?.value != "v5") {
+        database.adDao().clear()
+        database.newsDao().clear()
+        database.professionalDao().clear()
+        database.orientationDao().clear()
+        database.demandDao().clear()
+        if (database.metaDao().get("seeded")?.value != "v6") {
             database.offerDao().clear()
-            database.adDao().upsert(FakeCatalog.ads.map { it.toEntity() })
-            database.newsDao().upsert(FakeCatalog.news.map { it.toEntity() })
-            database.professionalDao().upsert(FakeCatalog.professionals.map { it.toEntity() })
-            database.orientationDao().upsert(FakeCatalog.orientation.map { it.toEntity() })
-            database.demandDao().upsert(FakeCatalog.stats.map { it.toEntity() })
-            database.metaDao().put(MetaEntity("seeded", "v5"))
+            database.metaDao().put(MetaEntity("seeded", "v6"))
         }
         loadPublicCatalog()
     }
@@ -102,5 +97,5 @@ class CatalogRepositoryImpl(
         }
     }
 
-    override fun plans(): List<SubscriptionPlan> = FakeCatalog.plans
+    override fun plans(): List<SubscriptionPlan> = LukaPlans.all
 }

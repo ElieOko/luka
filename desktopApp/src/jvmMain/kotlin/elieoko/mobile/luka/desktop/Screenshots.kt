@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -32,7 +31,6 @@ import androidx.compose.ui.renderComposeScene
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import elieoko.mobile.luka.data.remote.FakeCatalog
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.components.PageBackdrop
@@ -110,25 +108,22 @@ private fun HomeShot() {
                 Spacer(Modifier.width(8.dp))
                 Text("Analyses infinies actives", color = LukaRed, style = MaterialTheme.typography.labelLarge)
             }
-            Text("Bonjour Grace", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            Text("5 offres, puis tout voir · Kinshasa", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Bonjour Grace", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text("Les offres viennent du serveur Casanayo.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        items(FakeCatalog.offers.take(5)) { offer ->
+        item {
             Surface(shape = RoundedCornerShape(22.dp), shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text(offer.title, style = MaterialTheme.typography.titleMedium)
-                    Text("${offer.company} · ${offer.city}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(8.dp))
-                    Text(offer.summary, style = MaterialTheme.typography.bodyMedium)
-                    Text(offer.contract, color = LukaRed, style = MaterialTheme.typography.labelLarge)
+                    Text("Offres live", style = MaterialTheme.typography.titleMedium)
+                    Text("Home · Kinshasa", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         item {
             Surface(color = LukaMist, shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth().height(120.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.Bottom) {
-                    Text("PUBLICITÉ", color = LukaRed, style = MaterialTheme.typography.labelSmall)
-                    Text("Pubs en carrousel horizontal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Serveur Casanayo", color = LukaRed, style = MaterialTheme.typography.labelSmall)
+                    Text("Aucune pub locale — uniquement le backend.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
