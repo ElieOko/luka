@@ -31,14 +31,17 @@ import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -92,6 +95,7 @@ fun HomeScreen(
             onQuery = viewModel::onQuery,
             onCity = viewModel::onCity,
             onProfession = viewModel::onProfession,
+            onReset = viewModel::resetFilters,
             onDismiss = { showFilters = false },
             cities = state.cities,
             trades = state.trades,
@@ -102,7 +106,23 @@ fun HomeScreen(
         visible = true,
         enter = fadeIn(tween(400)) + slideInVertically { it / 12 },
     ) {
-        PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Soft) {
+        PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Cinematic) {
+            val ptr = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = state.refreshing,
+                onRefresh = viewModel::refresh,
+                state = ptr,
+                modifier = Modifier.fillMaxSize(),
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        isRefreshing = state.refreshing,
+                        state = ptr,
+                        color = LukaRed,
+                        containerColor = Color.White,
+                    )
+                },
+            ) {
             Column(
                 Modifier
                     .fillMaxSize()
@@ -135,15 +155,16 @@ fun HomeScreen(
             }
             if (state.previewOffers.isEmpty()) {
                 Text(
-                    "Aucune offre pour ces filtres. Change de ville ou de métier.",
+                    "Aucune offre pour ces filtres. Change de ville ou de métier, ou réinitialise.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.White.copy(0.85f),
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
             SectionTitle(title = "Pubs partenaires")
             AdsCarousel(state.feed?.ads.orEmpty())
             Spacer(Modifier.height(12.dp))
+            }
             }
         }
     }
@@ -176,16 +197,16 @@ private fun HomeHeader(
                 }
                 Spacer(Modifier.height(8.dp))
             }
-            Text("Bonjour $firstName", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text("Bonjour $firstName", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White)
             Text(
                 "L’emploi vient à toi. 5 pistes, puis tout voir.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White.copy(0.85f),
             )
         }
         IconButton(onClick = onSearch) {
             Box {
-                Icon(Icons.Outlined.Search, contentDescription = "Recherche et filtres", tint = LukaRed)
+                Icon(Icons.Outlined.Search, contentDescription = "Recherche et filtres", tint = Color.White)
                 if (filterActive) {
                     Box(
                         Modifier
@@ -245,7 +266,13 @@ fun SectionTitle(title: String, action: String? = null, onAction: (() -> Unit)? 
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.weight(1f),
+        )
         if (action != null && onAction != null) {
             TextButton(onClick = onAction) {
                 Text(action, color = LukaRed, fontWeight = FontWeight.Bold)

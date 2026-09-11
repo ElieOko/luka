@@ -98,6 +98,9 @@ class LukaDomainTest {
         assertEquals(1, elec.size)
         assertEquals("Électricien industriel", elec.first().title)
         assertEquals(5, offers.take(5).size)
+        val reset = OfferFilters()
+        assertTrue(reset.isEmpty)
+        assertTrue(!OfferFilters(city = "Goma").isEmpty)
     }
 
     @Test

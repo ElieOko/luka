@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.domain.model.NationalInsight
 import elieoko.mobile.luka.domain.model.OrientationPersona
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.LukaProgressBar
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.theme.LukaRed
@@ -216,12 +216,7 @@ private fun ResultsPane(
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(99.dp)),
-                    color = LukaRed,
-                    trackColor = Color.White.copy(0.2f),
-                )
+                LukaProgressBar(progress)
             }
         }
         TextButton(onClick = onReset, modifier = Modifier.align(Alignment.CenterHorizontally)) {

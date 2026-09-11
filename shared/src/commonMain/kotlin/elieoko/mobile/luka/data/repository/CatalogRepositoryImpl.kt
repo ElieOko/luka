@@ -62,16 +62,14 @@ class CatalogRepositoryImpl(
         offerStream.observe().onEach { database.offerDao().upsert(it.toEntity()) }
 
     override suspend fun seedIfNeeded() {
-        if (database.metaDao().get("seeded")?.value != "v4") {
+        if (database.metaDao().get("seeded")?.value != "v5") {
+            database.offerDao().clear()
             database.adDao().upsert(FakeCatalog.ads.map { it.toEntity() })
             database.newsDao().upsert(FakeCatalog.news.map { it.toEntity() })
             database.professionalDao().upsert(FakeCatalog.professionals.map { it.toEntity() })
             database.orientationDao().upsert(FakeCatalog.orientation.map { it.toEntity() })
             database.demandDao().upsert(FakeCatalog.stats.map { it.toEntity() })
-            if (database.offerDao().count() == 0) {
-                database.offerDao().upsert(FakeCatalog.offers.map { it.toEntity() })
-            }
-            database.metaDao().put(MetaEntity("seeded", "v4"))
+            database.metaDao().put(MetaEntity("seeded", "v5"))
         }
         loadPublicCatalog()
     }
@@ -97,12 +95,10 @@ class CatalogRepositoryImpl(
                 size = 50,
             )
         }.onFailure { crashReporter.capture(it) }.getOrNull() ?: return
+        database.offerDao().clear()
         val offers = page.content.map { it.toJobOffer() }
         if (offers.isNotEmpty()) {
-            database.offerDao().clear()
             database.offerDao().upsert(offers.map { it.toEntity() })
-        } else if (database.offerDao().count() == 0) {
-            database.offerDao().upsert(FakeCatalog.offers.map { it.toEntity() })
         }
     }
 
