@@ -38,6 +38,9 @@ interface AdDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(items: List<AdEntity>)
+
+    @Query("DELETE FROM ads")
+    suspend fun clear()
 }
 
 @Dao
@@ -47,6 +50,9 @@ interface NewsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(items: List<NewsEntity>)
+
+    @Query("DELETE FROM news")
+    suspend fun clear()
 }
 
 @Dao
@@ -56,6 +62,9 @@ interface ProfessionalDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(items: List<ProfessionalEntity>)
+
+    @Query("DELETE FROM professionals")
+    suspend fun clear()
 }
 
 @Dao
@@ -65,6 +74,9 @@ interface OrientationDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(items: List<OrientationEntity>)
+
+    @Query("DELETE FROM orientation")
+    suspend fun clear()
 }
 
 @Dao
@@ -74,6 +86,9 @@ interface DemandDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(items: List<DemandStatEntity>)
+
+    @Query("DELETE FROM demand_stats")
+    suspend fun clear()
 }
 
 @Dao

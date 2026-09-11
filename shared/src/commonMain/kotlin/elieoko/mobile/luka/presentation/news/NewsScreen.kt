@@ -74,12 +74,19 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
                 Text("Nouveautés numériques", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 Text(
-                    "Les meilleurs articles de MIT Technology Review, Hacker News, Ars Technica, Wired et The Verge — lus pour le marché RDC.",
+                    "Les actualités publiées par le serveur, quand il y en a.",
                     color = Color.White.copy(0.85f),
                 )
             }
         }
         Spacer(Modifier.height(16.dp))
+        if (items.isEmpty()) {
+            Text(
+                "Pas de nouveautés côté serveur pour l’instant.",
+                color = Color.White.copy(0.85f),
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
+        }
         items.forEachIndexed { index, item ->
             var ready by remember(item.id) { mutableStateOf(false) }
             val scale by animateFloatAsState(if (ready) 1f else 0.94f, tween(420 + index * 80), label = "n")

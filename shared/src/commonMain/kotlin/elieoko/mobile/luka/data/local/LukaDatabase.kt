@@ -29,7 +29,7 @@ import elieoko.mobile.luka.data.local.entity.ProfessionalEntity
         DemandStatEntity::class,
         MetaEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @ConstructedBy(LukaDatabaseConstructor::class)

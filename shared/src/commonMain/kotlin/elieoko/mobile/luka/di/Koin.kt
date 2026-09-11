@@ -65,6 +65,7 @@ val lukaModule = module {
     single {
         val builder: RoomDatabase.Builder<LukaDatabase> = createLukaDatabaseBuilder()
         builder
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .fallbackToDestructiveMigrationOnDowngrade(true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)

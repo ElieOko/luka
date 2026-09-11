@@ -65,6 +65,13 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
             }
         }
         Spacer(Modifier.height(8.dp))
+        if (stats.isEmpty()) {
+            Text(
+                "Les tendances se construisent à partir des offres du backend.",
+                color = Color.White.copy(0.85f),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
+        }
         stats.forEachIndexed { index, item ->
             var shown by remember(item.profession.id) { mutableStateOf(false) }
             val progress by animateFloatAsState(if (shown) item.sharePercent / 100f else 0f, tween(700 + index * 90), label = "p")

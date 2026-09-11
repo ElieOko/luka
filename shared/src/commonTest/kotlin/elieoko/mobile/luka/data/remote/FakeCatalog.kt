@@ -1,0 +1,48 @@
+package elieoko.mobile.luka.data.remote
+
+import elieoko.mobile.luka.domain.model.JobOffer
+import elieoko.mobile.luka.domain.model.Profession
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
+
+/** Fixtures for unit tests only — never shipped in the app. */
+@OptIn(ExperimentalTime::class)
+object FakeCatalog {
+    private fun ago(days: Long): Long =
+        (Clock.System.now() - days.days).toEpochMilliseconds()
+
+    val offers = listOf(
+        JobOffer("o1", "Ingénieur logiciel Kotlin", "Rawbank", "https://ui-avatars.com/api/?name=Rawbank&background=E31B23&color=fff", Profession.SOFTWARE_ENGINEERING, "kinshasa", "Kinshasa", "CDI", "1 800 – 2 400 USD", "Construire les APIs mobile banking utilisées par des millions de Congolais.", "https://www.rawbank.cd/careers", ago(1), false),
+        JobOffer("o2", "Développeur Full-Stack", "Orange RDC", "https://ui-avatars.com/api/?name=Orange&background=FF7900&color=fff", Profession.SOFTWARE_ENGINEERING, "kinshasa", "Kinshasa", "CDI", "1 500 – 2 100 USD", "Applications self-care, USSD et portails clients.", "https://www.orange.cd/emploi", ago(2), false),
+        JobOffer("o3", "Mobile Engineer Flutter", "Maxicash", "https://ui-avatars.com/api/?name=Maxicash&background=1B5E20&color=fff", Profession.SOFTWARE_ENGINEERING, "kinshasa", "Kinshasa", "CDI", "1 600 – 2 200 USD", "Wallet mobile, QR et intégrations fintech.", "https://www.maxicash.cd/jobs", ago(3), true),
+        JobOffer("o4", "Ingénieur backend Java", "Vodacom DRC", "https://ui-avatars.com/api/?name=Vodacom&background=E60000&color=fff", Profession.SOFTWARE_ENGINEERING, "kinshasa", "Kinshasa", "CDI", "2 000 – 2 800 USD", "Plateforme M-Pesa et microservices à haute disponibilité.", "https://www.vodacom.cd/careers", ago(4), false),
+        JobOffer("o5", "Analyste cybersécurité SOC", "Equity BCDC", "https://ui-avatars.com/api/?name=BCDC&background=0D47A1&color=fff", Profession.CYBER_SECURITY, "kinshasa", "Kinshasa", "CDI", "1 700 – 2 300 USD", "Supervision 24/7, réponse à incident et durcissement SI.", "https://www.equitybcdc.cd/carriere", ago(1), false),
+        JobOffer("o6", "Pentester junior", "Airtel Congo", "https://ui-avatars.com/api/?name=Airtel&background=ED1C24&color=fff", Profession.CYBER_SECURITY, "kinshasa", "Kinshasa", "Freelance", "80 – 120 USD / j", "Tests d’intrusion sur apps mobiles et API partenaires.", "https://www.airtel.cd/careers", ago(5), true),
+        JobOffer("o7", "RSSIe adjoint", "Régideso", "https://ui-avatars.com/api/?name=Regideso&background=01579B&color=fff", Profession.CYBER_SECURITY, "kinshasa", "Kinshasa", "CDI", "2 200 – 3 000 USD", "Gouvernance ISO 27001 et sensibilisation des métiers.", "https://www.regideso.cd/emploi", ago(6), false),
+        JobOffer("o8", "Chef de projet digital", "UNICEF RDC", "https://ui-avatars.com/api/?name=UNICEF&background=00AEEF&color=fff", Profession.MANAGEMENT, "kinshasa", "Kinshasa", "CDD", "2 400 – 3 200 USD", "Piloter des programmes d’inclusion numérique des jeunes.", "https://jobs.unicef.org", ago(2), false),
+        JobOffer("o9", "Product Manager", "Illicocash", "https://ui-avatars.com/api/?name=Illicocash&background=6A1B9A&color=fff", Profession.MANAGEMENT, "kinshasa", "Kinshasa", "CDI", "1 900 – 2 600 USD", "Roadmap wallet et expérience marchands.", "https://www.illicocash.cd/jobs", ago(3), false),
+        JobOffer("o10", "Manager opérations mines", "TFM", "https://ui-avatars.com/api/?name=TFM&background=37474F&color=fff", Profession.MANAGEMENT, "lualaba", "Kolwezi", "CDI", "3 000 – 4 500 USD", "Coordination des équipes terrain et KPIs production.", "https://www.tfm.cd/careers", ago(4), false),
+        JobOffer("o11", "Contrôleur de gestion", "Bracongo", "https://ui-avatars.com/api/?name=Bracongo&background=C62828&color=fff", Profession.FINANCE, "kinshasa", "Kinshasa", "CDI", "1 400 – 1 900 USD", "Budgets, reporting et analyse de marges.", "https://www.bracongo.cd/carriere", ago(2), false),
+        JobOffer("o12", "Analyste crédit PME", "TMB", "https://ui-avatars.com/api/?name=TMB&background=AD1457&color=fff", Profession.FINANCE, "haut-katanga", "Lubumbashi", "CDI", "1 200 – 1 700 USD", "Étude des dossiers et scoring des entrepreneurs du Katanga.", "https://www.tmb.cd/jobs", ago(5), false),
+        JobOffer("o13", "Comptable senior", "SNEL", "https://ui-avatars.com/api/?name=SNEL&background=F9A825&color=111", Profession.FINANCE, "kinshasa", "Kinshasa", "CDI", "1 100 – 1 500 USD", "Clôture mensuelle, IFRS et relations audit.", "https://www.snel.cd/carriere", ago(7), false),
+        JobOffer("o14", "Responsable talent acquisition", "Celtel/Airtel", "https://ui-avatars.com/api/?name=TA&background=D32F2F&color=fff", Profession.HUMAN_RESOURCES, "kinshasa", "Kinshasa", "CDI", "1 300 – 1 800 USD", "Sourcing tech et campagnes campus Kinshasa.", "https://www.airtel.cd/jobs", ago(1), false),
+        JobOffer("o15", "Chargé de formation", "Banque Commerciale du Congo", "https://ui-avatars.com/api/?name=BCDC&background=1565C0&color=fff", Profession.HUMAN_RESOURCES, "kinshasa", "Kinshasa", "CDI", "1 000 – 1 400 USD", "Parcours d’onboarding et académie digitale interne.", "https://www.bcdc.cd/carriere", ago(8), false),
+        JobOffer("o16", "HRBP mines", "Kamoa Copper", "https://ui-avatars.com/api/?name=Kamoa&background=4E342E&color=fff", Profession.HUMAN_RESOURCES, "lualaba", "Kolwezi", "CDI", "1 800 – 2 500 USD", "Accompagnement des managers et climat social.", "https://www.kamoacopper.com/careers", ago(3), false),
+        JobOffer("o17", "Logisticien last-mile", "Jumia RDC", "https://ui-avatars.com/api/?name=Jumia&background=F57C00&color=fff", Profession.OTHER, "kinshasa", "Kinshasa", "CDI", "700 – 1 000 USD", "Optimiser les tournées Kinshasa et Lubumbashi.", "https://group.jumia.com/careers", ago(2), false),
+        JobOffer("o18", "Infirmier coordinateur", "MSF", "https://ui-avatars.com/api/?name=MSF&background=FFFFFF&color=E31B23", Profession.OTHER, "nord-kivu", "Goma", "CDD", "Indemnités + package", "Coordination clinique et formation des équipes locales.", "https://www.msf.org/jobs", ago(4), false),
+        JobOffer("o19", "Community manager", "Digital Congo", "https://ui-avatars.com/api/?name=DC&background=111111&color=fff", Profession.OTHER, "kinshasa", "Kinshasa", "CDI", "600 – 900 USD", "Récits des jeunes talents et campagnes Luka.", "https://www.digitalcongo.net/jobs", ago(6), true),
+        JobOffer("o20", "Data analyst junior", "INS RDC", "https://ui-avatars.com/api/?name=INS&background=1B5E20&color=fff", Profession.SOFTWARE_ENGINEERING, "kinshasa", "Gombe", "CDD", "900 – 1 300 USD", "Tableaux de bord emploi et statistiques provinciales.", "https://www.ins.cd/carriere", ago(9), false),
+        JobOffer("o21", "Électricien industriel", "SNEL", "https://ui-avatars.com/api/?name=SNEL&background=F9A825&color=111", Profession.ELECTRICITY, "kinshasa", "Limete", "CDI", "800 – 1 200 USD", "Maintenance HT/BT des postes urbains de Kinshasa.", "https://www.snel.cd/carriere", ago(2), false),
+        JobOffer("o22", "Technicien solaire", "BBOXX", "https://ui-avatars.com/api/?name=BBOXX&background=F57C00&color=fff", Profession.ENERGY, "nord-kivu", "Goma", "CDI", "700 – 1 100 USD", "Installations mini-grids et SAV dans l’Est.", "https://www.bboxx.com/careers", ago(3), false),
+        JobOffer("o23", "Géologue junior", "Kamoa Copper", "https://ui-avatars.com/api/?name=Kamoa&background=4E342E&color=fff", Profession.MINING, "lualaba", "Kolwezi", "CDI", "1 600 – 2 200 USD", "Cartographie et suivi de production.", "https://www.kamoacopper.com/careers", ago(1), false),
+        JobOffer("o24", "Conducteur de travaux", "Rawji Construction", "https://ui-avatars.com/api/?name=Rawji&background=37474F&color=fff", Profession.CIVIL_ENGINEERING, "kinshasa", "Ngaliema", "CDI", "1 200 – 1 800 USD", "Chantiers voirie et bâtiments Gombe / Ngaliema.", "https://www.rawji.cd/jobs", ago(4), false),
+        JobOffer("o25", "Mécanicien engins", "TFM", "https://ui-avatars.com/api/?name=TFM&background=455A64&color=fff", Profession.MECHANICS, "lualaba", "Kolwezi", "CDI", "1 100 – 1 600 USD", "Atelier mines, hydraulique et diagnostic.", "https://www.tfm.cd/careers", ago(5), false),
+        JobOffer("o26", "Infirmier coordinateur", "MSF", "https://ui-avatars.com/api/?name=MSF&background=FFFFFF&color=E31B23", Profession.HEALTH, "nord-kivu", "Goma", "CDD", "Indemnités + package", "Coordination clinique et formation des équipes locales.", "https://www.msf.org/jobs", ago(4), false),
+        JobOffer("o27", "Juriste minier", "Cabinet Kalala", "https://ui-avatars.com/api/?name=JK&background=1A237E&color=fff", Profession.LEGAL, "haut-katanga", "Lubumbashi", "CDI", "1 400 – 2 000 USD", "Contrats d’exploitation et compliance OHADA.", "https://www.kalala.cd/jobs", ago(6), false),
+        JobOffer("o28", "Ingénieur data", "Vodacom DRC", "https://ui-avatars.com/api/?name=Voda&background=E60000&color=fff", Profession.DATA_AI, "kinshasa", "Gombe", "CDI", "1 800 – 2 500 USD", "Scoring crédit et fraude M-Pesa.", "https://www.vodacom.cd/careers", ago(2), false),
+        JobOffer("o29", "UX designer", "Maxicash", "https://ui-avatars.com/api/?name=UX&background=6A1B9A&color=fff", Profession.DESIGN, "kinshasa", "Gombe", "CDI", "1 200 – 1 700 USD", "Parcours wallet et accessibilité low-tech.", "https://www.maxicash.cd/jobs", ago(3), true),
+        JobOffer("o30", "Commercial B2B fibre", "Airtel Congo", "https://ui-avatars.com/api/?name=Fibre&background=ED1C24&color=fff", Profession.SALES, "haut-katanga", "Lubumbashi", "CDI", "900 – 1 400 USD + primes", "Grandes entreprises du Copperbelt.", "https://www.airtel.cd/careers", ago(1), false),
+    )
+
+}
