@@ -15,13 +15,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +50,7 @@ fun OffersSeeAllScreen(
             onQuery = viewModel::onQuery,
             onCity = viewModel::onCity,
             onProfession = viewModel::onProfession,
+            onReset = viewModel::resetFilters,
             onDismiss = { showFilters = false },
             cities = state.cities,
             trades = state.trades,
@@ -73,13 +79,30 @@ fun OffersSeeAllScreen(
                 }
             },
         )
-        LazyColumn(
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        val ptr = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = state.refreshing,
+            onRefresh = viewModel::refresh,
+            state = ptr,
+            modifier = Modifier.fillMaxSize(),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    isRefreshing = state.refreshing,
+                    state = ptr,
+                    color = LukaRed,
+                    containerColor = Color.White,
+                )
+            },
         ) {
-            itemsIndexed(state.allOffers, key = { _, o -> o.id }) { index, offer ->
-                OfferCard(offer, index) {
-                    runCatching { uriHandler.openUri(offer.applyUrl) }
+            LazyColumn(
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                itemsIndexed(state.allOffers, key = { _, o -> o.id }) { index, offer ->
+                    OfferCard(offer, index) {
+                        runCatching { uriHandler.openUri(offer.applyUrl) }
+                    }
                 }
             }
         }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
+import elieoko.mobile.luka.presentation.components.LukaProgressBar
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
@@ -88,12 +88,7 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(99.dp)),
-                    color = LukaRed,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
+                LukaProgressBar(progress)
             }
         }
     }

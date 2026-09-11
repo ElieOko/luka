@@ -59,7 +59,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
     val planId = profile?.planId
     val isFree = planId.isNullOrBlank() || planId == "starter"
 
-    PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Soft) {
+    PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Cinematic) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = LukaBottomNavHeight + 24.dp),
@@ -81,7 +81,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     if (isFree) {
-                        Surface(color = LukaMist, shape = RoundedCornerShape(99.dp)) {
+                        Surface(color = Color.White.copy(alpha = 0.92f), shape = RoundedCornerShape(99.dp)) {
                             Text(
                                 "Gratuit",
                                 color = LukaRed,
@@ -92,10 +92,15 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                         }
                         Spacer(Modifier.height(6.dp))
                     }
-                    Text(profile?.displayName.orEmpty().ifBlank { "Ton profil" }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(
+                        profile?.displayName.orEmpty().ifBlank { "Ton profil" },
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                    )
                     Text(
                         listOfNotNull(profile?.profession?.title, profile?.regionId?.replaceFirstChar { it.uppercase() }).joinToString(" · "),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(0.8f),
                     )
                 }
             }
@@ -107,23 +112,21 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
             )
         }
         item {
-            OutlinedTextField(state.displayName, viewModel::onName, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
-        }
-        item {
-            OutlinedTextField(state.email, viewModel::onEmail, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
-        }
-        item {
-            OutlinedTextField(state.bio, viewModel::onBio, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(16.dp))
-        }
-        item {
-            LukaPrimaryButton("Enregistrer", viewModel::saveProfile)
-            if (state.message != null) {
-                Text(state.message.orEmpty(), color = LukaRed, modifier = Modifier.padding(top = 8.dp))
+            Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(state.displayName, viewModel::onName, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+                    OutlinedTextField(state.email, viewModel::onEmail, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+                    OutlinedTextField(state.bio, viewModel::onBio, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(16.dp))
+                    LukaPrimaryButton("Enregistrer", viewModel::saveProfile)
+                    if (state.message != null) {
+                        Text(state.message.orEmpty(), color = LukaRed)
+                    }
+                }
             }
         }
         item {
             TextButton(onClick = viewModel::resetDemo, modifier = Modifier.fillMaxWidth()) {
-                Text("Réinitialiser la démo", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Réinitialiser la démo", color = Color.White.copy(0.75f))
             }
         }
     }
