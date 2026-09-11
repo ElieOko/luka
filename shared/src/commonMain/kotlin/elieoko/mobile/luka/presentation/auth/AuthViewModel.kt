@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
+import elieoko.mobile.luka.domain.usecase.ResendOtpUseCase
 import elieoko.mobile.luka.domain.usecase.VerifyOtpUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ data class AuthUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val identifier: AuthIdentifier? = null,
+    val info: String? = null,
 ) {
     enum class Step { Identifier, Otp }
 }
@@ -24,19 +26,27 @@ data class AuthUiState(
 class AuthViewModel(
     private val requestOtp: RequestOtpUseCase,
     private val verifyOtp: VerifyOtpUseCase,
+    private val resendOtp: ResendOtpUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(AuthUiState())
     val state: StateFlow<AuthUiState> = _state
 
-    fun onInput(value: String) = _state.update { it.copy(input = value, error = null) }
+    fun onInput(value: String) = _state.update { it.copy(input = value, error = null, info = null) }
     fun onOtp(value: String) = _state.update { it.copy(otp = value.filter { ch -> ch.isDigit() }.take(6), error = null) }
 
     fun submitIdentifier() {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true, error = null, info = null) }
             runCatching { requestOtp(_state.value.input) }
                 .onSuccess { challenge ->
-                    _state.update { it.copy(loading = false, step = AuthUiState.Step.Otp, identifier = challenge.identifier) }
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            step = AuthUiState.Step.Otp,
+                            identifier = challenge.identifier,
+                            info = "Code envoyé par SMS.",
+                        )
+                    }
                 }
                 .onFailure { error ->
                     _state.update { it.copy(loading = false, error = error.message) }
@@ -47,8 +57,22 @@ class AuthViewModel(
     fun submitOtp() {
         val identifier = _state.value.identifier ?: return
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true, error = null, info = null) }
             runCatching { verifyOtp(identifier, _state.value.otp) }
+                .onFailure { error ->
+                    _state.update { it.copy(loading = false, error = error.message) }
+                }
+        }
+    }
+
+    fun resend() {
+        val identifier = _state.value.identifier ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true, error = null) }
+            runCatching { resendOtp(identifier) }
+                .onSuccess {
+                    _state.update { it.copy(loading = false, info = "Nouveau code envoyé.", otp = "") }
+                }
                 .onFailure { error ->
                     _state.update { it.copy(loading = false, error = error.message) }
                 }

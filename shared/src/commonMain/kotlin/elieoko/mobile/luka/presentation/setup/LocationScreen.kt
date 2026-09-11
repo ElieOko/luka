@@ -57,7 +57,7 @@ fun LocationScreen(viewModel: SetupViewModel = koinViewModel()) {
             Text("Ta ville", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CongoCatalog.cities.forEach { city ->
+                state.cities.forEach { city ->
                     FilterPill(city.name, state.selectedCityName == city.name) { viewModel.selectCity(city) }
                 }
             }

@@ -4,10 +4,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import elieoko.mobile.luka.core.AppConfig
 import elieoko.mobile.luka.core.CrashReporter
+import elieoko.mobile.luka.core.PhoneNumbers
 import elieoko.mobile.luka.core.PushNotifier
+import elieoko.mobile.luka.data.mapper.mergeInto
+import elieoko.mobile.luka.data.mapper.toAuthTokens
+import elieoko.mobile.luka.data.remote.LukaApi
+import elieoko.mobile.luka.data.remote.TokenStore
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.OtpChallenge
@@ -23,45 +28,57 @@ import kotlin.uuid.Uuid
 
 class SessionRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
-    private val config: AppConfig,
+    private val api: LukaApi,
+    private val tokenStore: TokenStore,
     private val pushNotifier: PushNotifier,
     private val crashReporter: CrashReporter,
 ) : SessionRepository {
 
-    override val session: Flow<UserSession?> = dataStore.data.map { it.toSession() }
+    override val session: Flow<UserSession?> = dataStore.data.map { prefs ->
+        prefs.toSession().also { current ->
+            tokenStore.set(current?.token, current?.refreshToken)
+        }
+    }
 
     override suspend fun current(): UserSession? = session.first()
 
     override suspend fun requestOtp(identifier: AuthIdentifier): OtpChallenge {
-        crashReporter.breadcrumb("otp_requested:${identifier.channel}")
+        check(identifier.channel == AuthChannel.PHONE) { "Indique un numéro congolais." }
+        val phone = PhoneNumbers.normalize(identifier.value)
+        crashReporter.breadcrumb("otp_requested:PHONE")
+        api.registerPhone(phone)
         dataStore.edit { prefs ->
-            prefs[Keys.pendingValue] = identifier.value
-            prefs[Keys.pendingChannel] = identifier.channel.name
+            prefs[Keys.pendingValue] = phone
+            prefs[Keys.pendingChannel] = AuthChannel.PHONE.name
         }
-        return OtpChallenge(identifier)
+        return OtpChallenge(AuthIdentifier(AuthChannel.PHONE, phone))
+    }
+
+    override suspend fun resendOtp(identifier: AuthIdentifier) {
+        val phone = PhoneNumbers.normalize(identifier.value)
+        api.resendOtp(phone)
+        crashReporter.breadcrumb("otp_resent")
     }
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun verifyOtp(identifier: AuthIdentifier, code: String): UserSession {
-        check(code == config.demoOtpCode) { "Code incorrect. Pour la démo, utilise ${config.demoOtpCode}." }
+        val phone = PhoneNumbers.normalize(identifier.value)
+        val payload = api.verifyOtp(phone, code)
+        val tokens = payload.data.toAuthTokens()
+        tokenStore.set(tokens.accessToken, tokens.refreshToken)
         val existing = current()
-        val profile = existing?.profile?.copy(identifier = identifier)
-            ?: UserProfile(
-                id = Uuid.random().toString(),
-                displayName = defaultName(identifier),
-                bio = "Je cherche mon prochain rôle en RDC.",
-                photoUrl = "",
-                identifier = identifier,
-                profession = null,
-                countryCode = null,
-                regionId = null,
-                planId = "starter",
-                extraProfessionIds = emptyList(),
-                analysisLaunched = false,
-                welcomeSeen = true,
-                visibleToRecruiters = false,
-            )
-        val session = UserSession(token = "luka_${profile.id}", profile = profile.copy(welcomeSeen = true))
+        val profile = tokens.user.mergeInto(
+            identifier = AuthIdentifier(AuthChannel.PHONE, tokens.user.phone ?: phone),
+            existing = existing?.profile,
+        ).copy(
+            id = tokens.user.userId?.toString() ?: existing?.profile?.id ?: Uuid.random().toString(),
+            welcomeSeen = true,
+        )
+        val session = UserSession(
+            token = tokens.accessToken,
+            refreshToken = tokens.refreshToken,
+            profile = profile,
+        )
         persist(session)
         pushNotifier.login(profile.id)
         crashReporter.breadcrumb("session_persisted")
@@ -70,18 +87,39 @@ class SessionRepositoryImpl(
 
     override suspend fun markWelcomeSeen() = update { it.copy(welcomeSeen = true) }
 
-    override suspend fun saveProfession(professionId: String) = update {
-        it.copy(profession = Profession.fromId(professionId))
+    override suspend fun saveProfession(professionId: String, domainId: Long?) {
+        update { it.copy(profession = Profession.fromId(professionId), domainId = domainId) }
+        if (domainId != null) {
+            runCatching { api.savePreferences(listOf(domainId)) }
+                .onFailure { crashReporter.capture(it) }
+        }
     }
 
-    override suspend fun saveLocation(countryCode: String, regionId: String) = update {
-        it.copy(countryCode = countryCode, regionId = regionId)
+    override suspend fun saveLocation(countryCode: String, regionId: String, cityName: String?) {
+        update { it.copy(countryCode = countryCode, regionId = regionId, cityName = cityName) }
     }
 
     override suspend fun markAnalysisLaunched() = update { it.copy(analysisLaunched = true) }
 
-    override suspend fun updateProfile(displayName: String, bio: String) = update {
-        it.copy(displayName = displayName, bio = bio)
+    override suspend fun updateProfile(displayName: String, bio: String, email: String) {
+        update {
+            it.copy(
+                displayName = displayName,
+                bio = bio,
+                email = email.ifBlank { it.email },
+            )
+        }
+        val mail = email.ifBlank { current()?.profile?.email.orEmpty() }
+            .ifBlank {
+                current()?.profile?.identifier?.takeIf { it.channel == AuthChannel.EMAIL }?.value.orEmpty()
+            }
+        if (mail.contains("@")) {
+            runCatching { api.completeProfile(displayName, mail) }
+                .onSuccess { dto ->
+                    update { current -> dto.mergeInto(current.identifier, current) }
+                }
+                .onFailure { crashReporter.capture(it) }
+        }
     }
 
     override suspend fun selectPlan(planId: String, extraProfessionIds: List<String>) = update {
@@ -98,6 +136,7 @@ class SessionRepositoryImpl(
 
     override suspend fun resetDemo() {
         pushNotifier.logout()
+        tokenStore.clear()
         dataStore.edit { it.clear() }
     }
 
@@ -108,8 +147,10 @@ class SessionRepositoryImpl(
 
     private suspend fun persist(session: UserSession) {
         val profile = session.profile
+        tokenStore.set(session.token, session.refreshToken)
         dataStore.edit { prefs ->
             prefs[Keys.token] = session.token
+            prefs[Keys.refresh] = session.refreshToken
             prefs[Keys.userId] = profile.id
             prefs[Keys.displayName] = profile.displayName
             prefs[Keys.bio] = profile.bio
@@ -126,6 +167,10 @@ class SessionRepositoryImpl(
             prefs[Keys.visible] = profile.visibleToRecruiters
             prefs[Keys.cvName] = profile.cvFileName
             prefs[Keys.cvMime] = profile.cvMime
+            prefs[Keys.email] = profile.email
+            prefs[Keys.cityName] = profile.cityName.orEmpty()
+            if (profile.domainId != null) prefs[Keys.domainId] = profile.domainId else prefs.remove(Keys.domainId)
+            prefs[Keys.profileCompleted] = profile.profileCompleted
         }
     }
 
@@ -137,6 +182,7 @@ class SessionRepositoryImpl(
         val professionId = this[Keys.profession].orEmpty()
         return UserSession(
             token = token,
+            refreshToken = this[Keys.refresh].orEmpty(),
             profile = UserProfile(
                 id = this[Keys.userId].orEmpty(),
                 displayName = this[Keys.displayName].orEmpty(),
@@ -153,19 +199,17 @@ class SessionRepositoryImpl(
                 visibleToRecruiters = this[Keys.visible] ?: false,
                 cvFileName = this[Keys.cvName].orEmpty(),
                 cvMime = this[Keys.cvMime].orEmpty(),
+                email = this[Keys.email].orEmpty(),
+                cityName = this[Keys.cityName]?.takeIf { it.isNotBlank() },
+                domainId = this[Keys.domainId],
+                profileCompleted = this[Keys.profileCompleted] ?: false,
             ),
         )
     }
 
-    private fun defaultName(identifier: AuthIdentifier): String =
-        if (identifier.channel == AuthChannel.EMAIL) {
-            identifier.value.substringBefore("@").replaceFirstChar { it.uppercase() }
-        } else {
-            "Talent Luka"
-        }
-
     private object Keys {
         val token = stringPreferencesKey("token")
+        val refresh = stringPreferencesKey("refresh")
         val userId = stringPreferencesKey("userId")
         val displayName = stringPreferencesKey("displayName")
         val bio = stringPreferencesKey("bio")
@@ -182,6 +226,10 @@ class SessionRepositoryImpl(
         val visible = booleanPreferencesKey("visible")
         val cvName = stringPreferencesKey("cvName")
         val cvMime = stringPreferencesKey("cvMime")
+        val email = stringPreferencesKey("email")
+        val cityName = stringPreferencesKey("cityName")
+        val domainId = longPreferencesKey("domainId")
+        val profileCompleted = booleanPreferencesKey("profileCompleted")
         val pendingValue = stringPreferencesKey("pendingValue")
         val pendingChannel = stringPreferencesKey("pendingChannel")
     }

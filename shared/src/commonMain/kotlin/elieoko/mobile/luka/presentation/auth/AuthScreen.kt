@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,9 +47,9 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
             Spacer(Modifier.height(8.dp))
             Text(
                 if (state.step == AuthUiState.Step.Identifier)
-                    "Numéro Congolais ou e-mail. Comme WhatsApp, tu restes connecté même après avoir quitté Luka."
+                    "Numéro congolais. Un code SMS, puis tu restes connecté."
                 else
-                    "Code envoyé à ${state.identifier?.value}. Démo : 123456",
+                    "Code envoyé par SMS à ${state.identifier?.value}.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -58,10 +59,10 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
                     value = state.input,
                     onValueChange = viewModel::onInput,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Téléphone ou e-mail") },
+                    label = { Text("Téléphone") },
                     placeholder = { Text("+243 81 000 0000") },
                     shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                 )
             } else {
@@ -71,6 +72,12 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
                     value = state.otp,
                     onValueChange = viewModel::onOtp,
                 )
+                TextButton(onClick = viewModel::resend, enabled = !state.loading) {
+                    Text("Renvoyer le code")
+                }
+            }
+            AnimatedVisibility(state.info != null && state.error == null) {
+                Text(state.info.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
             }
             AnimatedVisibility(state.error != null) {
                 Text(state.error.orEmpty(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))

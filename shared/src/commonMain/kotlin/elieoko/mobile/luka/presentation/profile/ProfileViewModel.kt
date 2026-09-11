@@ -22,6 +22,7 @@ data class ProfileUiState(
     val profile: UserProfile? = null,
     val displayName: String = "",
     val bio: String = "",
+    val email: String = "",
     val plans: List<SubscriptionPlan> = emptyList(),
     val extraProfession: Profession? = null,
     val message: String? = null,
@@ -45,6 +46,7 @@ class ProfileViewModel(
             profile = profile,
             displayName = local.displayName.ifBlank { profile.displayName },
             bio = local.bio.ifBlank { profile.bio },
+            email = local.email.ifBlank { profile.email },
             extraProfession = local.extraProfession
                 ?: profile.extraProfessionIds.firstOrNull()?.let(Profession::fromId),
         )
@@ -52,12 +54,19 @@ class ProfileViewModel(
 
     fun onName(value: String) = draft.update { it.copy(displayName = value, message = null) }
     fun onBio(value: String) = draft.update { it.copy(bio = value, message = null) }
+    fun onEmail(value: String) = draft.update { it.copy(email = value, message = null) }
     fun onProfessionalQuery(value: String) = draft.update { it.copy(professionalQuery = value) }
     fun onExtraProfession(profession: Profession) = draft.update { it.copy(extraProfession = profession) }
 
     fun saveProfile() {
         viewModelScope.launch {
-            runCatching { updateProfile(draft.value.displayName.ifBlank { state.value.displayName }, draft.value.bio.ifBlank { state.value.bio }) }
+            runCatching {
+                updateProfile(
+                    draft.value.displayName.ifBlank { state.value.displayName },
+                    draft.value.bio.ifBlank { state.value.bio },
+                    draft.value.email.ifBlank { state.value.email },
+                )
+            }
                 .onSuccess { draft.update { it.copy(message = "Profil mis à jour") } }
                 .onFailure { error -> draft.update { it.copy(message = error.message) } }
         }

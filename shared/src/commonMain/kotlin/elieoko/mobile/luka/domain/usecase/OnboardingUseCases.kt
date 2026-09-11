@@ -5,14 +5,14 @@ import elieoko.mobile.luka.domain.repository.CatalogRepository
 import elieoko.mobile.luka.domain.repository.SessionRepository
 
 class CompleteProfessionUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(profession: Profession) {
-        sessions.saveProfession(profession.id)
+    suspend operator fun invoke(profession: Profession, domainId: Long? = null) {
+        sessions.saveProfession(profession.id, domainId)
     }
 }
 
 class CompleteLocationUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(regionId: String) {
-        sessions.saveLocation(countryCode = "CD", regionId = regionId)
+    suspend operator fun invoke(regionId: String, cityName: String? = null) {
+        sessions.saveLocation(countryCode = "CD", regionId = regionId, cityName = cityName)
     }
 }
 
@@ -24,14 +24,18 @@ class LaunchInfiniteAnalysisUseCase(
         val current = sessions.current() ?: error("Session expirée")
         check(!current.profile.analysisLaunched) { "Les analyses infinies sont déjà en cours." }
         catalog.seedIfNeeded()
+        catalog.refreshOffers(current.profile)
         sessions.markAnalysisLaunched()
     }
 }
 
 class UpdateProfileUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(displayName: String, bio: String) {
+    suspend operator fun invoke(displayName: String, bio: String, email: String = "") {
         require(displayName.trim().length >= 2) { "Le nom est trop court." }
-        sessions.updateProfile(displayName.trim(), bio.trim())
+        if (email.isNotBlank()) {
+            require(email.contains("@") && email.contains(".")) { "E-mail invalide." }
+        }
+        sessions.updateProfile(displayName.trim(), bio.trim(), email.trim())
     }
 }
 

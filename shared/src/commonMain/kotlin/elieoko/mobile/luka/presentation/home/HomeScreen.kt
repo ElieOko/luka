@@ -93,6 +93,8 @@ fun HomeScreen(
             onCity = viewModel::onCity,
             onProfession = viewModel::onProfession,
             onDismiss = { showFilters = false },
+            cities = state.cities,
+            trades = state.trades,
         )
     }
 

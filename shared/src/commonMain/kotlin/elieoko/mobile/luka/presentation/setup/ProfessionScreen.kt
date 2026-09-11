@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.theme.LukaMist
@@ -44,7 +43,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
     var query by remember { mutableStateOf("") }
-    val grouped = Profession.entries
+    val grouped = state.trades
         .filter {
             it.title.contains(query, true) ||
                 it.family.contains(query, true) ||
@@ -70,11 +69,13 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                 singleLine = true,
             )
             state.selectedProfession?.let { selected ->
+                val chip = state.trades.firstOrNull { it.profession == selected && it.domainId == state.selectedDomainId }
+                    ?: state.trades.firstOrNull { it.profession == selected }
                 Spacer(Modifier.height(12.dp))
                 Surface(color = LukaMist, shape = RoundedCornerShape(18.dp)) {
                     Column(Modifier.padding(14.dp)) {
-                        Text(selected.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(selected.tagline, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(chip?.title ?: selected.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(chip?.tagline ?: selected.tagline, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -94,14 +95,14 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                     modifier = Modifier.padding(top = 14.dp, bottom = 6.dp),
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    professions.forEach { profession ->
-                        val selected = state.selectedProfession == profession
+                    professions.forEach { chip ->
+                        val selected = state.selectedProfession == chip.profession && state.selectedDomainId == chip.domainId
                         val scale by animateFloatAsState(if (selected) 1.04f else 1f)
                         val selectedColor by animateColorAsState(if (selected) LukaRed else LukaMist)
                         FilterChip(
                             selected = selected,
-                            onClick = { viewModel.selectProfession(profession) },
-                            label = { Text(profession.title) },
+                            onClick = { viewModel.selectProfession(chip) },
+                            label = { Text(chip.title) },
                             modifier = Modifier.scale(scale),
                             shape = RoundedCornerShape(22.dp),
                             colors = FilterChipDefaults.filterChipColors(

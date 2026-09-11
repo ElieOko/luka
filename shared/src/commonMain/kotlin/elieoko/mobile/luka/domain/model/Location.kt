@@ -60,4 +60,24 @@ object CongoCatalog {
     )
 
     fun citiesIn(regionId: String?) = if (regionId.isNullOrBlank()) cities else cities.filter { it.regionId == regionId }
+
+    fun slug(value: String): String =
+        value.lowercase()
+            .replace("é", "e").replace("è", "e").replace("ê", "e")
+            .replace("à", "a").replace("â", "a")
+            .replace("ô", "o").replace("î", "i").replace("ï", "i")
+            .replace("ç", "c").replace("'", "")
+            .replace(Regex("[^a-z0-9]+"), "-")
+            .trim('-')
+
+    fun regionIdFor(city: String?, province: String?): String {
+        if (!province.isNullOrBlank()) {
+            val fromProvince = slug(province)
+            if (regions.any { it.id == fromProvince }) return fromProvince
+            return fromProvince
+        }
+        val name = city?.substringBefore(",")?.trim().orEmpty()
+        cities.firstOrNull { it.name.equals(name, true) }?.let { return it.regionId }
+        return slug(name).ifBlank { "rdc" }
+    }
 }
