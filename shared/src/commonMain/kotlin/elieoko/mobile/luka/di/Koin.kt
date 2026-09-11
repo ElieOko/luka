@@ -7,6 +7,7 @@ import elieoko.mobile.luka.core.CrashReporter
 import elieoko.mobile.luka.core.createHttpClient
 import elieoko.mobile.luka.core.createPushNotifier
 import elieoko.mobile.luka.data.local.LukaDatabase
+import elieoko.mobile.luka.data.local.MIGRATION_1_2
 import elieoko.mobile.luka.data.local.createLukaDatabaseBuilder
 import elieoko.mobile.luka.data.local.createSessionDataStore
 import elieoko.mobile.luka.data.platform.SentryCrashReporter
@@ -65,8 +66,8 @@ val lukaModule = module {
     single {
         val builder: RoomDatabase.Builder<LukaDatabase> = createLukaDatabaseBuilder()
         builder
+            .addMigrations(MIGRATION_1_2)
             .fallbackToDestructiveMigration(dropAllTables = true)
-            .fallbackToDestructiveMigrationOnDowngrade(true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
