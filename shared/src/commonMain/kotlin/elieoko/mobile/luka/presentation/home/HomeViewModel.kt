@@ -34,6 +34,7 @@ data class HomeUiState(
     val allOffers: List<JobOffer> = emptyList(),
     val cities: List<City> = CongoCatalog.cities,
     val trades: List<TradeChip> = TradeChip.fromLocal(),
+    val refreshing: Boolean = false,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -46,13 +47,14 @@ class HomeViewModel(
     private val filters = MutableStateFlow(OfferFilters())
     private val cities = MutableStateFlow(CongoCatalog.cities)
     private val trades = MutableStateFlow(TradeChip.fromLocal())
+    private val refreshing = MutableStateFlow(false)
 
     val state: StateFlow<HomeUiState> = combine(
         sessions.session.filterNotNull(),
         query,
         live,
         filters,
-        combine(cities, trades) { c, t -> c to t },
+        combine(cities, trades, refreshing) { c, t, r -> Triple(c, t, r) },
     ) { session, q, liveOffer, currentFilters, catalogUi ->
         arrayOf(session, q, liveOffer, currentFilters, catalogUi)
     }
@@ -61,7 +63,8 @@ class HomeViewModel(
             val q = args[1] as String
             val liveOffer = args[2] as JobOffer?
             val currentFilters = args[3] as OfferFilters
-            val catalogUi = args[4] as Pair<List<City>, List<TradeChip>>
+            @Suppress("UNCHECKED_CAST")
+            val catalogUi = args[4] as Triple<List<City>, List<TradeChip>, Boolean>
             catalog.observeFeed(session.profile).map { feed ->
                 val needle = q.trim()
                 var offers = feed.offers.applyFilters(currentFilters)
@@ -80,6 +83,7 @@ class HomeViewModel(
                     allOffers = offers,
                     cities = catalogUi.first,
                     trades = catalogUi.second,
+                    refreshing = catalogUi.third,
                 )
             }
         }
@@ -89,15 +93,7 @@ class HomeViewModel(
         viewModelScope.launch {
             catalog.observeLiveOffers().collect { live.value = it }
         }
-        viewModelScope.launch {
-            runCatching {
-                catalog.seedIfNeeded()
-                val public = catalog.loadPublicCatalog()
-                cities.value = public.cities
-                trades.value = public.trades
-                catalog.refreshOffers(sessions.current()?.profile)
-            }
-        }
+        viewModelScope.launch { loadFromBackend() }
     }
 
     fun onQuery(value: String) {
@@ -107,7 +103,28 @@ class HomeViewModel(
     fun onRegion(id: String?) = filters.update { it.copy(regionId = id, city = null) }
     fun onCity(name: String?) = filters.update { it.copy(city = name) }
     fun onProfession(id: String?) = filters.update { it.copy(professionId = id) }
-    fun clearFilters() {
+
+    fun resetFilters() {
         filters.value = OfferFilters()
+        query.value = ""
+    }
+
+    fun refresh() {
+        if (refreshing.value) return
+        viewModelScope.launch {
+            refreshing.value = true
+            loadFromBackend()
+            refreshing.value = false
+        }
+    }
+
+    private suspend fun loadFromBackend() {
+        runCatching {
+            catalog.seedIfNeeded()
+            val public = catalog.loadPublicCatalog()
+            cities.value = public.cities
+            trades.value = public.trades
+            catalog.refreshOffers(sessions.current()?.profile)
+        }
     }
 }

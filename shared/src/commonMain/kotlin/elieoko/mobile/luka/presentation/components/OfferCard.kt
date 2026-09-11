@@ -93,11 +93,13 @@ fun FilterBottomSheet(
     onQuery: (String) -> Unit,
     onCity: (String?) -> Unit,
     onProfession: (String?) -> Unit,
+    onReset: () -> Unit,
     onDismiss: () -> Unit,
     cities: List<elieoko.mobile.luka.domain.model.City> = CongoCatalog.cities,
     trades: List<elieoko.mobile.luka.domain.model.TradeChip> = elieoko.mobile.luka.domain.model.TradeChip.fromLocal(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val canReset = !filters.isEmpty || query.isNotBlank()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -107,7 +109,7 @@ fun FilterBottomSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .heightIn(max = 380.dp)
+                .heightIn(max = 420.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 20.dp),
@@ -148,6 +150,14 @@ fun FilterBottomSheet(
                         onProfession(chip.profession.id)
                     }
                 }
+            }
+            Spacer(Modifier.height(16.dp))
+            TextButton(
+                onClick = onReset,
+                enabled = canReset,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Réinitialiser les filtres", color = if (canReset) LukaRed else MaterialTheme.colorScheme.outline, fontWeight = FontWeight.Bold)
             }
         }
     }

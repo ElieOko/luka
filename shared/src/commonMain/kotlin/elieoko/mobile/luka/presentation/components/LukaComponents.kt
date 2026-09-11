@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -80,6 +81,24 @@ fun LukaPrimaryButton(
         contentPadding = PaddingValues(horizontal = 20.dp),
     ) {
         Text(text, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+fun LukaProgressBar(progress: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(10.dp)
+            .clip(RoundedCornerShape(99.dp))
+            .background(LukaRed.copy(alpha = 0.22f)),
+    ) {
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .background(LukaRed),
+        )
     }
 }
 
