@@ -15,17 +15,17 @@ class RequestOtpUseCase(private val sessions: SessionRepository) {
     companion object {
         fun parseIdentifier(raw: String): AuthIdentifier {
             val value = raw.trim()
-            require(value.isNotBlank()) { "Indique un numéro ou un e-mail." }
-            val channel = if (value.contains("@")) AuthChannel.EMAIL else AuthChannel.PHONE
-            if (channel == AuthChannel.EMAIL) {
-                require(value.contains(".") && value.length >= 6) { "E-mail invalide." }
-            } else {
-                val digits = value.filter { it.isDigit() }
-                require(digits.length >= 9) { "Numéro trop court. Exemple : +243 81 000 0000" }
-            }
-            return AuthIdentifier(channel, value)
+            require(value.isNotBlank()) { "Indique un numéro congolais." }
+            require(!value.contains("@")) { "Indique un numéro congolais. L’e-mail arrive plus tard." }
+            val digits = value.filter { it.isDigit() }
+            require(digits.length >= 9) { "Numéro trop court. Exemple : +243 81 000 0000" }
+            return AuthIdentifier(AuthChannel.PHONE, value)
         }
     }
+}
+
+class ResendOtpUseCase(private val sessions: SessionRepository) {
+    suspend operator fun invoke(identifier: AuthIdentifier) = sessions.resendOtp(identifier)
 }
 
 class VerifyOtpUseCase(private val sessions: SessionRepository) {

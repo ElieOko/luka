@@ -7,6 +7,7 @@ package elieoko.mobile.luka.core
 data class AppConfig(
     val sentryDsn: String = "",
     val oneSignalAppId: String = "",
+    val apiBaseUrl: String = "https://server.casanayo.com",
     val stompUrl: String = "wss://api.luka.cd/ws",
     val stompDestination: String = "/topic/offers.rdc",
     val stompEnabled: Boolean = false,

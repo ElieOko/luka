@@ -16,11 +16,16 @@ data class UserProfile(
     val visibleToRecruiters: Boolean,
     val cvFileName: String = "",
     val cvMime: String = "",
+    val email: String = "",
+    val cityName: String? = null,
+    val domainId: Long? = null,
+    val profileCompleted: Boolean = false,
 )
 
 data class UserSession(
     val token: String,
     val profile: UserProfile,
+    val refreshToken: String = "",
 ) {
     val isAuthenticated: Boolean get() = token.isNotBlank()
     val needsWelcome: Boolean get() = !profile.welcomeSeen

@@ -26,6 +26,9 @@ interface OfferDao {
 
     @Query("SELECT COUNT(*) FROM offers")
     suspend fun count(): Int
+
+    @Query("DELETE FROM offers")
+    suspend fun clear()
 }
 
 @Dao

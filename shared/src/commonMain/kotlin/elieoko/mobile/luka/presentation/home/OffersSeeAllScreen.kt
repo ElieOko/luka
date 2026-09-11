@@ -46,6 +46,8 @@ fun OffersSeeAllScreen(
             onCity = viewModel::onCity,
             onProfession = viewModel::onProfession,
             onDismiss = { showFilters = false },
+            cities = state.cities,
+            trades = state.trades,
         )
     }
     Column(Modifier.fillMaxSize()) {

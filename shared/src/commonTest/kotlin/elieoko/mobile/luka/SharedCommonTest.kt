@@ -11,7 +11,14 @@ import elieoko.mobile.luka.domain.usecase.OfferFilters
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
 import elieoko.mobile.luka.domain.usecase.applyFilters
+import elieoko.mobile.luka.domain.usecase.withPolicy
+import elieoko.mobile.luka.data.mapper.toAuthTokens
+import elieoko.mobile.luka.data.mapper.toCity
+import elieoko.mobile.luka.data.mapper.toJobOffer
+import elieoko.mobile.luka.data.remote.ApiException
 import elieoko.mobile.luka.data.remote.FakeCatalog
+import elieoko.mobile.luka.data.remote.dto.CongoCityDto
+import elieoko.mobile.luka.data.remote.dto.StoredJobOfferDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -73,9 +80,9 @@ class LukaDomainTest {
     }
 
     @Test
-    fun phoneAndEmailAreAccepted() {
+    fun phoneIsAcceptedAndEmailIsRejected() {
         assertEquals(AuthChannel.PHONE, RequestOtpUseCase.parseIdentifier("+243810000000").channel)
-        assertEquals(AuthChannel.EMAIL, RequestOtpUseCase.parseIdentifier("grace@luka.cd").channel)
+        assertFails { RequestOtpUseCase.parseIdentifier("grace@luka.cd") }
         assertFails { RequestOtpUseCase.parseIdentifier("12") }
     }
 
@@ -109,6 +116,95 @@ class LukaDomainTest {
         assertEquals(setOf(Profession.FINANCE), allowed)
         val pro = FeedPolicy.allowedProfessions(profile, FakeCatalog.plans.first { it.id == "pro" })
         assertTrue(pro.containsAll(Profession.entries))
+    }
+
+    @Test
+    fun congoPhoneIsNormalized() {
+        assertEquals("+243810000000", elieoko.mobile.luka.core.PhoneNumbers.normalize("0810000000"))
+        assertEquals("+243810000000", elieoko.mobile.luka.core.PhoneNumbers.normalize("+243 81 000 0000"))
+        assertEquals("+243810000000", elieoko.mobile.luka.core.PhoneNumbers.normalize("810000000"))
+    }
+
+    @Test
+    fun catalogNamesMapToLocalProfessions() {
+        assertEquals(Profession.SOFTWARE_ENGINEERING, Profession.fromCatalogName("Développement logiciel"))
+        assertEquals(Profession.CYBER_SECURITY, Profession.fromCatalogName("Cybersécurité"))
+        assertEquals(Profession.TELECOM, Profession.fromCatalogName("Télécom & réseaux"))
+        assertEquals(Profession.HUMAN_RESOURCES, Profession.fromCatalogName("Ressources humaines"))
+        assertEquals(Profession.SALES, Profession.fromCatalogName("Commercial"))
+    }
+
+    @Test
+    fun cityProvinceBecomesRegionSlug() {
+        val city = CongoCityDto(21, "Kinshasa", "Kinshasa", true).toCity()
+        assertEquals("kinshasa", city.regionId)
+        assertEquals("Kinshasa", city.name)
+        val goma = CongoCityDto(10, "Goma", "Nord-Kivu", true).toCity()
+        assertEquals("nord-kivu", goma.regionId)
+    }
+
+    @Test
+    fun storedOfferMapsToJobOffer() {
+        val dto = StoredJobOfferDto(
+            id = 58,
+            searchAgent = 1,
+            title = "Assistant IT — position nationale",
+            employer = "AVSI",
+            city = "Kinshasa",
+            province = null,
+            opportunityType = "Emploi",
+            contractType = "3 mois, renouvelables",
+            skills = listOf("Support utilisateurs", "Maintenance informatique"),
+            advertisementUrl = "https://www.avsi.org/en/work-with-us/jobs/V-154",
+            applicationUrl = null,
+            publicationDate = "2026-09-01",
+        )
+        val offer = dto.toJobOffer()
+        assertEquals("58", offer.id)
+        assertEquals("AVSI", offer.company)
+        assertEquals("Kinshasa", offer.city)
+        assertEquals("kinshasa", offer.regionId)
+        assertEquals(dto.advertisementUrl, offer.applyUrl)
+        assertEquals(Profession.SOFTWARE_ENGINEERING, offer.profession)
+        assertTrue(offer.postedAtEpochMs > 0)
+        assertTrue(offer.summary.contains("Support"))
+    }
+
+    @Test
+    fun authPayloadReadsNestedTokens() {
+        val json = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"accessToken":"aaa","refreshToken":"bbb","profile":{"userId":3,"phone":"+243810000000","username":"Grace","email":null,"isPremium":false,"isCertified":false,"profileCompleted":false}}""",
+        )
+        val tokens = json.toAuthTokens()
+        assertEquals("aaa", tokens.accessToken)
+        assertEquals("bbb", tokens.refreshToken)
+        assertEquals(3L, tokens.user.userId)
+        assertEquals("+243810000000", tokens.user.phone)
+    }
+
+    @Test
+    fun apiErrorMessageIsReadFromBody() {
+        val error = ApiException.fromBody(
+            400,
+            """{"message":"Code OTP invalide ou expiré.","detailMessage":"Code OTP invalide ou expiré."}""",
+        )
+        assertEquals("Code OTP invalide ou expiré.", error.message)
+    }
+
+    @Test
+    fun feedPolicyKeepsRemoteDomainOffers() {
+        val profile = session(profession = Profession.SOFTWARE_ENGINEERING).profile.copy(domainId = 1)
+        val feed = elieoko.mobile.luka.domain.model.HomeFeed(
+            offers = FakeCatalog.offers,
+            ads = emptyList(),
+            news = emptyList(),
+            stats = emptyList(),
+            orientation = emptyList(),
+            professionals = emptyList(),
+            topProfession = null,
+        )
+        val filtered = feed.withPolicy(profile, FakeCatalog.plans.first { it.id == "starter" })
+        assertEquals(FakeCatalog.offers.size, filtered.offers.size)
     }
 
     private fun session(

@@ -10,8 +10,10 @@ import elieoko.mobile.luka.data.local.LukaDatabase
 import elieoko.mobile.luka.data.local.createLukaDatabaseBuilder
 import elieoko.mobile.luka.data.local.createSessionDataStore
 import elieoko.mobile.luka.data.platform.SentryCrashReporter
+import elieoko.mobile.luka.data.remote.LukaApi
 import elieoko.mobile.luka.data.remote.OfferStream
 import elieoko.mobile.luka.data.remote.StompOfferStream
+import elieoko.mobile.luka.data.remote.TokenStore
 import elieoko.mobile.luka.data.repository.CatalogRepositoryImpl
 import elieoko.mobile.luka.data.repository.SessionRepositoryImpl
 import elieoko.mobile.luka.domain.repository.CatalogRepository
@@ -20,6 +22,7 @@ import elieoko.mobile.luka.domain.usecase.CompleteLocationUseCase
 import elieoko.mobile.luka.domain.usecase.CompleteProfessionUseCase
 import elieoko.mobile.luka.domain.usecase.LaunchInfiniteAnalysisUseCase
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
+import elieoko.mobile.luka.domain.usecase.ResendOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
 import elieoko.mobile.luka.domain.usecase.SelectPlanUseCase
 import elieoko.mobile.luka.domain.usecase.UpdateProfileUseCase
@@ -53,7 +56,9 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
 val lukaModule = module {
     single { AppConfig() }
     single { Json { ignoreUnknownKeys = true; isLenient = true } }
+    single { TokenStore() }
     single { createHttpClient() }
+    single { LukaApi(createHttpClient(), get(), get(), get()) }
     single<CrashReporter> { SentryCrashReporter(get()) }
     single { createPushNotifier(get()) }
     single { createSessionDataStore() }
@@ -70,6 +75,7 @@ val lukaModule = module {
     singleOf(::CatalogRepositoryImpl) bind CatalogRepository::class
     factoryOf(::ResolveDestinationUseCase)
     factoryOf(::RequestOtpUseCase)
+    factoryOf(::ResendOtpUseCase)
     factoryOf(::VerifyOtpUseCase)
     factoryOf(::CompleteProfessionUseCase)
     factoryOf(::CompleteLocationUseCase)

@@ -40,5 +40,45 @@ enum class Profession(
     companion object {
         fun fromId(id: String?): Profession =
             entries.firstOrNull { it.id == id } ?: SOFTWARE_ENGINEERING
+
+        fun fromCatalogName(name: String): Profession {
+            val key = name.lowercase()
+                .replace("é", "e").replace("è", "e").replace("ê", "e")
+                .replace("à", "a").replace("ô", "o")
+            return when {
+                "cyber" in key -> CYBER_SECURITY
+                "data" in key || "analyt" in key -> DATA_AI
+                "fintech" in key || "digital" in key -> SOFTWARE_ENGINEERING
+                "develop" in key || "logiciel" in key -> SOFTWARE_ENGINEERING
+                "support" in key || "systeme" in key -> SOFTWARE_ENGINEERING
+                "telecom" in key || "reseau" in key -> TELECOM
+                "commercial" in key -> SALES
+                "finance" in key -> FINANCE
+                "management" in key -> MANAGEMENT
+                "marketing" in key -> MARKETING
+                "humaine" in key || "rh" in key -> HUMAN_RESOURCES
+                "design" in key || "ux" in key -> DESIGN
+                else -> OTHER
+            }
+        }
     }
 }
+
+data class TradeChip(
+    val profession: Profession,
+    val title: String,
+    val family: String,
+    val tagline: String,
+    val domainId: Long?,
+) {
+    companion object {
+        fun fromLocal(): List<TradeChip> = Profession.entries.map {
+            TradeChip(it, it.title, it.family, it.tagline, domainId = null)
+        }
+    }
+}
+
+data class PublicCatalog(
+    val cities: List<City>,
+    val trades: List<TradeChip>,
+)

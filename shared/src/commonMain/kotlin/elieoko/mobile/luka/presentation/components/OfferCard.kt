@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.JobOffer
-import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.usecase.OfferFilters
 import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
@@ -95,6 +94,8 @@ fun FilterBottomSheet(
     onCity: (String?) -> Unit,
     onProfession: (String?) -> Unit,
     onDismiss: () -> Unit,
+    cities: List<elieoko.mobile.luka.domain.model.City> = CongoCatalog.cities,
+    trades: List<elieoko.mobile.luka.domain.model.TradeChip> = elieoko.mobile.luka.domain.model.TradeChip.fromLocal(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     ModalBottomSheet(
@@ -132,7 +133,7 @@ fun FilterBottomSheet(
                 TextButton(onClick = { onCity(null) }) { Text("Toutes", color = LukaRed) }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(CongoCatalog.cities, key = { it.id }) { city ->
+                items(cities, key = { it.id }) { city ->
                     FilterPill(city.name, filters.city == city.name) { onCity(city.name) }
                 }
             }
@@ -142,9 +143,9 @@ fun FilterBottomSheet(
                 TextButton(onClick = { onProfession(null) }) { Text("Tous", color = LukaRed) }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(Profession.entries, key = { it.id }) { profession ->
-                    FilterPill(profession.title, filters.professionId == profession.id) {
-                        onProfession(profession.id)
+                items(trades, key = { "${it.family}-${it.title}-${it.domainId}" }) { chip ->
+                    FilterPill(chip.title, filters.professionId == chip.profession.id) {
+                        onProfession(chip.profession.id)
                     }
                 }
             }

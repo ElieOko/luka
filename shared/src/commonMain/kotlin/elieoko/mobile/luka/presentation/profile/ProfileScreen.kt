@@ -110,6 +110,9 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
             OutlinedTextField(state.displayName, viewModel::onName, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
         }
         item {
+            OutlinedTextField(state.email, viewModel::onEmail, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+        }
+        item {
             OutlinedTextField(state.bio, viewModel::onBio, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(16.dp))
         }
         item {

@@ -2,8 +2,11 @@ package elieoko.mobile.luka.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import elieoko.mobile.luka.domain.model.City
+import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.HomeFeed
 import elieoko.mobile.luka.domain.model.JobOffer
+import elieoko.mobile.luka.domain.model.TradeChip
 import elieoko.mobile.luka.domain.model.UserProfile
 import elieoko.mobile.luka.domain.repository.CatalogRepository
 import elieoko.mobile.luka.domain.repository.SessionRepository
@@ -29,30 +32,36 @@ data class HomeUiState(
     val filters: OfferFilters = OfferFilters(),
     val previewOffers: List<JobOffer> = emptyList(),
     val allOffers: List<JobOffer> = emptyList(),
+    val cities: List<City> = CongoCatalog.cities,
+    val trades: List<TradeChip> = TradeChip.fromLocal(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
-    sessions: SessionRepository,
-    catalog: CatalogRepository,
+    private val sessions: SessionRepository,
+    private val catalog: CatalogRepository,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val live = MutableStateFlow<JobOffer?>(null)
     private val filters = MutableStateFlow(OfferFilters())
+    private val cities = MutableStateFlow(CongoCatalog.cities)
+    private val trades = MutableStateFlow(TradeChip.fromLocal())
 
     val state: StateFlow<HomeUiState> = combine(
         sessions.session.filterNotNull(),
         query,
         live,
         filters,
-    ) { session, q, liveOffer, currentFilters ->
-        arrayOf(session, q, liveOffer, currentFilters)
+        combine(cities, trades) { c, t -> c to t },
+    ) { session, q, liveOffer, currentFilters, catalogUi ->
+        arrayOf(session, q, liveOffer, currentFilters, catalogUi)
     }
         .flatMapLatest { args ->
             val session = args[0] as elieoko.mobile.luka.domain.model.UserSession
             val q = args[1] as String
             val liveOffer = args[2] as JobOffer?
             val currentFilters = args[3] as OfferFilters
+            val catalogUi = args[4] as Pair<List<City>, List<TradeChip>>
             catalog.observeFeed(session.profile).map { feed ->
                 val needle = q.trim()
                 var offers = feed.offers.applyFilters(currentFilters)
@@ -69,6 +78,8 @@ class HomeViewModel(
                     filters = currentFilters,
                     previewOffers = offers.take(5),
                     allOffers = offers,
+                    cities = catalogUi.first,
+                    trades = catalogUi.second,
                 )
             }
         }
@@ -77,6 +88,15 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             catalog.observeLiveOffers().collect { live.value = it }
+        }
+        viewModelScope.launch {
+            runCatching {
+                catalog.seedIfNeeded()
+                val public = catalog.loadPublicCatalog()
+                cities.value = public.cities
+                trades.value = public.trades
+                catalog.refreshOffers(sessions.current()?.profile)
+            }
         }
     }
 

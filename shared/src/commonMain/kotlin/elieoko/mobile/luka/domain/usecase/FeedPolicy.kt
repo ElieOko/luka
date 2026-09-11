@@ -21,6 +21,7 @@ object FeedPolicy {
 }
 
 fun HomeFeed.withPolicy(profile: UserProfile, plan: SubscriptionPlan): HomeFeed {
+    if (profile.domainId != null) return this
     val allowed = FeedPolicy.allowedProfessions(profile, plan)
     return copy(offers = FeedPolicy.filterOffers(offers, allowed))
 }
