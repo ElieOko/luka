@@ -47,7 +47,7 @@ fun JsonElement?.toAuthTokens(): AuthTokens {
         city = profileSource.str("city"),
         country = profileSource.str("country"),
         isPremium = profileSource.bool("isPremium") ?: false,
-        isCertified = profileSource.bool("isCertified") ?: false,
+        isCertified = profileSource.bool("isCertified") ?: profileSource.bool("certified") ?: false,
         profileCompleted = profileSource.bool("profileCompleted") ?: false,
     )
     return AuthTokens(accessToken = access, refreshToken = refresh, user = user)
@@ -89,8 +89,10 @@ fun UserDto.mergeInto(
         email = mail ?: existing?.email.orEmpty(),
         cityName = city?.takeIf { it.isNotBlank() } ?: existing?.cityName,
         countryCode = country?.takeIf { it.isNotBlank() } ?: existing?.countryCode,
+        regionId = city?.takeIf { it.isNotBlank() }?.let { CongoCatalog.regionIdFor(it, null) } ?: existing?.regionId,
         profileCompleted = profileCompleted,
         planId = if (isPremium) "pro" else (existing?.planId ?: "starter"),
+        isCertified = isCertified || certified == true,
     )
 }
 

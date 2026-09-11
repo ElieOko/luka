@@ -15,6 +15,7 @@ import elieoko.mobile.luka.domain.usecase.withPolicy
 import elieoko.mobile.luka.data.mapper.toAuthTokens
 import elieoko.mobile.luka.data.mapper.toCity
 import elieoko.mobile.luka.data.mapper.toJobOffer
+import elieoko.mobile.luka.data.mapper.mergeInto
 import elieoko.mobile.luka.data.remote.ApiException
 import elieoko.mobile.luka.data.remote.FakeCatalog
 import elieoko.mobile.luka.data.remote.dto.CongoCityDto
@@ -196,6 +197,47 @@ class LukaDomainTest {
         assertEquals("bbb", tokens.refreshToken)
         assertEquals(3L, tokens.user.userId)
         assertEquals("+243810000000", tokens.user.phone)
+    }
+
+    @Test
+    fun userDtoMergesCityCountryAndCertified() {
+        val dto = elieoko.mobile.luka.data.remote.dto.UserDto(
+            userId = 9,
+            username = "Patrick",
+            email = "patrick@luka.cd",
+            phone = "+243810000001",
+            city = "Goma",
+            country = "CD",
+            isCertified = true,
+            profileCompleted = true,
+        )
+        val merged = dto.mergeInto(
+            identifier = AuthIdentifier(AuthChannel.PHONE, "+243810000001"),
+            existing = session().profile,
+        )
+        assertEquals("Patrick", merged.displayName)
+        assertEquals("Goma", merged.cityName)
+        assertEquals("nord-kivu", merged.regionId)
+        assertEquals("CD", merged.countryCode)
+        assertTrue(merged.isCertified)
+        assertTrue(merged.profileCompleted)
+    }
+
+    @Test
+    fun updateProfileRequestKeepsSwaggerKeys() {
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest(
+                fullName = "Grace Mwamba",
+                email = "grace@luka.cd",
+                city = "Kinshasa",
+                country = "CD",
+            ),
+        )
+        assertTrue(encoded.contains("fullName"))
+        assertTrue(encoded.contains("email"))
+        assertTrue(encoded.contains("city"))
+        assertTrue(encoded.contains("country"))
     }
 
     @Test

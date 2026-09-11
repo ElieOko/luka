@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class RootViewModel(
     sessions: SessionRepository,
@@ -25,5 +26,8 @@ class RootViewModel(
     init {
         crashReporter.initialize()
         pushNotifier.initialize()
+        viewModelScope.launch {
+            runCatching { sessions.refreshRemoteProfile() }
+        }
     }
 }

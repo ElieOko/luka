@@ -40,6 +40,14 @@ data class ProfileCompletionRequest(
 )
 
 @Serializable
+data class UpdateProfileRequest(
+    val fullName: String? = null,
+    val email: String? = null,
+    val city: String? = null,
+    val country: String? = null,
+)
+
+@Serializable
 data class SaveUserPreferencesRequest(
     val domainIds: List<Long>,
 )
@@ -55,6 +63,7 @@ data class UserDto(
     val isPremium: Boolean = false,
     val isCertified: Boolean = false,
     val profileCompleted: Boolean = false,
+    val certified: Boolean? = null,
 )
 
 @Serializable

@@ -20,6 +20,7 @@ data class UserProfile(
     val cityName: String? = null,
     val domainId: Long? = null,
     val profileCompleted: Boolean = false,
+    val isCertified: Boolean = false,
 )
 
 data class UserSession(

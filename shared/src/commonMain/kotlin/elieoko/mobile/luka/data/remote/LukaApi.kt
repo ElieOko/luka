@@ -9,6 +9,7 @@ import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
 import elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest
 import elieoko.mobile.luka.data.remote.dto.ProfileCompletionRequest
 import elieoko.mobile.luka.data.remote.dto.SaveUserPreferencesRequest
+import elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest
 import elieoko.mobile.luka.data.remote.dto.SearchDomainDto
 import elieoko.mobile.luka.data.remote.dto.UserDto
 import elieoko.mobile.luka.data.remote.dto.UserPreferencesDto
@@ -44,6 +45,16 @@ class LukaApi(
             jsonBody(VerifyRequest(identifier, code))
         }
 
+    suspend fun requestLoginOtp(identifier: String): LooseEnvelope =
+        send(HttpMethod.Post, "/api/v1/public/auth/login/request-otp", auth = false) {
+            jsonBody(IdentifiantRequest(identifier))
+        }
+
+    suspend fun verifyLoginOtp(identifier: String, code: String): LooseEnvelope =
+        send(HttpMethod.Post, "/api/v1/public/auth/login/verify-otp", auth = false) {
+            jsonBody(VerifyRequest(identifier, code))
+        }
+
     suspend fun resendOtp(identifier: String): LooseEnvelope =
         send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false) {
             jsonBody(IdentifiantRequest(identifier))
@@ -52,6 +63,19 @@ class LukaApi(
     suspend fun completeProfile(fullName: String, email: String): UserDto =
         send<ApiEnvelope<UserDto>>(HttpMethod.Post, "/api/v1/auth/complete-profile") {
             jsonBody(ProfileCompletionRequest(fullName, email))
+        }.required()
+
+    suspend fun getProfile(): UserDto =
+        send<ApiEnvelope<UserDto>>(HttpMethod.Get, "/api/v1/auth/profile").required()
+
+    suspend fun updateProfile(
+        fullName: String? = null,
+        email: String? = null,
+        city: String? = null,
+        country: String? = null,
+    ): UserDto =
+        send<ApiEnvelope<UserDto>>(HttpMethod.Put, "/api/v1/auth/profile") {
+            jsonBody(UpdateProfileRequest(fullName = fullName, email = email, city = city, country = country))
         }.required()
 
     suspend fun savePreferences(domainIds: List<Long>): UserPreferencesDto =
@@ -82,15 +106,19 @@ class LukaApi(
         domainIds: List<Long> = emptyList(),
         page: Int = 0,
         size: Int = 50,
-        status: String? = "ECHEANCE_NON_DEPASSEE",
+        employer: String? = null,
+        sector: String? = null,
+        opportunityType: String? = null,
     ): JobOfferPageDto {
         val envelope: ApiEnvelope<JobOfferPageDto> = send(HttpMethod.Get, "/api/offres", auth = false) {
             city?.takeIf { it.isNotBlank() }?.let { parameter("city", it) }
             province?.takeIf { it.isNotBlank() }?.let { parameter("province", it) }
+            employer?.takeIf { it.isNotBlank() }?.let { parameter("employer", it) }
+            sector?.takeIf { it.isNotBlank() }?.let { parameter("sector", it) }
+            opportunityType?.takeIf { it.isNotBlank() }?.let { parameter("opportunityType", it) }
             domainIds.forEach { parameter("domainId", it) }
             parameter("page", page)
             parameter("size", size)
-            status?.let { parameter("status", it) }
         }
         return envelope.data ?: JobOfferPageDto()
     }

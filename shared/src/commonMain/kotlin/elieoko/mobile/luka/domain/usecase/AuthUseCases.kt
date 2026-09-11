@@ -7,9 +7,9 @@ import elieoko.mobile.luka.domain.model.UserSession
 import elieoko.mobile.luka.domain.repository.SessionRepository
 
 class RequestOtpUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(raw: String): OtpChallenge {
+    suspend operator fun invoke(raw: String, newAccount: Boolean = false): OtpChallenge {
         val identifier = parseIdentifier(raw)
-        return sessions.requestOtp(identifier)
+        return sessions.requestOtp(identifier, newAccount)
     }
 
     companion object {

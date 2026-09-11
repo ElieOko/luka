@@ -41,7 +41,11 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
             LukaLogo()
             Spacer(Modifier.height(28.dp))
             Text(
-                if (state.step == AuthUiState.Step.Identifier) "Entre sans mot de passe." else "Confirme que c’est toi.",
+                if (state.step == AuthUiState.Step.Identifier) {
+                    if (state.newAccount) "Crée ton compte." else "Entre sans mot de passe."
+                } else {
+                    "Confirme que c’est toi."
+                },
                 style = MaterialTheme.typography.headlineLarge,
             )
             Spacer(Modifier.height(8.dp))
@@ -65,6 +69,11 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                 )
+                TextButton(onClick = viewModel::toggleNewAccount) {
+                    Text(
+                        if (state.newAccount) "Déjà inscrit ? Se connecter" else "Pas encore de compte ? Créer un compte",
+                    )
+                }
             } else {
                 Text("Code à 6 chiffres", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(12.dp))
@@ -87,6 +96,7 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
             LukaPrimaryButton(
                 text = when {
                     state.loading -> "Un instant…"
+                    state.step == AuthUiState.Step.Identifier && state.newAccount -> "Créer le compte"
                     state.step == AuthUiState.Step.Identifier -> "Recevoir le code"
                     else -> "Continuer"
                 },
