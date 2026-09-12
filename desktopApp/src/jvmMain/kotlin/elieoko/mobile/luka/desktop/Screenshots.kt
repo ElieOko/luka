@@ -62,8 +62,8 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
-    shot(File(outDir, "abonnement.png"), height = 1600) { SubscriptionShot() }
-    shot(File(outDir, "menu_drawer.png"), height = 1200) { DrawerShot() }
+    shot(File(outDir, "abonnement.png"), height = 1100) { SubscriptionShot() }
+    shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }
