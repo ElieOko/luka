@@ -2,8 +2,9 @@ package elieoko.mobile.luka
 
 import androidx.compose.ui.window.ComposeUIViewController
 import elieoko.mobile.luka.di.initKoin
+import platform.UIKit.UIViewController
 
-fun MainViewController() = ComposeUIViewController {
+fun MainViewController(): UIViewController {
     initKoin()
-    App()
+    return ComposeUIViewController { App() }
 }
