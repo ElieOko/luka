@@ -13,6 +13,8 @@ import luka.shared.generated.resources.onboarding_city
 import luka.shared.generated.resources.onboarding_kinshasa_1
 import luka.shared.generated.resources.onboarding_kinshasa_2
 import luka.shared.generated.resources.onboarding_kinshasa_3
+import luka.shared.generated.resources.logo_luka
+import luka.shared.generated.resources.logo_luka_light
 import luka.shared.generated.resources.onboarding_learn
 import luka.shared.generated.resources.onboarding_team
 import luka.shared.generated.resources.orientation_digital
@@ -54,5 +56,7 @@ fun imageByName(name: String): DrawableResource = when (name) {
     "onboarding_kinshasa_1" -> Res.drawable.onboarding_kinshasa_1
     "onboarding_kinshasa_2" -> Res.drawable.onboarding_kinshasa_2
     "onboarding_kinshasa_3" -> Res.drawable.onboarding_kinshasa_3
+    "logo_luka" -> Res.drawable.logo_luka
+    "logo_luka_light" -> Res.drawable.logo_luka_light
     else -> Res.drawable.hero_career
 }

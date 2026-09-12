@@ -6,17 +6,16 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -31,34 +30,39 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.LukaWine
+import luka.shared.generated.resources.Res
+import luka.shared.generated.resources.logo_luka
+import luka.shared.generated.resources.logo_luka_light
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun LukaLogo(modifier: Modifier = Modifier, light: Boolean = false) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (light) Color.White else LukaRed),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                "L",
-                color = if (light) LukaRed else Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        Text(
-            "Luka",
-            style = MaterialTheme.typography.headlineMedium,
-            color = if (light) Color.White else MaterialTheme.colorScheme.onBackground,
+    Image(
+        painter = painterResource(if (light) Res.drawable.logo_luka_light else Res.drawable.logo_luka),
+        contentDescription = "Luka",
+        modifier = modifier.height(32.dp),
+        contentScale = ContentScale.FillHeight,
+    )
+}
+
+@Composable
+fun LukaOfferIcon(modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(Color.White),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(Res.drawable.logo_luka),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize().padding(7.dp),
+            contentScale = ContentScale.Fit,
         )
     }
 }
