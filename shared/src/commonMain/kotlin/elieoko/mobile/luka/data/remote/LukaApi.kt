@@ -5,14 +5,17 @@ import elieoko.mobile.luka.core.DeviceSerial
 import elieoko.mobile.luka.core.applyDeviceSerialHeaders
 import elieoko.mobile.luka.data.remote.dto.ApiEnvelope
 import elieoko.mobile.luka.data.remote.dto.CongoCityDto
+import elieoko.mobile.luka.data.remote.dto.IdentifiantRequest
 import elieoko.mobile.luka.data.remote.dto.JobOfferPageDto
 import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
+import elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest
 import elieoko.mobile.luka.data.remote.dto.ProfileCompletionRequest
 import elieoko.mobile.luka.data.remote.dto.SaveUserPreferencesRequest
 import elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest
 import elieoko.mobile.luka.data.remote.dto.SearchDomainDto
 import elieoko.mobile.luka.data.remote.dto.UserDto
 import elieoko.mobile.luka.data.remote.dto.UserPreferencesDto
+import elieoko.mobile.luka.data.remote.dto.VerifyRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
@@ -23,12 +26,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
+import io.ktor.http.content.TextContent
 import io.ktor.http.takeFrom
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 class LukaApi(
     private val http: HttpClient,
@@ -40,41 +43,35 @@ class LukaApi(
     suspend fun registerPhone(phone: String, isStudent: Boolean = false): LooseEnvelope {
         val serial = deviceSerial.value()
         return send(HttpMethod.Post, "/api/v1/public/auth/register-phone", auth = false) {
-            jsonBody(
-                buildJsonObject {
-                    put("phone", phone)
-                    put("isStudent", isStudent)
-                    put("buildSerial", serial)
-                },
-            )
+            jsonBody(PhoneRegisterRequest(phone = phone, isStudent = isStudent, buildSerial = serial))
         }
     }
 
     suspend fun verifyOtp(identifier: String, code: String): LooseEnvelope {
         val serial = deviceSerial.value()
         return send(HttpMethod.Post, "/api/v1/public/auth/verify-otp", auth = false) {
-            jsonBody(verifyBody(identifier, code, serial))
+            jsonBody(VerifyRequest(identifier, code, buildSerial = serial))
         }
     }
 
     suspend fun requestLoginOtp(identifier: String): LooseEnvelope {
         val serial = deviceSerial.value()
         return send(HttpMethod.Post, "/api/v1/public/auth/login/request-otp", auth = false) {
-            jsonBody(identifiantBody(identifier, serial))
+            jsonBody(IdentifiantRequest(identifier, buildSerial = serial))
         }
     }
 
     suspend fun verifyLoginOtp(identifier: String, code: String): LooseEnvelope {
         val serial = deviceSerial.value()
         return send(HttpMethod.Post, "/api/v1/public/auth/login/verify-otp", auth = false) {
-            jsonBody(verifyBody(identifier, code, serial))
+            jsonBody(VerifyRequest(identifier, code, buildSerial = serial))
         }
     }
 
     suspend fun resendOtp(identifier: String): LooseEnvelope {
         val serial = deviceSerial.value()
         return send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false) {
-            jsonBody(identifiantBody(identifier, serial))
+            jsonBody(IdentifiantRequest(identifier, buildSerial = serial))
         }
     }
 
@@ -137,20 +134,8 @@ class LukaApi(
         return envelope.data ?: JobOfferPageDto()
     }
 
-    private fun identifiantBody(identifier: String, serial: String) = buildJsonObject {
-        put("identifier", identifier)
-        put("buildSerial", serial)
-    }
-
-    private fun verifyBody(identifier: String, code: String, serial: String) = buildJsonObject {
-        put("identifier", identifier)
-        put("code", code)
-        put("buildSerial", serial)
-    }
-
-    private fun HttpRequestBuilder.jsonBody(body: Any) {
-        contentType(ContentType.Application.Json)
-        setBody(body)
+    private inline fun <reified T> HttpRequestBuilder.jsonBody(body: T) {
+        setBody(TextContent(json.encodeToString(body), ContentType.Application.Json))
     }
 
     private fun <T> ApiEnvelope<T>.required(): T =
@@ -174,9 +159,11 @@ class LukaApi(
                 }
                 builder()
             }
+        } catch (error: CancellationException) {
+            throw error
         } catch (error: Exception) {
             if (error is ApiException) throw error
-            throw ApiException("Vérifie ta connexion.", status = 0)
+            throw ApiException(mapClientTransportError(error), status = 0)
         }
         val text = response.bodyAsText()
         if (!response.status.isSuccess()) {
@@ -188,4 +175,28 @@ class LukaApi(
             throw ApiException("Réponse inattendue du serveur.", response.status.value)
         }
     }
+}
+
+internal fun mapClientTransportError(error: Throwable): String {
+    val parts = mutableListOf<String>()
+    var current: Throwable? = error
+    while (current != null) {
+        parts += current::class.simpleName.orEmpty()
+        parts += current.message.orEmpty()
+        current = current.cause
+    }
+    val blob = parts.joinToString(" ")
+    val network = listOf(
+        "UnknownHost",
+        "Unable to resolve",
+        "Failed to connect",
+        "ConnectException",
+        "SocketTimeout",
+        "timed out",
+        "Timeout",
+        "Unreachable",
+        "Network is unreachable",
+        "Connection reset",
+    ).any { blob.contains(it, ignoreCase = true) }
+    return if (network) "Vérifie ta connexion." else "Impossible d’envoyer la requête. Réessaie."
 }

@@ -59,7 +59,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
 
 val lukaModule = module {
     single { AppConfig() }
-    single { Json { ignoreUnknownKeys = true; isLenient = true } }
+    single { Json { ignoreUnknownKeys = true; isLenient = true; encodeDefaults = true } }
     single { TokenStore() }
     single { createDeviceSerial().memoized() }
     single { createHttpClient().withDeviceSerial(get()) }
