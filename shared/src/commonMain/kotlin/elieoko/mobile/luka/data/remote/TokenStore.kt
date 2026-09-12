@@ -1,5 +1,7 @@
 package elieoko.mobile.luka.data.remote
 
+import kotlin.concurrent.Volatile
+
 /**
  * In-memory JWT holder used by [LukaApi] on each request.
  * [elieoko.mobile.luka.data.repository.SessionRepositoryImpl] keeps it in sync with DataStore.
