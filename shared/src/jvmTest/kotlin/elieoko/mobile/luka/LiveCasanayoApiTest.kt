@@ -2,6 +2,7 @@ package elieoko.mobile.luka
 
 import elieoko.mobile.luka.core.AppConfig
 import elieoko.mobile.luka.core.createHttpClient
+import elieoko.mobile.luka.core.withDeviceSerial
 import elieoko.mobile.luka.data.mapper.toCity
 import elieoko.mobile.luka.data.mapper.toJobOffer
 import elieoko.mobile.luka.data.remote.LukaApi
@@ -15,7 +16,7 @@ class LiveCasanayoApiTest {
     @Test
     fun publicCatalogAndOffersDecode() = runBlocking {
         val api = LukaApi(
-            http = createHttpClient(),
+            http = createHttpClient().withDeviceSerial(elieoko.mobile.luka.core.createDeviceSerial()),
             config = AppConfig(),
             tokenStore = TokenStore(),
             json = Json { ignoreUnknownKeys = true; isLenient = true },

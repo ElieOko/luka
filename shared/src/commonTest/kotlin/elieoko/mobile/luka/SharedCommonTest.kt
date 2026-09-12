@@ -1,5 +1,6 @@
 package elieoko.mobile.luka
 
+import elieoko.mobile.luka.core.memoized
 import elieoko.mobile.luka.domain.model.AppDestination
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
@@ -26,6 +27,7 @@ import elieoko.mobile.luka.domain.usecase.LiveInsights
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class LukaDomainTest {
@@ -224,6 +226,36 @@ class LukaDomainTest {
     }
 
     @Test
+    fun buildSerialErrorIsNotShownToUser() {
+        val error = ApiException.fromBody(
+            400,
+            """{"message":"Le build_serial est obligatoire.","detailMessage":"Le build_serial est obligatoire."}""",
+        )
+        assertFalse(error.message.orEmpty().contains("build_serial", ignoreCase = true))
+        assertTrue(error.message.orEmpty().isNotBlank())
+    }
+
+    @Test
+    fun registerPhonePayloadIncludesStudentFlag() {
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest(phone = "+243810000000", isStudent = false),
+        )
+        assertTrue(encoded.contains("phone"))
+        assertTrue(encoded.contains("isStudent"))
+    }
+
+    @Test
+    fun deviceSerialIsStableAndPrefixed() {
+        val serial = elieoko.mobile.luka.core.createDeviceSerial().memoized()
+        val first = serial.value()
+        val second = serial.value()
+        assertEquals(first, second)
+        assertTrue(first.startsWith("luka-"))
+        assertTrue(first.length > 8)
+    }
+
+    @Test
     fun feedPolicyKeepsRemoteDomainOffers() {
         val profile = session(profession = Profession.SOFTWARE_ENGINEERING).profile.copy(domainId = 1)
         val feed = elieoko.mobile.luka.domain.model.HomeFeed(
@@ -279,16 +311,6 @@ class LukaDomainTest {
         assertTrue(encoded.contains("email"))
         assertTrue(encoded.contains("city"))
         assertTrue(encoded.contains("country"))
-    }
-
-    @Test
-    fun deviceSerialIsStableAndPrefixed() {
-        val serial = elieoko.mobile.luka.core.createDeviceSerial()
-        val first = serial.value()
-        val second = serial.value()
-        assertEquals(first, second)
-        assertTrue(first.startsWith("luka-"))
-        assertTrue(first.length > 8)
     }
 
     private fun session(

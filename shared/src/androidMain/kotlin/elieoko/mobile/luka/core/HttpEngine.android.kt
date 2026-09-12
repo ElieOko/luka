@@ -10,6 +10,6 @@ import kotlinx.serialization.json.Json
 actual fun createHttpClient(): HttpClient = HttpClient(OkHttp) {
     install(WebSockets)
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(Json { ignoreUnknownKeys = true; encodeDefaults = true })
     }
 }

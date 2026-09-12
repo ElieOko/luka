@@ -1,5 +1,7 @@
 package elieoko.mobile.luka.data.remote.dto
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -17,9 +19,11 @@ data class ApiErrorBody(
     val status: Int? = null,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class PhoneRegisterRequest(
     val phone: String,
+    @EncodeDefault val isStudent: Boolean = false,
 )
 
 @Serializable
