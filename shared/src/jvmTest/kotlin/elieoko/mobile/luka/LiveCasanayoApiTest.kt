@@ -19,6 +19,7 @@ class LiveCasanayoApiTest {
             config = AppConfig(),
             tokenStore = TokenStore(),
             json = Json { ignoreUnknownKeys = true; isLenient = true },
+            deviceSerial = elieoko.mobile.luka.core.createDeviceSerial(),
         )
         val domains = api.listDomains()
         assertTrue(domains.isNotEmpty(), "domaines publics vides")

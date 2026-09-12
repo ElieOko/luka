@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import elieoko.mobile.luka.presentation.components.ProUpgradeHost
 import elieoko.mobile.luka.presentation.home.HomeScreen
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.home.OffersSeeAllScreen
@@ -70,31 +71,34 @@ fun MainShell() {
     var showAllOffers by rememberSaveable { mutableStateOf(false) }
     val homeVm: HomeViewModel = koinViewModel()
 
-    if (showAllOffers) {
-        OffersSeeAllScreen(onBack = { showAllOffers = false }, viewModel = homeVm)
-        return
-    }
-
     Box(Modifier.fillMaxSize()) {
-        AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
-            when (current) {
-                MainTab.Home -> HomeScreen(
-                    onSeeAllOffers = { showAllOffers = true },
-                    onOpenNews = { tab = MainTab.News },
-                    onOpenTrends = { tab = MainTab.Trends },
-                    onOpenOrientation = { tab = MainTab.Orientation },
-                    viewModel = homeVm,
-                )
-                MainTab.News -> NewsScreen()
-                MainTab.Trends -> TrendsScreen()
-                MainTab.Orientation -> OrientationScreen()
-                MainTab.Profile -> ProfileScreen()
+        if (showAllOffers) {
+            OffersSeeAllScreen(onBack = { showAllOffers = false }, viewModel = homeVm)
+        } else {
+            AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+                when (current) {
+                    MainTab.Home -> HomeScreen(
+                        onSeeAllOffers = { showAllOffers = true },
+                        onOpenNews = { tab = MainTab.News },
+                        onOpenTrends = { tab = MainTab.Trends },
+                        onOpenOrientation = { tab = MainTab.Orientation },
+                        viewModel = homeVm,
+                    )
+                    MainTab.News -> NewsScreen()
+                    MainTab.Trends -> TrendsScreen()
+                    MainTab.Orientation -> OrientationScreen()
+                    MainTab.Profile -> ProfileScreen()
+                }
             }
+            TikTokBottomBar(
+                tab = tab,
+                onTab = { tab = it },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
-        TikTokBottomBar(
-            tab = tab,
-            onTab = { tab = it },
-            modifier = Modifier.align(Alignment.BottomCenter),
+        ProUpgradeHost(
+            modifier = Modifier.align(Alignment.BottomEnd),
+            bottomInset = if (showAllOffers) 24.dp else 64.dp,
         )
     }
 }

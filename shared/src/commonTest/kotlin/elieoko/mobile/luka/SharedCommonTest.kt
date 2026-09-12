@@ -12,6 +12,7 @@ import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
 import elieoko.mobile.luka.domain.usecase.applyFilters
 import elieoko.mobile.luka.domain.usecase.withPolicy
+import elieoko.mobile.luka.data.mapper.mergeInto
 import elieoko.mobile.luka.data.mapper.toAuthTokens
 import elieoko.mobile.luka.data.mapper.toCity
 import elieoko.mobile.luka.data.mapper.toJobOffer
@@ -221,6 +222,58 @@ class LukaDomainTest {
         )
         val filtered = feed.withPolicy(profile, LukaPlans.byId("starter"))
         assertEquals(FakeCatalog.offers.size, filtered.offers.size)
+    }
+
+    @Test
+    fun userDtoMergeMapsCityCertifiedAndPremium() {
+        val dto = elieoko.mobile.luka.data.remote.dto.UserDto(
+            userId = 9,
+            username = "Patrick",
+            phone = "+243810000001",
+            city = "Goma",
+            country = "CD",
+            isPremium = true,
+            isCertified = true,
+            profileCompleted = true,
+        )
+        val merged = dto.mergeInto(
+            identifier = AuthIdentifier(AuthChannel.PHONE, "+243810000001"),
+            existing = session().profile,
+        )
+        assertEquals("Patrick", merged.displayName)
+        assertEquals("Goma", merged.cityName)
+        assertEquals("nord-kivu", merged.regionId)
+        assertEquals("CD", merged.countryCode)
+        assertTrue(merged.isCertified)
+        assertTrue(merged.isPro)
+        assertTrue(merged.profileCompleted)
+    }
+
+    @Test
+    fun updateProfileRequestKeepsSwaggerKeys() {
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest(
+                fullName = "Grace Mwamba",
+                email = "grace@luka.cd",
+                city = "Kinshasa",
+                country = "CD",
+            ),
+        )
+        assertTrue(encoded.contains("fullName"))
+        assertTrue(encoded.contains("email"))
+        assertTrue(encoded.contains("city"))
+        assertTrue(encoded.contains("country"))
+    }
+
+    @Test
+    fun deviceSerialIsStableAndPrefixed() {
+        val serial = elieoko.mobile.luka.core.createDeviceSerial()
+        val first = serial.value()
+        val second = serial.value()
+        assertEquals(first, second)
+        assertTrue(first.startsWith("luka-"))
+        assertTrue(first.length > 8)
     }
 
     private fun session(
