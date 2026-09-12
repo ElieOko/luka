@@ -3,11 +3,16 @@ package elieoko.mobile.luka.data.remote
 import elieoko.mobile.luka.core.AppConfig
 import elieoko.mobile.luka.core.DeviceSerial
 import elieoko.mobile.luka.core.applyDeviceSerialHeaders
+import elieoko.mobile.luka.data.remote.dto.AbonnementDto
 import elieoko.mobile.luka.data.remote.dto.ApiEnvelope
 import elieoko.mobile.luka.data.remote.dto.CongoCityDto
+import elieoko.mobile.luka.data.remote.dto.DeviseDto
+import elieoko.mobile.luka.data.remote.dto.FlexPaymentResponse
 import elieoko.mobile.luka.data.remote.dto.IdentifiantRequest
 import elieoko.mobile.luka.data.remote.dto.JobOfferPageDto
 import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
+import elieoko.mobile.luka.data.remote.dto.PaiementDto
+import elieoko.mobile.luka.data.remote.dto.PaymentInitRequest
 import elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest
 import elieoko.mobile.luka.data.remote.dto.ProfileCompletionRequest
 import elieoko.mobile.luka.data.remote.dto.SaveUserPreferencesRequest
@@ -133,6 +138,33 @@ class LukaApi(
         }
         return envelope.data ?: JobOfferPageDto()
     }
+
+    suspend fun listAbonnements(): List<AbonnementDto> =
+        send<ApiEnvelope<List<AbonnementDto>>>(
+            HttpMethod.Get,
+            "/api/v1/public/abonnements",
+            auth = false,
+        ).data.orEmpty()
+
+    suspend fun listDevises(): List<DeviseDto> =
+        send<ApiEnvelope<List<DeviseDto>>>(
+            HttpMethod.Get,
+            "/api/v1/public/devises",
+            auth = false,
+        ).data.orEmpty()
+
+    suspend fun payMobileMoney(abonnementId: Long, devise: String, phone: String): FlexPaymentResponse =
+        send<ApiEnvelope<FlexPaymentResponse>>(HttpMethod.Post, "/api/v1/auth/payment/mobile-money") {
+            jsonBody(PaymentInitRequest(abonnementId = abonnementId, devise = devise, phone = phone))
+        }.required()
+
+    suspend fun payWithCard(abonnementId: Long, devise: String, phone: String): FlexPaymentResponse =
+        send<ApiEnvelope<FlexPaymentResponse>>(HttpMethod.Post, "/api/v1/auth/payment/card") {
+            jsonBody(PaymentInitRequest(abonnementId = abonnementId, devise = devise, phone = phone))
+        }.required()
+
+    suspend fun paymentHistory(): List<PaiementDto> =
+        send<ApiEnvelope<List<PaiementDto>>>(HttpMethod.Get, "/api/v1/auth/payment/history").data.orEmpty()
 
     private inline fun <reified T> HttpRequestBuilder.jsonBody(body: T) {
         setBody(TextContent(json.encodeToString(body), ContentType.Application.Json))

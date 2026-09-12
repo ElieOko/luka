@@ -19,8 +19,10 @@ import elieoko.mobile.luka.data.remote.OfferStream
 import elieoko.mobile.luka.data.remote.StompOfferStream
 import elieoko.mobile.luka.data.remote.TokenStore
 import elieoko.mobile.luka.data.repository.CatalogRepositoryImpl
+import elieoko.mobile.luka.data.repository.PaymentRepositoryImpl
 import elieoko.mobile.luka.data.repository.SessionRepositoryImpl
 import elieoko.mobile.luka.domain.repository.CatalogRepository
+import elieoko.mobile.luka.domain.repository.PaymentRepository
 import elieoko.mobile.luka.domain.repository.SessionRepository
 import elieoko.mobile.luka.domain.usecase.CompleteLocationUseCase
 import elieoko.mobile.luka.domain.usecase.CompleteProfessionUseCase
@@ -37,6 +39,7 @@ import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.orientation.OrientationViewModel
 import elieoko.mobile.luka.presentation.profile.ProfileViewModel
 import elieoko.mobile.luka.presentation.root.RootViewModel
+import elieoko.mobile.luka.presentation.subscription.SubscriptionViewModel
 import elieoko.mobile.luka.presentation.setup.SetupViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -79,6 +82,7 @@ val lukaModule = module {
     single<OfferStream> { StompOfferStream(get(), get(), get(), get()) }
     singleOf(::SessionRepositoryImpl) bind SessionRepository::class
     singleOf(::CatalogRepositoryImpl) bind CatalogRepository::class
+    singleOf(::PaymentRepositoryImpl) bind PaymentRepository::class
     factoryOf(::ResolveDestinationUseCase)
     factoryOf(::RequestOtpUseCase)
     factoryOf(::ResendOtpUseCase)
@@ -95,4 +99,5 @@ val lukaModule = module {
     viewModelOf(::ExploreViewModel)
     viewModelOf(::OrientationViewModel)
     viewModelOf(::ProfileViewModel)
+    viewModelOf(::SubscriptionViewModel)
 }

@@ -136,3 +136,52 @@ data class LooseEnvelope(
     val message: String = "",
     val data: JsonElement? = null,
 )
+
+@Serializable
+data class AbonnementDto(
+    val id: Long,
+    val code: String = "",
+    val name: String = "",
+    val amountUsd: Double = 0.0,
+    val description: String? = null,
+    val active: Boolean = true,
+)
+
+@Serializable
+data class DeviseDto(
+    val id: Long,
+    val code: String,
+    val name: String,
+    val tauxLocal: Double,
+)
+
+@Serializable
+data class PaymentInitRequest(
+    val abonnementId: Long,
+    val devise: String,
+    val phone: String,
+)
+
+@Serializable
+data class FlexPaymentResponse(
+    val code: String? = null,
+    val message: String? = null,
+    val orderNumber: String? = null,
+    val url: String? = null,
+    val paymentAccepted: Boolean = false,
+)
+
+@Serializable
+data class PaiementDto(
+    val id: Long? = null,
+    val userId: Long? = null,
+    val abonnementId: Long,
+    val reference: String = "",
+    val amount: String = "",
+    val devise: String = "",
+    val description: String? = null,
+    val typePayment: String = "",
+    val status: String = "",
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+)

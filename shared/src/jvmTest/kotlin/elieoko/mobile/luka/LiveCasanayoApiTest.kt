@@ -34,5 +34,11 @@ class LiveCasanayoApiTest {
         assertTrue(offer.title.isNotBlank())
         assertTrue(offer.company.isNotBlank())
         assertTrue(offer.applyUrl.startsWith("http"))
+        val plans = api.listAbonnements()
+        assertTrue(plans.any { it.id == 1L && it.amountUsd == 3.0 }, "abonnement étudiant id=1")
+        assertTrue(plans.any { it.id == 2L && it.amountUsd == 5.0 }, "abonnement professionnel id=2")
+        val devises = api.listDevises()
+        assertTrue(devises.any { it.code.equals("USD", true) && it.tauxLocal == 1.0 })
+        assertTrue(devises.any { it.code.equals("CDF", true) && it.tauxLocal >= 1000.0 })
     }
 }
