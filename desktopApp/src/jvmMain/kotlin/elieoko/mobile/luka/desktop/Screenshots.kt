@@ -31,8 +31,12 @@ import androidx.compose.ui.renderComposeScene
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.JobOffer
 import elieoko.mobile.luka.domain.model.Profession
+import elieoko.mobile.luka.presentation.components.LukaLogo
+import elieoko.mobile.luka.presentation.components.LukaOfferIcon
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.PulseDot
@@ -51,6 +55,9 @@ fun main() {
     shot(File(outDir, "welcome_onboarding.png")) {
         WelcomeScreen(onStart = {})
     }
+    shot(File(outDir, "brand_logo.png"), width = 840, height = 720) {
+        BrandLogoShot()
+    }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
@@ -58,13 +65,57 @@ fun main() {
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
-private fun shot(file: File, content: @Composable () -> Unit) {
-    val image = renderComposeScene(width = 840, height = 1720, density = Density(2f)) {
+private fun shot(
+    file: File,
+    width: Int = 840,
+    height: Int = 1720,
+    content: @Composable () -> Unit,
+) {
+    val image = renderComposeScene(width = width, height = height, density = Density(2f)) {
         LukaTheme {
             Box(Modifier.fillMaxSize().background(LukaCream), content = { content() })
         }
     }
     file.writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+}
+
+@Composable
+private fun BrandLogoShot() {
+    Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
+        Text("Luka", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+        Surface(shape = RoundedCornerShape(22.dp), shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
+            Box(Modifier.padding(24.dp), contentAlignment = Alignment.CenterStart) {
+                LukaLogo()
+            }
+        }
+        Surface(color = Color(0xFF141414), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+            Box(Modifier.padding(24.dp), contentAlignment = Alignment.CenterStart) {
+                LukaLogo(light = true)
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            LukaOfferIcon()
+            Text("Marque sur les offres", style = MaterialTheme.typography.titleMedium)
+        }
+        OfferCard(
+            offer = JobOffer(
+                id = "logo-preview",
+                title = "Développeur Android",
+                company = "Casanayo",
+                companyLogoUrl = "",
+                profession = Profession.SOFTWARE_ENGINEERING,
+                regionId = "kin",
+                city = "Kinshasa",
+                contract = "CDI",
+                salary = "",
+                summary = "Le logo LUKA reste net à toutes les tailles.",
+                applyUrl = "",
+                postedAtEpochMs = 0L,
+                isRemote = false,
+            ),
+            onOpen = {},
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -112,12 +163,24 @@ private fun HomeShot() {
             Text("Les offres viennent du serveur Casanayo.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item {
-            Surface(shape = RoundedCornerShape(22.dp), shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Offres live", style = MaterialTheme.typography.titleMedium)
-                    Text("Home · Kinshasa", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            OfferCard(
+                offer = JobOffer(
+                    id = "home-preview",
+                    title = "Chargé de recrutement",
+                    company = "Casanayo",
+                    companyLogoUrl = "",
+                    profession = Profession.HUMAN_RESOURCES,
+                    regionId = "kin",
+                    city = "Kinshasa",
+                    contract = "CDI",
+                    salary = "",
+                    summary = "Les offres live portent le logo LUKA.",
+                    applyUrl = "",
+                    postedAtEpochMs = 0L,
+                    isRemote = false,
+                ),
+                onOpen = {},
+            )
         }
         item {
             Surface(color = LukaMist, shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth().height(120.dp)) {
