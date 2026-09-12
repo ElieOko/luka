@@ -10,11 +10,14 @@ import elieoko.mobile.luka.core.CrashReporter
 import elieoko.mobile.luka.core.PhoneNumbers
 import elieoko.mobile.luka.core.PushNotifier
 import elieoko.mobile.luka.data.mapper.mergeInto
+import elieoko.mobile.luka.data.mapper.requiresOtp
 import elieoko.mobile.luka.data.mapper.toAuthTokens
 import elieoko.mobile.luka.data.remote.LukaApi
 import elieoko.mobile.luka.data.remote.TokenStore
+import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
+import elieoko.mobile.luka.domain.model.AuthStartResult
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.domain.model.OtpChallenge
@@ -44,17 +47,22 @@ class SessionRepositoryImpl(
 
     override suspend fun current(): UserSession? = session.first()
 
-    override suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean): OtpChallenge {
+    override suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean): AuthStartResult {
         check(identifier.channel == AuthChannel.PHONE) { "Indique un numéro congolais." }
         val phone = PhoneNumbers.normalize(identifier.value)
         crashReporter.breadcrumb("otp_requested:PHONE")
-        if (newAccount) api.registerPhone(phone) else api.requestLoginOtp(phone)
+        val payload = if (newAccount) api.registerPhone(phone) else api.requestLoginOtp(phone)
         dataStore.edit { prefs ->
             prefs[Keys.pendingValue] = phone
             prefs[Keys.pendingChannel] = AuthChannel.PHONE.name
             prefs[Keys.pendingNewAccount] = newAccount
         }
-        return OtpChallenge(AuthIdentifier(AuthChannel.PHONE, phone))
+        if (!payload.data.requiresOtp()) {
+            val session = persistFromAuthPayload(phone, payload, skipOnboarding = true)
+            crashReporter.breadcrumb("session_direct_login")
+            return AuthStartResult.SignedIn(session)
+        }
+        return AuthStartResult.OtpRequired(OtpChallenge(AuthIdentifier(AuthChannel.PHONE, phone)))
     }
 
     override suspend fun resendOtp(identifier: AuthIdentifier) {
@@ -64,11 +72,19 @@ class SessionRepositoryImpl(
         crashReporter.breadcrumb("otp_resent")
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun verifyOtp(identifier: AuthIdentifier, code: String): UserSession {
         val phone = PhoneNumbers.normalize(identifier.value)
         val newAccount = dataStore.data.first()[Keys.pendingNewAccount] ?: false
         val payload = if (newAccount) api.verifyOtp(phone, code) else api.verifyLoginOtp(phone, code)
+        return persistFromAuthPayload(phone, payload, skipOnboarding = false)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private suspend fun persistFromAuthPayload(
+        phone: String,
+        payload: LooseEnvelope,
+        skipOnboarding: Boolean,
+    ): UserSession {
         val tokens = payload.data.toAuthTokens()
         tokenStore.set(tokens.accessToken, tokens.refreshToken)
         val existing = current()
@@ -78,6 +94,7 @@ class SessionRepositoryImpl(
         ).copy(
             id = tokens.user.userId?.toString() ?: existing?.profile?.id ?: Uuid.random().toString(),
             welcomeSeen = true,
+            analysisLaunched = skipOnboarding || existing?.profile?.analysisLaunched == true,
         )
         val session = UserSession(
             token = tokens.accessToken,

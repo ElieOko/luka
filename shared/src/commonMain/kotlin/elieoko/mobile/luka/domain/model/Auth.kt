@@ -11,3 +11,8 @@ data class OtpChallenge(
     val identifier: AuthIdentifier,
     val expiresInSeconds: Int = 300,
 )
+
+sealed class AuthStartResult {
+    data class OtpRequired(val challenge: OtpChallenge) : AuthStartResult()
+    data class SignedIn(val session: UserSession) : AuthStartResult()
+}
