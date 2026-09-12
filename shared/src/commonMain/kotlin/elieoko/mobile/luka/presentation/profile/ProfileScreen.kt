@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.UploadFile
-import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -52,7 +51,6 @@ import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.rememberCvPicker
-import elieoko.mobile.luka.presentation.theme.LukaGold
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import luka.shared.generated.resources.Res
@@ -65,8 +63,8 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
     val profile = state.profile
     val pickCv = rememberCvPicker(viewModel::saveCv)
-    val plan = LukaPlans.byId(profile?.planId ?: "starter")
-    val isPro = profile?.isPro == true
+    val plan = LukaPlans.byId(profile?.planId ?: LukaPlans.STARTER)
+    val paid = plan.id != LukaPlans.STARTER
 
     PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Cinematic) {
         LazyColumn(
@@ -80,10 +78,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                         Modifier
                             .size(76.dp)
                             .clip(CircleShape)
-                            .background(
-                                if (isPro) Brush.linearGradient(listOf(LukaGold, LukaRed))
-                                else Brush.linearGradient(listOf(LukaRed, Color(0xFF7A0C18))),
-                            ),
+                            .background(Brush.linearGradient(listOf(LukaRed, Color(0xFF7A0C18)))),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -96,9 +91,9 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PlanBadge(if (isPro) plan.name else "Gratuit", pro = isPro)
+                            PlanBadge(plan.name, paid = paid)
                             if (profile?.isCertified == true) {
-                                PlanBadge("Certifié", pro = false, certified = true)
+                                PlanBadge("Certifié", paid = false, certified = true)
                             }
                         }
                         Spacer(Modifier.height(6.dp))
@@ -112,7 +107,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                             listOfNotNull(
                                 profile?.profession?.title,
                                 profile?.cityName,
-                            ).distinct().joinToString(" · ").ifBlank { "Complète ton profil Pro" },
+                            ).distinct().joinToString(" · ").ifBlank { "Complète ton profil" },
                             color = Color.White.copy(0.8f),
                         )
                         val phone = profile?.identifier?.value.orEmpty()
@@ -127,31 +122,19 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 }
             }
             item {
-                Surface(
-                    shape = RoundedCornerShape(22.dp),
-                    color = Color.Transparent,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(listOf(Color(0xFF1A0A0C), Color(0xFF4A0710))),
-                            RoundedCornerShape(22.dp),
-                        ),
-                ) {
-                    Row(
-                        Modifier.padding(18.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Rounded.WorkspacePremium, contentDescription = null, tint = LukaGold, modifier = Modifier.size(28.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(plan.name, color = Color.White, fontWeight = FontWeight.Bold)
-                            Text(
-                                if (isPro) "Profil visible par les recruteurs · tous les métiers"
-                                else "Passe Pro pour débloquer tous les métiers",
-                                color = Color.White.copy(0.75f),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
+                Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Abonnement", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(plan.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            when (plan.id) {
+                                LukaPlans.PROFESSIONAL -> "Recherche d’emploi, profil proposé aux entreprises, actif 3 mois."
+                                LukaPlans.STUDENT -> "Orientation, tendances, universités et revues scientifiques."
+                                else -> "Ouvre le menu pour choisir Étudiant (3 $) ou Professionnel (5 $)."
+                            },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     }
                 }
             }
@@ -197,14 +180,14 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
 }
 
 @Composable
-private fun PlanBadge(label: String, pro: Boolean, certified: Boolean = false) {
+private fun PlanBadge(label: String, paid: Boolean, certified: Boolean = false) {
     val bg = when {
-        pro -> LukaGold
+        paid -> LukaRed
         certified -> Color.White.copy(alpha = 0.92f)
         else -> Color.White.copy(alpha = 0.92f)
     }
     val fg = when {
-        pro -> Color(0xFF1A0A0C)
+        paid -> Color.White
         certified -> Color(0xFF1B5E20)
         else -> LukaRed
     }

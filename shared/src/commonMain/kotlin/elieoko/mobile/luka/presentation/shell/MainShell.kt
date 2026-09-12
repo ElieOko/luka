@@ -49,7 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import elieoko.mobile.luka.presentation.components.ProUpgradeHost
+import elieoko.mobile.luka.presentation.components.AccountMenuHost
 import elieoko.mobile.luka.presentation.home.HomeScreen
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.home.OffersSeeAllScreen
@@ -96,8 +96,7 @@ fun MainShell() {
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
-        ProUpgradeHost(
-            modifier = Modifier.align(Alignment.BottomEnd),
+        AccountMenuHost(
             bottomInset = if (showAllOffers) 24.dp else 64.dp,
         )
     }
@@ -162,16 +161,16 @@ private fun TikTokBottomBar(
         ) {
             Box(
                 Modifier
-                    .size(44.dp)
+                    .size(if (tab == MainTab.Trends) 48.dp else 44.dp)
                     .shadow(8.dp, CircleShape)
                     .clip(CircleShape)
-                    .background(if (tab == MainTab.Trends) Color.White else LukaRed),
+                    .background(LukaRed),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     if (tab == MainTab.Trends) Icons.Rounded.Whatshot else Icons.Outlined.Whatshot,
                     contentDescription = "Tendances",
-                    tint = if (tab == MainTab.Trends) LukaRed else Color.White,
+                    tint = Color.White,
                     modifier = Modifier.size(22.dp),
                 )
             }

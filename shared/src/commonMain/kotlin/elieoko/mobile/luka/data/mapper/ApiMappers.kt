@@ -11,6 +11,7 @@ import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.City
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.JobOffer
+import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.model.TradeChip
 import elieoko.mobile.luka.domain.model.UserProfile
@@ -91,7 +92,7 @@ fun UserDto.mergeInto(
         countryCode = country?.takeIf { it.isNotBlank() } ?: existing?.countryCode,
         regionId = city?.takeIf { it.isNotBlank() }?.let { CongoCatalog.regionIdFor(it, null) } ?: existing?.regionId,
         profileCompleted = profileCompleted,
-        planId = if (isPremium) "pro" else (existing?.planId ?: "starter"),
+        planId = if (isPremium) LukaPlans.PROFESSIONAL else (existing?.planId ?: LukaPlans.STARTER),
         isCertified = isCertified || certified == true,
     )
 }

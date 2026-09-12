@@ -97,5 +97,5 @@ class CatalogRepositoryImpl(
         }
     }
 
-    override fun plans(): List<SubscriptionPlan> = LukaPlans.all
+    override fun plans(): List<SubscriptionPlan> = LukaPlans.paid
 }

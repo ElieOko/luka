@@ -1,68 +1,70 @@
 package elieoko.mobile.luka.domain.model
 
 object LukaPlans {
-    val all = listOf(
-        SubscriptionPlan(
-            id = "starter",
-            name = "Luka Starter",
-            priceLabel = "Gratuit",
-            period = "toujours",
-            highlight = false,
-            professionSlots = 1,
-            recruiterVisible = false,
-            orientationPlus = false,
-            perks = listOf(
-                "1 métier analysé en continu",
-                "Offres RDC + liens de candidature",
-                "Alertes OneSignal des nouvelles opportunités",
-            ),
-        ),
-        SubscriptionPlan(
-            id = "plus",
-            name = "Luka Plus",
-            priceLabel = "9 USD",
-            period = "/ mois",
-            highlight = false,
-            professionSlots = 2,
-            recruiterVisible = false,
-            orientationPlus = false,
-            perks = listOf(
-                "2 métiers au choix",
-                "Filtrage par ville",
-                "Actualités Luka en avant-première",
-            ),
-        ),
-        SubscriptionPlan(
-            id = "pro",
-            name = "Luka Pro",
-            priceLabel = "19 USD",
-            period = "/ mois",
-            highlight = true,
-            professionSlots = Profession.entries.size,
-            recruiterVisible = true,
-            orientationPlus = false,
-            perks = listOf(
-                "Tous les métiers",
-                "Profil visible par les recruteurs",
-                "Statistiques de demande au Congo",
-            ),
-        ),
-        SubscriptionPlan(
-            id = "elite",
-            name = "Luka Elite",
-            priceLabel = "39 USD",
-            period = "/ mois",
-            highlight = false,
-            professionSlots = Profession.entries.size,
-            recruiterVisible = true,
-            orientationPlus = true,
-            perks = listOf(
-                "Tout Luka Pro",
-                "Moteur d’orientation numérique",
-                "Mise en avant auprès des entreprises",
-            ),
+    const val STARTER = "starter"
+    const val STUDENT = "student"
+    const val PROFESSIONAL = "professional"
+
+    val starter = SubscriptionPlan(
+        id = STARTER,
+        name = "Gratuit",
+        priceLabel = "0 $",
+        period = "toujours",
+        highlight = false,
+        professionSlots = 1,
+        recruiterVisible = false,
+        orientationPlus = false,
+        perks = listOf(
+            "1 métier suivi",
+            "Offres RDC",
+            "Alertes des nouvelles opportunités",
         ),
     )
 
-    fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()
+    val student = SubscriptionPlan(
+        id = STUDENT,
+        name = "Étudiant",
+        priceLabel = "3 $",
+        period = "/ mois",
+        highlight = false,
+        professionSlots = 1,
+        recruiterVisible = false,
+        orientationPlus = true,
+        perks = listOf(
+            "Orientation",
+            "Tendances",
+            "News des universités mondiales et américaines",
+            "Revues scientifiques",
+        ),
+    )
+
+    val professional = SubscriptionPlan(
+        id = PROFESSIONAL,
+        name = "Professionnel",
+        priceLabel = "5 $",
+        period = "/ mois",
+        highlight = true,
+        professionSlots = Profession.entries.size,
+        recruiterVisible = true,
+        orientationPlus = false,
+        perks = listOf(
+            "Recherche d’emploi",
+            "Optimisation du profil",
+            "Amélioration du profil",
+            "Proposition du profil dans certaines entreprises",
+            "Profil actif au moins 3 mois",
+        ),
+    )
+
+    val all = listOf(starter, student, professional)
+    val paid = listOf(student, professional)
+
+    fun byId(id: String): SubscriptionPlan = when (id) {
+        STUDENT -> student
+        PROFESSIONAL, "plus", "pro", "elite" -> professional
+        else -> starter
+    }
+
+    fun isProfessional(id: String) = byId(id).id == PROFESSIONAL
+    fun isStudent(id: String) = byId(id).id == STUDENT
 }
