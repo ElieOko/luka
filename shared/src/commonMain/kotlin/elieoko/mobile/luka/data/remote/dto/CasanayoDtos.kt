@@ -24,17 +24,20 @@ data class ApiErrorBody(
 data class PhoneRegisterRequest(
     val phone: String,
     @EncodeDefault val isStudent: Boolean = false,
+    val buildSerial: String? = null,
 )
 
 @Serializable
 data class VerifyRequest(
     val identifier: String,
     val code: String,
+    val buildSerial: String? = null,
 )
 
 @Serializable
 data class IdentifiantRequest(
     val identifier: String,
+    val buildSerial: String? = null,
 )
 
 @Serializable
