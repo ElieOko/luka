@@ -277,14 +277,6 @@ fun SubscriptionCheckoutContent(
                 )
             },
             placeholder = { Text("827824163", style = MaterialTheme.typography.bodyMedium) },
-            supportingText = {
-                val hint = when {
-                    operator != null && state.method == PaymentMethod.MobileMoney -> operator.label
-                    state.method == PaymentMethod.Card -> "Requis pour FlexPay"
-                    else -> "9 chiffres"
-                }
-                Text(hint, style = MaterialTheme.typography.bodySmall)
-            },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             textStyle = MaterialTheme.typography.bodyMedium,
