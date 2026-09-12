@@ -226,13 +226,14 @@ class LukaDomainTest {
     }
 
     @Test
-    fun buildSerialErrorIsNotShownToUser() {
+    fun buildSerialErrorIsNotAConnectivityMessage() {
         val error = ApiException.fromBody(
             400,
             """{"message":"Le build_serial est obligatoire.","detailMessage":"Le build_serial est obligatoire."}""",
         )
+        assertFalse(error.message.orEmpty().contains("Impossible de joindre", ignoreCase = true))
         assertFalse(error.message.orEmpty().contains("build_serial", ignoreCase = true))
-        assertTrue(error.message.orEmpty().isNotBlank())
+        assertTrue(error.message.orEmpty().contains("code", ignoreCase = true))
     }
 
     @Test
