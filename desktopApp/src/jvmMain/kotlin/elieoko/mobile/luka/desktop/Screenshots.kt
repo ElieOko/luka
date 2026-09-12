@@ -65,8 +65,8 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
-    shot(File(outDir, "abonnement.png"), height = 1980) { SubscriptionShot() }
-    shot(File(outDir, "abonnement_pro.png"), height = 1980) { SubscriptionProShot() }
+    shot(File(outDir, "abonnement.png"), height = 1480) { SubscriptionShot() }
+    shot(File(outDir, "abonnement_pro.png"), height = 1480) { SubscriptionProShot() }
     shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
     shot(File(outDir, "luka_topbar.png"), height = 360) {
         LukaTopBarPreview()

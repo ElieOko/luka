@@ -210,7 +210,7 @@ private fun DrawerItem(
 
 @Composable
 fun SubscriptionPage(onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
         OverlayTopBar(title = "Abonnement", onBack = onBack)
         SubscriptionScreen()
     }

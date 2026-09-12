@@ -7,11 +7,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -33,8 +39,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -51,6 +59,8 @@ import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaMuted
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.image
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -90,25 +100,22 @@ fun SubscriptionCheckoutContent(
     val plan = state.plan
     val tabIndex = if (state.selectedApiId == 2L) 1 else 0
     val operator = CongoMno.detect(state.phoneNational)
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
+            .verticalScroll(scroll)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(
-            "Deux formules",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = LukaInk,
-        )
-        Text(
-            "Étudiant pour s’orienter. Professionnel pour trouver un emploi.",
+            "Étudiant pour s’orienter. Pro pour l’emploi.",
             color = LukaMuted,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodySmall,
         )
 
         TabRow(
@@ -119,6 +126,7 @@ fun SubscriptionCheckoutContent(
                 TabRowDefaults.SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(positions[tabIndex]),
                     color = LukaRed,
+                    height = 2.dp,
                 )
             },
         ) {
@@ -127,93 +135,88 @@ fun SubscriptionCheckoutContent(
                 onClick = { onSelectApiId(1L) },
                 selectedContentColor = LukaRed,
                 unselectedContentColor = LukaMuted,
-                text = { Text("Étudiant", fontWeight = FontWeight.SemiBold) },
+                text = { Text("Étudiant", style = MaterialTheme.typography.labelLarge) },
             )
             Tab(
                 selected = tabIndex == 1,
                 onClick = { onSelectApiId(2L) },
                 selectedContentColor = LukaRed,
                 unselectedContentColor = LukaMuted,
-                text = { Text("Professionnel", fontWeight = FontWeight.SemiBold) },
+                text = { Text("Professionnel", style = MaterialTheme.typography.labelLarge) },
             )
         }
 
         if (state.loadingCatalog) {
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally).size(28.dp),
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(22.dp),
                 color = LukaRed,
                 strokeWidth = 2.dp,
             )
         }
 
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             color = Color.White,
-            border = BorderStroke(1.5.dp, LukaRed),
+            border = BorderStroke(1.dp, LukaRed),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(plan.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = LukaInk)
+                    Text(plan.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium, color = LukaInk)
                     Spacer(Modifier.weight(1f))
                     Text(
                         "${state.formattedPrice} ${plan.period}".trim(),
                         color = LukaRed,
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 plan.perks.forEach { perk ->
-                    Text("·  $perk", color = LukaInk.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
+                    Text("·  $perk", color = LukaInk.copy(alpha = 0.75f), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
-        Text("Devise", style = MaterialTheme.typography.titleMedium, color = LukaInk)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             state.currencies.forEach { currency ->
                 val selected = currency.code.equals(state.currency.code, true)
                 Surface(
                     onClick = { onSelectCurrency(currency) },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = if (selected) LukaMist else Color.White,
                     border = BorderStroke(
                         width = if (selected) 1.5.dp else 1.dp,
                         color = if (selected) LukaRed else Color(0xFFE8D6D7),
                     ),
                 ) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            if (currency.code.equals("CDF", true)) "Francs (FC)" else "Dollars (USD)",
-                            fontWeight = FontWeight.SemiBold,
+                            if (currency.code.equals("CDF", true)) "FC" else "USD",
+                            style = MaterialTheme.typography.labelLarge,
                             color = LukaInk,
                         )
                         Text(
                             currency.format(plan.usdAmount),
                             color = LukaRed,
                             fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.bodyMedium,
                         )
-                        Text(
-                            if (currency.code.equals("CDF", true)) {
-                                "1 $ = ${currency.tauxLocal.toInt()} FC"
-                            } else {
-                                "Devise de référence"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = LukaMuted,
-                        )
+                        if (currency.code.equals("CDF", true)) {
+                            Text(
+                                "1 $ = ${currency.tauxLocal.toInt()} FC",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = LukaMuted,
+                            )
+                        }
                     }
                 }
             }
         }
 
-        Text("Paiement", style = MaterialTheme.typography.titleMedium, color = LukaInk)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PaymentChoiceCard(
                 title = "Mobile Money",
-                subtitle = "Vodacom, Orange, Airtel, Africell",
                 icon = Icons.Outlined.PhoneAndroid,
                 selected = state.method == PaymentMethod.MobileMoney,
                 onClick = { onSelectMethod(PaymentMethod.MobileMoney) },
@@ -221,7 +224,6 @@ fun SubscriptionCheckoutContent(
             )
             PaymentChoiceCard(
                 title = "Carte",
-                subtitle = "Visa, Mastercard",
                 icon = Icons.Outlined.CreditCard,
                 selected = state.method == PaymentMethod.Card,
                 onClick = { onSelectMethod(PaymentMethod.Card) },
@@ -232,70 +234,62 @@ fun SubscriptionCheckoutContent(
         AnimatedVisibility(visible = state.method == PaymentMethod.MobileMoney) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CongoMno.entries.forEach { mno ->
                     OperatorLogo(
                         operator = mno,
                         selected = mno == operator,
-                        modifier = Modifier.size(52.dp),
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+                if (operator != null) {
+                    Text(
+                        operator.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = LukaInk,
                     )
                 }
             }
         }
 
-        Text("Numéro à débiter", style = MaterialTheme.typography.titleMedium, color = LukaInk)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = LukaMist,
-                border = BorderStroke(1.dp, Color(0xFFE8D6D7)),
-            ) {
+        OutlinedTextField(
+            value = state.phoneNational,
+            onValueChange = onPhoneChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focus ->
+                    if (focus.isFocused) {
+                        scope.launch {
+                            delay(280)
+                            scroll.animateScrollTo(scroll.maxValue)
+                        }
+                    }
+                },
+            prefix = {
                 Text(
                     "+243",
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 18.dp),
                     fontWeight = FontWeight.Bold,
                     color = LukaInk,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
-            }
-            OutlinedTextField(
-                value = state.phoneNational,
-                onValueChange = onPhoneChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("827824163") },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            )
-        }
-
-        AnimatedVisibility(visible = operator != null && state.method == PaymentMethod.MobileMoney) {
-            if (operator != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    OperatorLogo(operator = operator, selected = true, modifier = Modifier.size(44.dp))
-                    Column {
-                        Text(operator.label, fontWeight = FontWeight.SemiBold, color = LukaInk)
-                        Text(
-                            "Réseau détecté",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = LukaMuted,
-                        )
-                    }
-                }
-            }
-        }
+            },
+            placeholder = { Text("827824163", style = MaterialTheme.typography.bodyMedium) },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            textStyle = MaterialTheme.typography.bodyMedium,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = LukaRed,
+                cursorColor = LukaRed,
+            ),
+        )
 
         AnimatedVisibility(visible = state.method == PaymentMethod.Card) {
             Text(
-                "Après validation, tu seras redirigé vers FlexPay pour payer par carte.",
+                "Tu seras redirigé vers FlexPay.",
                 style = MaterialTheme.typography.bodySmall,
                 color = LukaMuted,
             )
@@ -317,7 +311,7 @@ fun SubscriptionCheckoutContent(
             onClick = onPay,
             enabled = state.canPay,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
     }
 }
 
@@ -327,7 +321,7 @@ private fun OperatorLogo(
     selected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(10.dp)
     Surface(
         modifier = modifier,
         shape = shape,
@@ -339,7 +333,7 @@ private fun OperatorLogo(
     ) {
         val inset = when (operator) {
             CongoMno.Orange, CongoMno.Vodacom -> 0.dp
-            else -> 5.dp
+            else -> 4.dp
         }
         Image(
             painter = painterResource(operator.image()),
@@ -353,7 +347,6 @@ private fun OperatorLogo(
 @Composable
 private fun PaymentChoiceCard(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
@@ -362,17 +355,25 @@ private fun PaymentChoiceCard(
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         color = if (selected) LukaMist else Color.White,
         border = BorderStroke(
             width = if (selected) 1.5.dp else 1.dp,
             color = if (selected) LukaRed else Color(0xFFE8D6D7),
         ),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(icon, contentDescription = null, tint = if (selected) LukaRed else LukaMuted)
-            Text(title, fontWeight = FontWeight.SemiBold, color = LukaInk)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LukaMuted)
+        Row(
+            Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = if (selected) LukaRed else LukaMuted,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(title, fontWeight = FontWeight.SemiBold, color = LukaInk, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
