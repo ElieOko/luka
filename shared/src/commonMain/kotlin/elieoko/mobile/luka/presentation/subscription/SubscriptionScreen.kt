@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -37,9 +35,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -231,6 +229,22 @@ fun SubscriptionCheckoutContent(
             )
         }
 
+        AnimatedVisibility(visible = state.method == PaymentMethod.MobileMoney) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CongoMno.entries.forEach { mno ->
+                    OperatorLogo(
+                        operator = mno,
+                        selected = mno == operator,
+                        modifier = Modifier.size(52.dp),
+                    )
+                }
+            }
+        }
+
         Text("Numéro à débiter", style = MaterialTheme.typography.titleMedium, color = LukaInk)
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -259,18 +273,14 @@ fun SubscriptionCheckoutContent(
             )
         }
 
-        AnimatedVisibility(visible = operator != null) {
+        AnimatedVisibility(visible = operator != null && state.method == PaymentMethod.MobileMoney) {
             if (operator != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Image(
-                        painter = painterResource(operator.image()),
-                        contentDescription = operator.label,
-                        modifier = Modifier.size(44.dp).clip(CircleShape),
-                    )
+                    OperatorLogo(operator = operator, selected = true, modifier = Modifier.size(44.dp))
                     Column {
                         Text(operator.label, fontWeight = FontWeight.SemiBold, color = LukaInk)
                         Text(
@@ -308,6 +318,35 @@ fun SubscriptionCheckoutContent(
             enabled = state.canPay,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun OperatorLogo(
+    operator: CongoMno,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(12.dp)
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = Color.White,
+        border = BorderStroke(
+            width = if (selected) 1.5.dp else 1.dp,
+            color = if (selected) LukaRed else Color(0xFFE8D6D7),
+        ),
+    ) {
+        val inset = when (operator) {
+            CongoMno.Orange, CongoMno.Vodacom -> 0.dp
+            else -> 5.dp
+        }
+        Image(
+            painter = painterResource(operator.image()),
+            contentDescription = operator.label,
+            modifier = Modifier.fillMaxSize().padding(inset),
+            contentScale = ContentScale.Fit,
+        )
     }
 }
 
