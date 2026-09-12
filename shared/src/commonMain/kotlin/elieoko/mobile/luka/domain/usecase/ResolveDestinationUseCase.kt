@@ -8,7 +8,7 @@ class ResolveDestinationUseCase {
         if (session == null || !session.isAuthenticated) return AppDestination.Welcome
         val profile = session.profile
         return when {
-            profile.profession == null -> AppDestination.Profession
+            profile.profession == null && profile.cityName.isNullOrBlank() -> AppDestination.Profession
             profile.countryCode.isNullOrBlank() || profile.regionId.isNullOrBlank() -> AppDestination.Location
             !profile.analysisLaunched -> AppDestination.Analysis
             else -> AppDestination.Home

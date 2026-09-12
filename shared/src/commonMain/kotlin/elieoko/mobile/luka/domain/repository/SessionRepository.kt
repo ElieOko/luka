@@ -1,14 +1,14 @@
 package elieoko.mobile.luka.domain.repository
 
 import elieoko.mobile.luka.domain.model.AuthIdentifier
-import elieoko.mobile.luka.domain.model.OtpChallenge
+import elieoko.mobile.luka.domain.model.AuthStartResult
 import elieoko.mobile.luka.domain.model.UserSession
 import kotlinx.coroutines.flow.Flow
 
 interface SessionRepository {
     val session: Flow<UserSession?>
     suspend fun current(): UserSession?
-    suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean = false): OtpChallenge
+    suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean = false): AuthStartResult
     suspend fun resendOtp(identifier: AuthIdentifier)
     suspend fun verifyOtp(identifier: AuthIdentifier, code: String): UserSession
     suspend fun refreshRemoteProfile()

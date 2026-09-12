@@ -34,11 +34,13 @@ data class AuthTokens(
 
 fun JsonElement?.toAuthTokens(): AuthTokens {
     val root = this as? JsonObject ?: error("Réponse de connexion inattendue.")
-    val nested = root["profile"] as? JsonObject
+    val nested = (root["user"] as? JsonObject) ?: (root["profile"] as? JsonObject)
     val access = root.str("accessToken", "token", "access_token")
         ?: nested?.str("accessToken", "token")
         ?: error("Jeton manquant. Réessaie le code.")
-    val refresh = root.str("refreshToken", "refresh_token").orEmpty()
+    val refresh = root.str("refreshToken", "refresh_token")
+        ?: nested?.str("refreshToken", "refresh_token")
+        ?: ""
     val profileSource = nested ?: root
     val user = UserDto(
         userId = profileSource.long("userId", "id"),
@@ -52,6 +54,15 @@ fun JsonElement?.toAuthTokens(): AuthTokens {
         profileCompleted = profileSource.bool("profileCompleted") ?: false,
     )
     return AuthTokens(accessToken = access, refreshToken = refresh, user = user)
+}
+
+fun JsonElement?.requiresOtp(): Boolean {
+    val root = this as? JsonObject ?: return true
+    val flag = root["requiresOtp"]?.jsonPrimitive?.booleanOrNull
+    if (flag != null) return flag
+    if (root["otpBypassed"]?.jsonPrimitive?.booleanOrNull == true) return false
+    if (root["loginFlow"]?.jsonPrimitive?.contentOrNull.equals("direct", ignoreCase = true)) return false
+    return root.str("accessToken", "token", "access_token") == null
 }
 
 fun UserDto.mergeInto(

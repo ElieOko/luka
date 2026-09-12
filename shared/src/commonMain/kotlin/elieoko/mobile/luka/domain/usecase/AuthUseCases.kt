@@ -2,12 +2,13 @@ package elieoko.mobile.luka.domain.usecase
 
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
+import elieoko.mobile.luka.domain.model.AuthStartResult
 import elieoko.mobile.luka.domain.model.OtpChallenge
 import elieoko.mobile.luka.domain.model.UserSession
 import elieoko.mobile.luka.domain.repository.SessionRepository
 
 class RequestOtpUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(raw: String, newAccount: Boolean = false): OtpChallenge {
+    suspend operator fun invoke(raw: String, newAccount: Boolean = false): AuthStartResult {
         val identifier = parseIdentifier(raw)
         return sessions.requestOtp(identifier, newAccount)
     }

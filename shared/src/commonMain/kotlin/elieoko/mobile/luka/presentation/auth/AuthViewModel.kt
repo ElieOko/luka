@@ -3,6 +3,7 @@ package elieoko.mobile.luka.presentation.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import elieoko.mobile.luka.domain.model.AuthIdentifier
+import elieoko.mobile.luka.domain.model.AuthStartResult
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResendOtpUseCase
 import elieoko.mobile.luka.domain.usecase.VerifyOtpUseCase
@@ -43,14 +44,19 @@ class AuthViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, info = null) }
             runCatching { requestOtp(_state.value.input, _state.value.newAccount) }
-                .onSuccess { challenge ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            step = AuthUiState.Step.Otp,
-                            identifier = challenge.identifier,
-                            info = "Code envoyé par SMS.",
-                        )
+                .onSuccess { result ->
+                    when (result) {
+                        is AuthStartResult.SignedIn -> _state.update {
+                            it.copy(loading = false, error = null, info = null)
+                        }
+                        is AuthStartResult.OtpRequired -> _state.update {
+                            it.copy(
+                                loading = false,
+                                step = AuthUiState.Step.Otp,
+                                identifier = result.challenge.identifier,
+                                info = "Code envoyé par SMS.",
+                            )
+                        }
                     }
                 }
                 .onFailure { error ->

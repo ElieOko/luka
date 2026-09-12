@@ -14,6 +14,7 @@ import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
 import elieoko.mobile.luka.domain.usecase.applyFilters
 import elieoko.mobile.luka.domain.usecase.withPolicy
 import elieoko.mobile.luka.data.mapper.mergeInto
+import elieoko.mobile.luka.data.mapper.requiresOtp
 import elieoko.mobile.luka.data.mapper.toAuthTokens
 import elieoko.mobile.luka.data.mapper.toCity
 import elieoko.mobile.luka.data.mapper.toJobOffer
@@ -24,6 +25,7 @@ import elieoko.mobile.luka.data.remote.dto.StoredJobOfferDto
 import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.domain.model.OrientationPersona
 import elieoko.mobile.luka.domain.usecase.LiveInsights
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -214,6 +216,35 @@ class LukaDomainTest {
         assertEquals("bbb", tokens.refreshToken)
         assertEquals(3L, tokens.user.userId)
         assertEquals("+243810000000", tokens.user.phone)
+    }
+
+    @Test
+    fun requiresOtpFalseReadsUserAndSkipsSms() {
+        val json = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"requiresOtp":false,"deviceRecognized":true,"loginFlow":"direct","otpBypassed":true,"accessToken":"aaa","refreshToken":"bbb","user":{"userId":9,"username":"Talent Luka","phone":"+243827824163","city":"Kinshasa","country":"CD","isPremium":false,"isCertified":true,"profileCompleted":false}}""",
+        )
+        assertFalse(json.requiresOtp())
+        val tokens = json.toAuthTokens()
+        assertEquals("aaa", tokens.accessToken)
+        assertEquals(9L, tokens.user.userId)
+        assertEquals("+243827824163", tokens.user.phone)
+        assertEquals("Kinshasa", tokens.user.city)
+        assertEquals("CD", tokens.user.country)
+        assertTrue(tokens.user.isCertified)
+        val merged = tokens.user.mergeInto(
+            identifier = AuthIdentifier(AuthChannel.PHONE, "+243827824163"),
+            existing = null,
+        ).copy(welcomeSeen = true, analysisLaunched = true)
+        assertEquals(AppDestination.Home, resolve(UserSession(token = "aaa", profile = merged)))
+    }
+
+    @Test
+    fun requiresOtpTrueWhenFlagMissingAndNoToken() {
+        val json = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"message":"Code OTP envoyé par SMS.","data":{"otpStatus":"pending"}}""",
+        )
+        val data = json.jsonObject["data"]
+        assertTrue(data.requiresOtp())
     }
 
     @Test
