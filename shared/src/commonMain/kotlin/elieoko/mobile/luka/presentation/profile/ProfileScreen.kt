@@ -2,6 +2,8 @@ package elieoko.mobile.luka.presentation.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +42,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.CongoCatalog
+import elieoko.mobile.luka.presentation.components.FilterPill
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.components.PageBackdrop
@@ -51,6 +55,7 @@ import luka.shared.generated.resources.Res
 import luka.shared.generated.resources.onboarding_kinshasa_1
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
@@ -80,6 +85,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (isFree) {
                         Surface(color = Color.White.copy(alpha = 0.92f), shape = RoundedCornerShape(99.dp)) {
                             Text(
@@ -90,6 +96,20 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             )
                         }
+                    }
+                    if (profile?.isCertified == true) {
+                        Surface(color = Color.White.copy(alpha = 0.92f), shape = RoundedCornerShape(99.dp)) {
+                            Text(
+                                "Certifié",
+                                color = Color(0xFF1B5E20),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            )
+                        }
+                    }
+                    }
+                    if (isFree || profile?.isCertified == true) {
                         Spacer(Modifier.height(6.dp))
                     }
                     Text(
@@ -99,9 +119,16 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                         color = Color.White,
                     )
                     Text(
-                        listOfNotNull(profile?.profession?.title, profile?.regionId?.replaceFirstChar { it.uppercase() }).joinToString(" · "),
+                        listOfNotNull(
+                            profile?.profession?.title,
+                            profile?.cityName,
+                            profile?.regionId?.replaceFirstChar { it.uppercase() },
+                        ).distinct().joinToString(" · "),
                         color = Color.White.copy(0.8f),
                     )
+                    if (!profile?.identifier?.value.isNullOrBlank()) {
+                        Text(profile?.identifier?.value.orEmpty(), color = Color.White.copy(0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
@@ -117,7 +144,19 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                     OutlinedTextField(state.displayName, viewModel::onName, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
                     OutlinedTextField(state.email, viewModel::onEmail, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
                     OutlinedTextField(state.bio, viewModel::onBio, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(16.dp))
-                    LukaPrimaryButton("Enregistrer", viewModel::saveProfile)
+                    Text("${CongoCatalog.rdc.flag}  ${CongoCatalog.rdc.name}", style = MaterialTheme.typography.titleSmall)
+                    Text("Pays verrouillé", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text("Ville", style = MaterialTheme.typography.titleSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.cities.forEach { city ->
+                            FilterPill(city.name, state.cityName.equals(city.name, true)) { viewModel.onCity(city.name) }
+                        }
+                    }
+                    LukaPrimaryButton(
+                        if (state.saving) "Enregistrement…" else "Enregistrer",
+                        viewModel::saveProfile,
+                        enabled = !state.saving,
+                    )
                     if (state.message != null) {
                         Text(state.message.orEmpty(), color = LukaRed)
                     }
@@ -125,8 +164,8 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
             }
         }
         item {
-            TextButton(onClick = viewModel::resetDemo, modifier = Modifier.fillMaxWidth()) {
-                Text("Réinitialiser la démo", color = Color.White.copy(0.75f))
+            TextButton(onClick = viewModel::logout, modifier = Modifier.fillMaxWidth()) {
+                Text("Se déconnecter", color = Color.White.copy(0.75f))
             }
         }
     }

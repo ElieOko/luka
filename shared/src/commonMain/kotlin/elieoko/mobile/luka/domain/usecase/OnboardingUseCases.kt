@@ -30,12 +30,17 @@ class LaunchInfiniteAnalysisUseCase(
 }
 
 class UpdateProfileUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(displayName: String, bio: String, email: String = "") {
+    suspend operator fun invoke(
+        displayName: String,
+        bio: String,
+        email: String = "",
+        cityName: String? = null,
+    ) {
         require(displayName.trim().length >= 2) { "Le nom est trop court." }
         if (email.isNotBlank()) {
             require(email.contains("@") && email.contains(".")) { "E-mail invalide." }
         }
-        sessions.updateProfile(displayName.trim(), bio.trim(), email.trim())
+        sessions.updateProfile(displayName.trim(), bio.trim(), email.trim(), cityName?.trim()?.ifBlank { null })
     }
 }
 

@@ -86,6 +86,7 @@ class CatalogRepositoryImpl(
     override suspend fun refreshOffers(profile: UserProfile?) {
         val page = runCatching {
             api.listOffers(
+                city = profile?.cityName,
                 domainIds = listOfNotNull(profile?.domainId),
                 size = 50,
             )
