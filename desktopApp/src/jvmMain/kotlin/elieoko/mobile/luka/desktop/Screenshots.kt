@@ -42,7 +42,9 @@ import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.PulseDot
-import elieoko.mobile.luka.presentation.components.SubscriptionPlansContent
+import elieoko.mobile.luka.domain.model.PaymentMethod
+import elieoko.mobile.luka.presentation.subscription.SubscriptionCheckoutContent
+import elieoko.mobile.luka.presentation.subscription.SubscriptionUiState
 import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
@@ -63,7 +65,8 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
-    shot(File(outDir, "abonnement.png"), height = 1380) { SubscriptionShot() }
+    shot(File(outDir, "abonnement.png"), height = 1980) { SubscriptionShot() }
+    shot(File(outDir, "abonnement_pro.png"), height = 1980) { SubscriptionProShot() }
     shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
     shot(File(outDir, "luka_topbar.png"), height = 360) {
         LukaTopBarPreview()
@@ -205,7 +208,38 @@ private fun HomeShot() {
 @Composable
 private fun SubscriptionShot() {
     Box(Modifier.fillMaxSize().background(Color.White).padding(top = 24.dp)) {
-        SubscriptionPlansContent(currentPlanId = "starter", onSelect = {})
+        SubscriptionCheckoutContent(
+            state = SubscriptionUiState(
+                selectedApiId = 1,
+                phoneNational = "827824163",
+                loadingCatalog = false,
+            ),
+            onSelectApiId = {},
+            onSelectMethod = {},
+            onPhoneChange = {},
+            onSelectCurrency = {},
+            onPay = {},
+        )
+    }
+}
+
+@Composable
+private fun SubscriptionProShot() {
+    Box(Modifier.fillMaxSize().background(Color.White).padding(top = 24.dp)) {
+        SubscriptionCheckoutContent(
+            state = SubscriptionUiState(
+                selectedApiId = 2,
+                currencyCode = "CDF",
+                method = PaymentMethod.Card,
+                phoneNational = "827824163",
+                loadingCatalog = false,
+            ),
+            onSelectApiId = {},
+            onSelectMethod = {},
+            onPhoneChange = {},
+            onSelectCurrency = {},
+            onPay = {},
+        )
     }
 }
 

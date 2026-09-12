@@ -24,7 +24,19 @@ import luka.shared.generated.resources.profession_management
 import luka.shared.generated.resources.profession_other
 import luka.shared.generated.resources.profession_security
 import luka.shared.generated.resources.profession_software
+import elieoko.mobile.luka.core.CongoMno
+import luka.shared.generated.resources.operator_africell
+import luka.shared.generated.resources.operator_airtel
+import luka.shared.generated.resources.operator_orange
+import luka.shared.generated.resources.operator_vodacom
 import org.jetbrains.compose.resources.DrawableResource
+
+fun CongoMno.image(): DrawableResource = when (this) {
+    CongoMno.Vodacom -> Res.drawable.operator_vodacom
+    CongoMno.Orange -> Res.drawable.operator_orange
+    CongoMno.Airtel -> Res.drawable.operator_airtel
+    CongoMno.Africell -> Res.drawable.operator_africell
+}
 
 fun Profession.image(): DrawableResource = when (imageName) {
     "profession_software" -> Res.drawable.profession_software

@@ -36,6 +36,8 @@ object LukaPlans {
             "News des universités mondiales et américaines",
             "Revues scientifiques",
         ),
+        apiId = 1,
+        usdAmount = 3.0,
     )
 
     val professional = SubscriptionPlan(
@@ -54,6 +56,8 @@ object LukaPlans {
             "Proposition du profil dans certaines entreprises",
             "Profil actif au moins 3 mois",
         ),
+        apiId = 2,
+        usdAmount = 5.0,
     )
 
     val all = listOf(starter, student, professional)
@@ -64,6 +68,8 @@ object LukaPlans {
         PROFESSIONAL, "plus", "pro", "elite" -> professional
         else -> starter
     }
+
+    fun byApiId(id: Long): SubscriptionPlan = paid.firstOrNull { it.apiId == id } ?: student
 
     fun isProfessional(id: String) = byId(id).id == PROFESSIONAL
     fun isStudent(id: String) = byId(id).id == STUDENT

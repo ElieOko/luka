@@ -122,6 +122,8 @@ data class SubscriptionPlan(
     val recruiterVisible: Boolean,
     val orientationPlus: Boolean,
     val perks: List<String>,
+    val apiId: Long = 0,
+    val usdAmount: Double = 0.0,
 )
 
 data class HomeFeed(

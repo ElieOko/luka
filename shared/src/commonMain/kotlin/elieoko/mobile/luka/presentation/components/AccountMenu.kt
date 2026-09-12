@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,9 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.CreditCard
@@ -42,8 +39,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -54,10 +49,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import elieoko.mobile.luka.domain.model.LukaPlans
-import elieoko.mobile.luka.domain.model.SubscriptionPlan
 import elieoko.mobile.luka.domain.repository.SessionRepository
-import elieoko.mobile.luka.domain.usecase.SelectPlanUseCase
+import elieoko.mobile.luka.presentation.subscription.SubscriptionScreen
 import elieoko.mobile.luka.presentation.theme.LukaInk
 import elieoko.mobile.luka.presentation.theme.LukaMuted
 import elieoko.mobile.luka.presentation.theme.LukaRed
@@ -76,8 +69,6 @@ fun AccountMenuHost(
     bottomInset: Dp = LukaBottomNavHeight,
 ) {
     val sessions: SessionRepository = koinInject()
-    val selectPlan: SelectPlanUseCase = koinInject()
-    val session by sessions.session.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxSize()) {
@@ -129,15 +120,7 @@ fun AccountMenuHost(
         if (page != null) {
             Surface(Modifier.fillMaxSize(), color = Color.White) {
                 when (page) {
-                    AccountPage.Subscription -> SubscriptionPage(
-                        currentPlanId = session?.profile?.planId ?: LukaPlans.STARTER,
-                        onBack = { onPageChange(null) },
-                        onSelect = { plan ->
-                            scope.launch {
-                                runCatching { selectPlan(plan.id, emptyList()) }
-                            }
-                        },
-                    )
+                    AccountPage.Subscription -> SubscriptionPage(onBack = { onPageChange(null) })
                     AccountPage.Notifications -> NotificationsPage(onBack = { onPageChange(null) })
                     AccountPage.Settings -> SettingsPage(
                         onBack = { onPageChange(null) },
@@ -226,89 +209,10 @@ private fun DrawerItem(
 }
 
 @Composable
-fun SubscriptionPage(
-    currentPlanId: String,
-    onBack: () -> Unit,
-    onSelect: (SubscriptionPlan) -> Unit,
-) {
+fun SubscriptionPage(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         OverlayTopBar(title = "Abonnement", onBack = onBack)
-        SubscriptionPlansContent(
-            currentPlanId = currentPlanId,
-            onSelect = onSelect,
-            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-        )
-    }
-}
-
-@Composable
-fun SubscriptionPlansContent(
-    currentPlanId: String,
-    onSelect: (SubscriptionPlan) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier.padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
-        Text(
-            "Deux formules",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = LukaInk,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Étudiant pour s’orienter. Professionnel pour trouver un emploi.",
-            color = LukaMuted,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        Spacer(Modifier.height(20.dp))
-        LukaPlans.paid.forEach { plan ->
-            PlanCard(
-                plan = plan,
-                selected = LukaPlans.byId(currentPlanId).id == plan.id,
-                onSelect = { onSelect(plan) },
-            )
-            Spacer(Modifier.height(12.dp))
-        }
-    }
-}
-
-@Composable
-private fun PlanCard(
-    plan: SubscriptionPlan,
-    selected: Boolean,
-    onSelect: () -> Unit,
-) {
-    Surface(
-        onClick = onSelect,
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(
-            width = if (selected || plan.highlight) 1.5.dp else 1.dp,
-            color = if (selected || plan.highlight) LukaRed else Color(0xFFE8D6D7),
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(plan.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = LukaInk)
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "${plan.priceLabel} ${plan.period}".trim(),
-                    color = LukaRed,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            plan.perks.forEach { perk ->
-                Text("·  $perk", color = LukaInk.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
-            }
-            Spacer(Modifier.height(4.dp))
-            LukaPrimaryButton(
-                text = if (selected) "Formule actuelle" else "Choisir ${plan.name.lowercase()}",
-                onClick = onSelect,
-                enabled = !selected,
-            )
-        }
+        SubscriptionScreen()
     }
 }
 

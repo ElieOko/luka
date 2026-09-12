@@ -144,6 +144,10 @@ class LukaDomainTest {
         assertEquals(2, LukaPlans.paid.size)
         assertEquals("3 $", LukaPlans.student.priceLabel)
         assertEquals("5 $", LukaPlans.professional.priceLabel)
+        assertEquals(1L, LukaPlans.student.apiId)
+        assertEquals(2L, LukaPlans.professional.apiId)
+        assertEquals(LukaPlans.student, LukaPlans.byApiId(1))
+        assertEquals(LukaPlans.professional, LukaPlans.byApiId(2))
         assertEquals(LukaPlans.professional, LukaPlans.byId("pro"))
         assertEquals(LukaPlans.professional, LukaPlans.byId("elite"))
         assertEquals(LukaPlans.professional, LukaPlans.byId("plus"))
@@ -386,6 +390,44 @@ class LukaDomainTest {
         assertTrue(encoded.contains("email"))
         assertTrue(encoded.contains("city"))
         assertTrue(encoded.contains("country"))
+    }
+
+    @Test
+    fun congoMnoDetectsVodacomFor827824163() {
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Vodacom, elieoko.mobile.luka.core.CongoMno.detect("827824163"))
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Vodacom, elieoko.mobile.luka.core.CongoMno.detect("+243827824163"))
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Vodacom, elieoko.mobile.luka.core.CongoMno.detect("82"))
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Orange, elieoko.mobile.luka.core.CongoMno.detect("850000000"))
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Airtel, elieoko.mobile.luka.core.CongoMno.detect("970000000"))
+        assertEquals(elieoko.mobile.luka.core.CongoMno.Africell, elieoko.mobile.luka.core.CongoMno.detect("910000000"))
+        assertEquals("827824163", elieoko.mobile.luka.core.CongoMno.nationalDigits("+243 827 824 163"))
+    }
+
+    @Test
+    fun paymentAmountFollowsTauxLocal() {
+        val usd = elieoko.mobile.luka.domain.model.PaymentCurrency("USD", "Dollar US", 1.0)
+        val cdf = elieoko.mobile.luka.domain.model.PaymentCurrency("CDF", "Franc congolais", 2250.0)
+        assertEquals("3 $", usd.format(3.0))
+        assertEquals("5 $", usd.format(5.0))
+        assertEquals("6750 FC", cdf.format(3.0))
+        assertEquals("11250 FC", cdf.format(5.0))
+        assertEquals(6750.0, cdf.amountFor(LukaPlans.student.usdAmount))
+        assertEquals(11250.0, cdf.amountFor(LukaPlans.professional.usdAmount))
+    }
+
+    @Test
+    fun paymentInitRequestKeepsSwaggerKeys() {
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.PaymentInitRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.PaymentInitRequest(
+                abonnementId = 1,
+                devise = "USD",
+                phone = "+243827824163",
+            ),
+        )
+        assertTrue(encoded.contains("\"abonnementId\":1"))
+        assertTrue(encoded.contains("\"devise\":\"USD\""))
+        assertTrue(encoded.contains("\"phone\":\"+243827824163\""))
     }
 
     private fun session(
