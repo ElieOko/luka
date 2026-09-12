@@ -18,8 +18,15 @@ class ApiException(
                     ?: obj["detailMessage"]?.jsonPrimitive?.content
                     ?: obj["error"]?.jsonPrimitive?.content
             }.getOrNull()?.takeIf { it.isNotBlank() }
-            return ApiException(parsed ?: fallback(status), status)
+            return ApiException(userFacing(parsed ?: fallback(status)), status)
         }
+
+        private fun userFacing(raw: String): String =
+            if (raw.contains("build_serial", ignoreCase = true)) {
+                "Impossible de joindre Luka. Réessaie."
+            } else {
+                raw
+            }
 
         private fun fallback(status: Int) = when (status) {
             401 -> "Session expirée. Reconnecte-toi."

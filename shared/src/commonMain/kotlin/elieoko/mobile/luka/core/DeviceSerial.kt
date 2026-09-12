@@ -9,4 +9,10 @@ fun interface DeviceSerial {
     fun value(): String
 }
 
+fun DeviceSerial.memoized(): DeviceSerial {
+    val cached = value()
+    return DeviceSerial { cached }
+}
+
 expect fun createDeviceSerial(): DeviceSerial
+

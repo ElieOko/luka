@@ -37,28 +37,28 @@ class LukaApi(
     private val json: Json,
     private val deviceSerial: DeviceSerial,
 ) {
-    suspend fun registerPhone(phone: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/register-phone", auth = false, deviceHeader = true) {
-            jsonBody(PhoneRegisterRequest(phone))
+    suspend fun registerPhone(phone: String, isStudent: Boolean = false): LooseEnvelope =
+        send(HttpMethod.Post, "/api/v1/public/auth/register-phone", auth = false) {
+            jsonBody(PhoneRegisterRequest(phone = phone, isStudent = isStudent))
         }
 
     suspend fun verifyOtp(identifier: String, code: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/verify-otp", auth = false, deviceHeader = true) {
+        send(HttpMethod.Post, "/api/v1/public/auth/verify-otp", auth = false) {
             jsonBody(VerifyRequest(identifier, code))
         }
 
     suspend fun requestLoginOtp(identifier: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/login/request-otp", auth = false, deviceHeader = true) {
+        send(HttpMethod.Post, "/api/v1/public/auth/login/request-otp", auth = false) {
             jsonBody(IdentifiantRequest(identifier))
         }
 
     suspend fun verifyLoginOtp(identifier: String, code: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/login/verify-otp", auth = false, deviceHeader = true) {
+        send(HttpMethod.Post, "/api/v1/public/auth/login/verify-otp", auth = false) {
             jsonBody(VerifyRequest(identifier, code))
         }
 
     suspend fun resendOtp(identifier: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false, deviceHeader = true) {
+        send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false) {
             jsonBody(IdentifiantRequest(identifier))
         }
 
@@ -126,6 +126,13 @@ class LukaApi(
         setBody(body)
     }
 
+    private fun HttpRequestBuilder.applyDeviceSerial(raw: String) {
+        val value = raw.trim()
+        if (value.isBlank()) return
+        header("build_serial", value)
+        header("build-serial", value)
+    }
+
     private fun <T> ApiEnvelope<T>.required(): T =
         data ?: throw ApiException(message.ifBlank { "Réponse inattendue du serveur." })
 
@@ -133,20 +140,17 @@ class LukaApi(
         method: HttpMethod,
         path: String,
         auth: Boolean = true,
-        deviceHeader: Boolean = false,
         builder: HttpRequestBuilder.() -> Unit = {},
     ): T {
         val response = try {
             http.request {
                 this.method = method
                 url { takeFrom("${config.apiBaseUrl}$path") }
+                applyDeviceSerial(deviceSerial.value())
                 if (auth) {
                     tokenStore.accessToken?.takeIf { it.isNotBlank() }?.let {
                         header(HttpHeaders.Authorization, "Bearer $it")
                     }
-                }
-                if (deviceHeader) {
-                    header("build_serial", deviceSerial.value())
                 }
                 builder()
             }
