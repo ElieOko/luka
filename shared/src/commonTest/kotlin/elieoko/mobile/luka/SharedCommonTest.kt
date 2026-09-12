@@ -247,6 +247,47 @@ class LukaDomainTest {
     }
 
     @Test
+    fun authBodiesSendCamelCaseBuildSerial() {
+        val json = kotlinx.serialization.json.Json { encodeDefaults = true }
+        val register = json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest(
+                phone = "+243827824163",
+                isStudent = false,
+                buildSerial = "luka-and-test",
+            ),
+        )
+        val login = json.encodeToString(
+            elieoko.mobile.luka.data.remote.dto.IdentifiantRequest.serializer(),
+            elieoko.mobile.luka.data.remote.dto.IdentifiantRequest(
+                identifier = "+243827824163",
+                buildSerial = "luka-and-test",
+            ),
+        )
+        assertTrue(register.contains("\"buildSerial\":\"luka-and-test\""))
+        assertTrue(register.contains("\"isStudent\":false"))
+        assertFalse(register.contains("build_serial"))
+        assertTrue(login.contains("\"buildSerial\":\"luka-and-test\""))
+        assertTrue(login.contains("\"identifier\":\"+243827824163\""))
+    }
+
+    @Test
+    fun serializationFailureIsNotAConnectivityMessage() {
+        val message = elieoko.mobile.luka.data.remote.mapClientTransportError(
+            IllegalArgumentException("Serializer for class 'JsonObject' is not found"),
+        )
+        assertEquals("Impossible d’envoyer la requête. Réessaie.", message)
+    }
+
+    @Test
+    fun unresolvedHostIsAConnectivityMessage() {
+        val message = elieoko.mobile.luka.data.remote.mapClientTransportError(
+            Exception("Unable to resolve host server.casanayo.com"),
+        )
+        assertEquals("Vérifie ta connexion.", message)
+    }
+
+    @Test
     fun deviceSerialIsStableAndPrefixed() {
         val serial = elieoko.mobile.luka.core.createDeviceSerial().memoized()
         val first = serial.value()
