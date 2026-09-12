@@ -1,6 +1,7 @@
 package elieoko.mobile.luka.data.remote
 
 import elieoko.mobile.luka.core.AppConfig
+import elieoko.mobile.luka.core.DeviceSerial
 import elieoko.mobile.luka.data.remote.dto.ApiEnvelope
 import elieoko.mobile.luka.data.remote.dto.CongoCityDto
 import elieoko.mobile.luka.data.remote.dto.IdentifiantRequest
@@ -9,6 +10,7 @@ import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
 import elieoko.mobile.luka.data.remote.dto.PhoneRegisterRequest
 import elieoko.mobile.luka.data.remote.dto.ProfileCompletionRequest
 import elieoko.mobile.luka.data.remote.dto.SaveUserPreferencesRequest
+import elieoko.mobile.luka.data.remote.dto.UpdateProfileRequest
 import elieoko.mobile.luka.data.remote.dto.SearchDomainDto
 import elieoko.mobile.luka.data.remote.dto.UserDto
 import elieoko.mobile.luka.data.remote.dto.UserPreferencesDto
@@ -33,25 +35,49 @@ class LukaApi(
     private val config: AppConfig,
     private val tokenStore: TokenStore,
     private val json: Json,
+    private val deviceSerial: DeviceSerial,
 ) {
     suspend fun registerPhone(phone: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/register-phone", auth = false) {
+        send(HttpMethod.Post, "/api/v1/public/auth/register-phone", auth = false, deviceHeader = true) {
             jsonBody(PhoneRegisterRequest(phone))
         }
 
     suspend fun verifyOtp(identifier: String, code: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/verify-otp", auth = false) {
+        send(HttpMethod.Post, "/api/v1/public/auth/verify-otp", auth = false, deviceHeader = true) {
+            jsonBody(VerifyRequest(identifier, code))
+        }
+
+    suspend fun requestLoginOtp(identifier: String): LooseEnvelope =
+        send(HttpMethod.Post, "/api/v1/public/auth/login/request-otp", auth = false, deviceHeader = true) {
+            jsonBody(IdentifiantRequest(identifier))
+        }
+
+    suspend fun verifyLoginOtp(identifier: String, code: String): LooseEnvelope =
+        send(HttpMethod.Post, "/api/v1/public/auth/login/verify-otp", auth = false, deviceHeader = true) {
             jsonBody(VerifyRequest(identifier, code))
         }
 
     suspend fun resendOtp(identifier: String): LooseEnvelope =
-        send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false) {
+        send(HttpMethod.Post, "/api/v1/public/auth/resend-otp", auth = false, deviceHeader = true) {
             jsonBody(IdentifiantRequest(identifier))
         }
 
     suspend fun completeProfile(fullName: String, email: String): UserDto =
         send<ApiEnvelope<UserDto>>(HttpMethod.Post, "/api/v1/auth/complete-profile") {
             jsonBody(ProfileCompletionRequest(fullName, email))
+        }.required()
+
+    suspend fun getProfile(): UserDto =
+        send<ApiEnvelope<UserDto>>(HttpMethod.Get, "/api/v1/auth/profile").required()
+
+    suspend fun updateProfile(
+        fullName: String? = null,
+        email: String? = null,
+        city: String? = null,
+        country: String? = null,
+    ): UserDto =
+        send<ApiEnvelope<UserDto>>(HttpMethod.Put, "/api/v1/auth/profile") {
+            jsonBody(UpdateProfileRequest(fullName = fullName, email = email, city = city, country = country))
         }.required()
 
     suspend fun savePreferences(domainIds: List<Long>): UserPreferencesDto =
@@ -107,6 +133,7 @@ class LukaApi(
         method: HttpMethod,
         path: String,
         auth: Boolean = true,
+        deviceHeader: Boolean = false,
         builder: HttpRequestBuilder.() -> Unit = {},
     ): T {
         val response = try {
@@ -117,6 +144,9 @@ class LukaApi(
                     tokenStore.accessToken?.takeIf { it.isNotBlank() }?.let {
                         header(HttpHeaders.Authorization, "Bearer $it")
                     }
+                }
+                if (deviceHeader) {
+                    header("build_serial", deviceSerial.value())
                 }
                 builder()
             }

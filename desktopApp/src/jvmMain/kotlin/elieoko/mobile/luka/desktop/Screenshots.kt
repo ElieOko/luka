@@ -40,10 +40,12 @@ import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.PulseDot
+import elieoko.mobile.luka.presentation.components.ProPlansContent
 import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.LukaTheme
+import elieoko.mobile.luka.presentation.theme.LukaWine
 import elieoko.mobile.luka.presentation.theme.imageByName
 import elieoko.mobile.luka.presentation.welcome.WelcomeScreen
 import org.jetbrains.skia.EncodedImageFormat
@@ -60,6 +62,7 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
+    shot(File(outDir, "pro_upgrade.png"), height = 1400) { ProShot() }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }
@@ -190,6 +193,13 @@ private fun HomeShot() {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProShot() {
+    Box(Modifier.fillMaxSize().background(LukaWine)) {
+        ProPlansContent(currentPlanId = "starter", onSelect = {})
     }
 }
 

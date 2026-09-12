@@ -20,7 +20,10 @@ data class UserProfile(
     val cityName: String? = null,
     val domainId: Long? = null,
     val profileCompleted: Boolean = false,
-)
+    val isCertified: Boolean = false,
+) {
+    val isPro: Boolean get() = planId == "pro" || planId == "elite"
+}
 
 data class UserSession(
     val token: String,

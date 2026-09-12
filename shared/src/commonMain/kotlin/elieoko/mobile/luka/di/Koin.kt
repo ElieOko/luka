@@ -4,6 +4,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import elieoko.mobile.luka.core.AppConfig
 import elieoko.mobile.luka.core.CrashReporter
+import elieoko.mobile.luka.core.createDeviceSerial
 import elieoko.mobile.luka.core.createHttpClient
 import elieoko.mobile.luka.core.createPushNotifier
 import elieoko.mobile.luka.data.local.LukaDatabase
@@ -58,8 +59,9 @@ val lukaModule = module {
     single { AppConfig() }
     single { Json { ignoreUnknownKeys = true; isLenient = true } }
     single { TokenStore() }
+    single { createDeviceSerial() }
     single { createHttpClient() }
-    single { LukaApi(createHttpClient(), get(), get(), get()) }
+    single { LukaApi(createHttpClient(), get(), get(), get(), get()) }
     single<CrashReporter> { SentryCrashReporter(get()) }
     single { createPushNotifier(get()) }
     single { createSessionDataStore() }

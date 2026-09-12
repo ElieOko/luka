@@ -8,14 +8,15 @@ import kotlinx.coroutines.flow.Flow
 interface SessionRepository {
     val session: Flow<UserSession?>
     suspend fun current(): UserSession?
-    suspend fun requestOtp(identifier: AuthIdentifier): OtpChallenge
+    suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean = false): OtpChallenge
     suspend fun resendOtp(identifier: AuthIdentifier)
     suspend fun verifyOtp(identifier: AuthIdentifier, code: String): UserSession
+    suspend fun refreshRemoteProfile()
     suspend fun markWelcomeSeen()
     suspend fun saveProfession(professionId: String, domainId: Long? = null)
     suspend fun saveLocation(countryCode: String, regionId: String, cityName: String? = null)
     suspend fun markAnalysisLaunched()
-    suspend fun updateProfile(displayName: String, bio: String, email: String = "")
+    suspend fun updateProfile(displayName: String, bio: String, email: String = "", cityName: String? = null)
     suspend fun selectPlan(planId: String, extraProfessionIds: List<String>)
     suspend fun saveCv(fileName: String, mimeType: String)
     suspend fun resetDemo()

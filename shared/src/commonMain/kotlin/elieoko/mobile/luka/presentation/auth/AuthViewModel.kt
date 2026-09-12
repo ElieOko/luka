@@ -19,6 +19,7 @@ data class AuthUiState(
     val error: String? = null,
     val identifier: AuthIdentifier? = null,
     val info: String? = null,
+    val newAccount: Boolean = false,
 ) {
     enum class Step { Identifier, Otp }
 }
@@ -34,10 +35,14 @@ class AuthViewModel(
     fun onInput(value: String) = _state.update { it.copy(input = value, error = null, info = null) }
     fun onOtp(value: String) = _state.update { it.copy(otp = value.filter { ch -> ch.isDigit() }.take(6), error = null) }
 
+    fun toggleNewAccount() = _state.update {
+        it.copy(newAccount = !it.newAccount, error = null, info = null, step = AuthUiState.Step.Identifier, otp = "")
+    }
+
     fun submitIdentifier() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, info = null) }
-            runCatching { requestOtp(_state.value.input) }
+            runCatching { requestOtp(_state.value.input, _state.value.newAccount) }
                 .onSuccess { challenge ->
                     _state.update {
                         it.copy(
