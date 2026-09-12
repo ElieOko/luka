@@ -45,18 +45,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
+import org.koin.core.error.KoinApplicationAlreadyStartedException
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
-    if (org.koin.core.context.GlobalContext.getOrNull() != null) return
-    startKoin {
-        appDeclaration()
-        modules(lukaModule)
+    if (KoinPlatform.getKoinOrNull() != null) return
+    try {
+        startKoin {
+            appDeclaration()
+            modules(lukaModule)
+        }
+    } catch (_: KoinApplicationAlreadyStartedException) {
+        // Déjà démarré (double appel Android/iOS).
     }
 }
 
