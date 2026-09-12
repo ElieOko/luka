@@ -21,8 +21,9 @@ data class UserProfile(
     val domainId: Long? = null,
     val profileCompleted: Boolean = false,
     val isCertified: Boolean = false,
+    val isPremium: Boolean = false,
 ) {
-    val isPro: Boolean get() = LukaPlans.isProfessional(planId)
+    val isPro: Boolean get() = isPremium || LukaPlans.isProfessional(planId)
     val isStudent: Boolean get() = LukaPlans.isStudent(planId)
 }
 

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,9 +31,9 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.NotificationsNone
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,11 +44,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -68,34 +64,36 @@ import elieoko.mobile.luka.presentation.theme.LukaRed
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
-private enum class AccountPage { Subscription, Notifications, Settings }
+enum class AccountPage { Subscription, Notifications, Settings }
 
 @Composable
 fun AccountMenuHost(
+    drawerOpen: Boolean,
+    page: AccountPage?,
+    onDrawerChange: (Boolean) -> Unit,
+    onPageChange: (AccountPage?) -> Unit,
+    showOpportunityFab: Boolean,
     bottomInset: Dp = LukaBottomNavHeight,
 ) {
     val sessions: SessionRepository = koinInject()
     val selectPlan: SelectPlanUseCase = koinInject()
     val session by sessions.session.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
-    var drawerOpen by rememberSaveable { mutableStateOf(false) }
-    var page by remember { mutableStateOf<AccountPage?>(null) }
 
     Box(Modifier.fillMaxSize()) {
-        if (page == null && !drawerOpen) {
-            FloatingActionButton(
-                onClick = { drawerOpen = true },
+        if (showOpportunityFab) {
+            ExtendedFloatingActionButton(
+                onClick = { onPageChange(AccountPage.Subscription) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .navigationBarsPadding()
-                    .padding(end = 16.dp, bottom = bottomInset - 8.dp)
-                    .shadow(10.dp, CircleShape),
+                    .padding(end = 16.dp, bottom = bottomInset + 20.dp)
+                    .shadow(10.dp, RoundedCornerShape(28.dp)),
                 containerColor = LukaRed,
                 contentColor = Color.White,
-                shape = CircleShape,
-            ) {
-                Icon(Icons.Rounded.Menu, contentDescription = "Menu")
-            }
+                icon = { Icon(Icons.Rounded.Star, contentDescription = null) },
+                text = { Text("Plus d’opportunité", fontWeight = FontWeight.SemiBold) },
+            )
         }
 
         AnimatedVisibility(
@@ -110,7 +108,7 @@ fun AccountMenuHost(
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                    ) { drawerOpen = false },
+                    ) { onDrawerChange(false) },
             )
         }
 
@@ -120,10 +118,10 @@ fun AccountMenuHost(
             exit = slideOutHorizontally { -it },
         ) {
             AccountDrawer(
-                onClose = { drawerOpen = false },
+                onClose = { onDrawerChange(false) },
                 onOpen = { destination ->
-                    drawerOpen = false
-                    page = destination
+                    onDrawerChange(false)
+                    onPageChange(destination)
                 },
             )
         }
@@ -133,22 +131,21 @@ fun AccountMenuHost(
                 when (page) {
                     AccountPage.Subscription -> SubscriptionPage(
                         currentPlanId = session?.profile?.planId ?: LukaPlans.STARTER,
-                        onBack = { page = null },
+                        onBack = { onPageChange(null) },
                         onSelect = { plan ->
                             scope.launch {
                                 runCatching { selectPlan(plan.id, emptyList()) }
                             }
                         },
                     )
-                    AccountPage.Notifications -> NotificationsPage(onBack = { page = null })
+                    AccountPage.Notifications -> NotificationsPage(onBack = { onPageChange(null) })
                     AccountPage.Settings -> SettingsPage(
-                        onBack = { page = null },
+                        onBack = { onPageChange(null) },
                         onLogout = {
                             scope.launch { sessions.resetDemo() }
-                            page = null
+                            onPageChange(null)
                         },
                     )
-                    null -> Unit
                 }
             }
         }

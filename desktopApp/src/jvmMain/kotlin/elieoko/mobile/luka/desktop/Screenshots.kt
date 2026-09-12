@@ -37,6 +37,7 @@ import elieoko.mobile.luka.presentation.components.AccountDrawerPreview
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaOfferIcon
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.LukaTopBarPreview
 import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
@@ -64,6 +65,10 @@ fun main() {
     shot(File(outDir, "home_offers.png")) { HomeShot() }
     shot(File(outDir, "abonnement.png"), height = 1380) { SubscriptionShot() }
     shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
+    shot(File(outDir, "luka_topbar.png"), height = 360) {
+        LukaTopBarPreview()
+    }
+    shot(File(outDir, "luka_chrome.png"), height = 1720) { ChromeShot() }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }
@@ -207,6 +212,52 @@ private fun SubscriptionShot() {
 @Composable
 private fun DrawerShot() {
     AccountDrawerPreview()
+}
+
+@Composable
+private fun ChromeShot() {
+    Box(Modifier.fillMaxSize().background(Color(0xFF2A0C12))) {
+        Column(Modifier.fillMaxSize()) {
+            LukaTopBarPreview()
+            Column(Modifier.weight(1f).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Bonjour Grace", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                Text("L’emploi vient à toi.", color = Color.White.copy(0.85f))
+                OfferCard(
+                    offer = JobOffer(
+                        id = "chrome-preview",
+                        title = "Développeur Android",
+                        company = "Casanayo",
+                        companyLogoUrl = "",
+                        profession = Profession.SOFTWARE_ENGINEERING,
+                        regionId = "kin",
+                        city = "Kinshasa",
+                        contract = "CDI",
+                        salary = "",
+                        summary = "Top bar Luka, menu, cloche, Plus d’opportunité.",
+                        applyUrl = "",
+                        postedAtEpochMs = 0L,
+                        isRemote = false,
+                    ),
+                    onOpen = {},
+                )
+            }
+            Box(Modifier.fillMaxWidth().height(56.dp).background(Color(0xFF121212)))
+        }
+        Surface(
+            onClick = {},
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 76.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = LukaRed,
+            shadowElevation = 8.dp,
+        ) {
+            Text(
+                "Plus d’opportunité",
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+            )
+        }
+    }
 }
 
 @Composable

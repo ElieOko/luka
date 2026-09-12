@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,7 +50,7 @@ fun TrendsScreen(viewModel: ExploreViewModel = koinViewModel()) {
     val stats = feed?.stats.orEmpty()
     PageBackdrop(Res.drawable.onboarding_kinshasa_2, tone = PageBackdropTone.Cinematic) {
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = LukaBottomNavHeight + 16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LukaBottomNavHeight + 72.dp),
     ) {
         Box(
             Modifier

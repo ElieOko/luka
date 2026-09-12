@@ -33,11 +33,15 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,55 +53,121 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import elieoko.mobile.luka.core.AppBackHandler
+import elieoko.mobile.luka.core.rememberAppExitRequest
 import elieoko.mobile.luka.presentation.components.AccountMenuHost
+import elieoko.mobile.luka.presentation.components.AccountPage
+import elieoko.mobile.luka.presentation.components.LukaTopBar
 import elieoko.mobile.luka.presentation.home.HomeScreen
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.home.OffersSeeAllScreen
 import elieoko.mobile.luka.presentation.news.NewsScreen
 import elieoko.mobile.luka.presentation.orientation.OrientationScreen
+import elieoko.mobile.luka.presentation.profile.ProfileEditScreen
 import elieoko.mobile.luka.presentation.profile.ProfileScreen
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.trends.TrendsScreen
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 enum class MainTab { Home, News, Trends, Orientation, Profile }
 
 private val TikTokBar = Color(0xFF121212)
 private val TikTokMuted = Color(0xFF8A8A8A)
+private const val ExitWindowMs = 2_000L
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun MainShell() {
     var tab by rememberSaveable { mutableStateOf(MainTab.Home) }
     var showAllOffers by rememberSaveable { mutableStateOf(false) }
+    var drawerOpen by rememberSaveable { mutableStateOf(false) }
+    var accountPage by remember { mutableStateOf<AccountPage?>(null) }
+    var editProfile by rememberSaveable { mutableStateOf(false) }
+    var lastBackAt by remember { mutableStateOf(0L) }
     val homeVm: HomeViewModel = koinViewModel()
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val exitApp = rememberAppExitRequest()
+    val chromeVisible = !showAllOffers && accountPage == null && !editProfile
 
-    Box(Modifier.fillMaxSize()) {
-        if (showAllOffers) {
-            OffersSeeAllScreen(onBack = { showAllOffers = false }, viewModel = homeVm)
-        } else {
-            AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
-                when (current) {
-                    MainTab.Home -> HomeScreen(
-                        onSeeAllOffers = { showAllOffers = true },
-                        onOpenNews = { tab = MainTab.News },
-                        onOpenTrends = { tab = MainTab.Trends },
-                        onOpenOrientation = { tab = MainTab.Orientation },
-                        viewModel = homeVm,
-                    )
-                    MainTab.News -> NewsScreen()
-                    MainTab.Trends -> TrendsScreen()
-                    MainTab.Orientation -> OrientationScreen()
-                    MainTab.Profile -> ProfileScreen()
+    AppBackHandler {
+        when {
+            editProfile -> editProfile = false
+            accountPage != null -> accountPage = null
+            drawerOpen -> drawerOpen = false
+            showAllOffers -> showAllOffers = false
+            tab != MainTab.Home -> tab = MainTab.Home
+            else -> {
+                val now = Clock.System.now().toEpochMilliseconds()
+                if (now - lastBackAt < ExitWindowMs) {
+                    exitApp()
+                } else {
+                    lastBackAt = now
+                    scope.launch {
+                        snackbar.showSnackbar("Appuie encore pour quitter.")
+                    }
                 }
             }
-            TikTokBottomBar(
-                tab = tab,
-                onTab = { tab = it },
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            if (chromeVisible) {
+                LukaTopBar(
+                    onMenu = { drawerOpen = true },
+                    onNotifications = { accountPage = AccountPage.Notifications },
+                )
+            }
+            Box(Modifier.weight(1f)) {
+                if (showAllOffers) {
+                    OffersSeeAllScreen(onBack = { showAllOffers = false }, viewModel = homeVm)
+                } else {
+                    AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+                        when (current) {
+                            MainTab.Home -> HomeScreen(
+                                onSeeAllOffers = { showAllOffers = true },
+                                onOpenNews = { tab = MainTab.News },
+                                onOpenTrends = { tab = MainTab.Trends },
+                                onOpenOrientation = { tab = MainTab.Orientation },
+                                viewModel = homeVm,
+                            )
+                            MainTab.News -> NewsScreen()
+                            MainTab.Trends -> TrendsScreen()
+                            MainTab.Orientation -> OrientationScreen()
+                            MainTab.Profile -> ProfileScreen(onEditProfile = { editProfile = true })
+                        }
+                    }
+                    TikTokBottomBar(
+                        tab = tab,
+                        onTab = { tab = it },
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
+            }
         }
         AccountMenuHost(
-            bottomInset = if (showAllOffers) 24.dp else 64.dp,
+            drawerOpen = drawerOpen,
+            page = accountPage,
+            onDrawerChange = { drawerOpen = it },
+            onPageChange = { accountPage = it },
+            showOpportunityFab = chromeVisible,
+            bottomInset = 56.dp,
+        )
+        if (editProfile) {
+            Surface(Modifier.fillMaxSize(), color = Color.White) {
+                ProfileEditScreen(onBack = { editProfile = false })
+            }
+        }
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 88.dp),
         )
     }
 }

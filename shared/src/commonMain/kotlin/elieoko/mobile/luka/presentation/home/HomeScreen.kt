@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -86,7 +85,8 @@ fun HomeScreen(
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
     var showFilters by rememberSaveable { mutableStateOf(false) }
-    val isFree = state.profile?.planId.isNullOrBlank() || state.profile?.planId == "starter"
+    val isFree = state.profile?.isPremium != true &&
+        (state.profile?.planId.isNullOrBlank() || state.profile?.planId == "starter")
 
     if (showFilters) {
         FilterBottomSheet(
@@ -126,9 +126,8 @@ fun HomeScreen(
             Column(
                 Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(bottom = LukaBottomNavHeight + 16.dp),
+                    .padding(bottom = LukaBottomNavHeight + 72.dp),
             ) {
             HomeHeader(
                 firstName = state.profile?.firstName().orEmpty(),
