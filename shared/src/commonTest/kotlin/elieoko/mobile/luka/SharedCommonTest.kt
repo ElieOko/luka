@@ -422,12 +422,22 @@ class LukaDomainTest {
             elieoko.mobile.luka.data.remote.dto.PaymentInitRequest(
                 abonnementId = 1,
                 devise = "USD",
-                phone = "+243827824163",
+                phone = "243827824163",
             ),
         )
         assertTrue(encoded.contains("\"abonnementId\":1"))
         assertTrue(encoded.contains("\"devise\":\"USD\""))
-        assertTrue(encoded.contains("\"phone\":\"+243827824163\""))
+        assertTrue(encoded.contains("\"phone\":\"243827824163\""))
+        assertFalse(encoded.contains("+243"))
+    }
+
+    @Test
+    fun paymentPhoneMergesPrefixWithoutPlus() {
+        assertEquals("243827824163", elieoko.mobile.luka.core.PhoneNumbers.forPayment("827824163"))
+        assertEquals("243827824163", elieoko.mobile.luka.core.PhoneNumbers.forPayment("+243827824163"))
+        assertEquals("243827824163", elieoko.mobile.luka.core.PhoneNumbers.forPayment("0827824163"))
+        assertFails { elieoko.mobile.luka.core.PhoneNumbers.forPayment("") }
+        assertFails { elieoko.mobile.luka.core.PhoneNumbers.forPayment("82") }
     }
 
     private fun session(

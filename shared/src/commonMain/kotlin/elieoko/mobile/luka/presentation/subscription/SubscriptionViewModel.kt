@@ -12,10 +12,7 @@ import elieoko.mobile.luka.domain.repository.PaymentRepository
 import elieoko.mobile.luka.domain.repository.SessionRepository
 import elieoko.mobile.luka.domain.usecase.SelectPlanUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -48,19 +45,18 @@ class SubscriptionViewModel(
     private val selectPlan: SelectPlanUseCase,
 ) : ViewModel() {
     private val draft = MutableStateFlow(SubscriptionUiState())
-
-    val state: StateFlow<SubscriptionUiState> = combine(sessions.session, draft) { session, local ->
-        val fromProfile = CongoMno.nationalDigits(session?.profile?.identifier?.value.orEmpty())
-        local.copy(phoneNational = local.phoneNational.ifBlank { fromProfile })
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SubscriptionUiState())
+    val state: StateFlow<SubscriptionUiState> = draft
+    private var phoneTouched = false
 
     init {
         viewModelScope.launch {
+            val fromProfile = CongoMno.nationalDigits(sessions.current()?.profile?.identifier?.value.orEmpty()).take(9)
             val plans = runCatching { payments.plans() }.getOrDefault(LukaPlans.paid)
             val currencies = runCatching { payments.currencies() }.getOrDefault(PaymentCurrency.fallback)
             draft.update {
                 it.copy(
                     loadingCatalog = false,
+                    phoneNational = if (phoneTouched) it.phoneNational else it.phoneNational.ifBlank { fromProfile },
                     plans = plans.ifEmpty { LukaPlans.paid },
                     currencies = currencies.ifEmpty { PaymentCurrency.fallback },
                     selectedApiId = it.selectedApiId.takeIf { id -> plans.any { plan -> plan.apiId == id } }
@@ -82,8 +78,11 @@ class SubscriptionViewModel(
 
     fun selectMethod(method: PaymentMethod) = draft.update { it.copy(method = method, error = null) }
 
-    fun onPhone(value: String) = draft.update {
-        it.copy(phoneNational = CongoMno.nationalDigits(value).take(9), error = null)
+    fun onPhone(value: String) {
+        phoneTouched = true
+        draft.update {
+            it.copy(phoneNational = CongoMno.nationalDigits(value).take(9), error = null)
+        }
     }
 
     fun pay() {
@@ -93,8 +92,8 @@ class SubscriptionViewModel(
                 draft.update { it.copy(error = "Connecte-toi pour payer.") }
                 return@launch
             }
-            val phone = runCatching { PhoneNumbers.normalize("243${current.phoneNational}") }.getOrNull()
-            if (phone == null || current.phoneNational.length != 9) {
+            val phone = runCatching { PhoneNumbers.forPayment(current.phoneNational) }.getOrNull()
+            if (phone == null) {
                 draft.update { it.copy(error = "Indique un numéro congolais de 9 chiffres.") }
                 return@launch
             }

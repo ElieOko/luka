@@ -234,14 +234,14 @@ fun SubscriptionCheckoutContent(
         AnimatedVisibility(visible = state.method == PaymentMethod.MobileMoney) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CongoMno.entries.forEach { mno ->
                     OperatorLogo(
                         operator = mno,
                         selected = mno == operator,
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 if (operator != null) {
@@ -270,13 +270,12 @@ fun SubscriptionCheckoutContent(
                 },
             prefix = {
                 Text(
-                    "+243",
+                    "243",
                     fontWeight = FontWeight.Bold,
                     color = LukaInk,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
-            placeholder = { Text("827824163", style = MaterialTheme.typography.bodyMedium) },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             textStyle = MaterialTheme.typography.bodyMedium,
@@ -321,7 +320,7 @@ private fun OperatorLogo(
     selected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(8.dp)
     Surface(
         modifier = modifier,
         shape = shape,
@@ -333,7 +332,7 @@ private fun OperatorLogo(
     ) {
         val inset = when (operator) {
             CongoMno.Orange, CongoMno.Vodacom -> 0.dp
-            else -> 4.dp
+            else -> 2.dp
         }
         Image(
             painter = painterResource(operator.image()),

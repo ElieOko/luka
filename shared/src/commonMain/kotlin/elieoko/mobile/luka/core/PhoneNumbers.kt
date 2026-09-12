@@ -12,4 +12,10 @@ object PhoneNumbers {
         require(national.length >= 12) { "Numéro trop court. Exemple : +243 81 000 0000" }
         return "+$national"
     }
+
+    fun forPayment(raw: String): String {
+        val national = CongoMno.nationalDigits(raw)
+        require(national.length == 9) { "Indique un numéro congolais de 9 chiffres." }
+        return "243$national"
+    }
 }
