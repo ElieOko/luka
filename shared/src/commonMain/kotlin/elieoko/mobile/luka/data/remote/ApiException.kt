@@ -21,12 +21,11 @@ class ApiException(
             return ApiException(userFacing(parsed ?: fallback(status)), status)
         }
 
-        private fun userFacing(raw: String): String =
-            if (raw.contains("build_serial", ignoreCase = true)) {
-                "Impossible de joindre Luka. Réessaie."
-            } else {
-                raw
-            }
+        private fun userFacing(raw: String): String = when {
+            raw.contains("build_serial", ignoreCase = true) ->
+                "Le code n’a pas pu être envoyé. Réessaie."
+            else -> raw
+        }
 
         private fun fallback(status: Int) = when (status) {
             401 -> "Session expirée. Reconnecte-toi."
