@@ -16,6 +16,7 @@ import elieoko.mobile.luka.data.remote.TokenStore
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.CongoCatalog
+import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.domain.model.OtpChallenge
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.domain.model.UserProfile
@@ -154,7 +155,7 @@ class SessionRepositoryImpl(
         it.copy(
             planId = planId,
             extraProfessionIds = extraProfessionIds,
-            visibleToRecruiters = planId == "pro" || planId == "elite",
+            visibleToRecruiters = LukaPlans.isProfessional(planId),
         )
     }
 

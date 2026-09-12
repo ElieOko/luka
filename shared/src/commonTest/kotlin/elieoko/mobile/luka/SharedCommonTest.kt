@@ -131,8 +131,23 @@ class LukaDomainTest {
         val profile = session(profession = Profession.FINANCE).profile
         val allowed = FeedPolicy.allowedProfessions(profile, LukaPlans.byId("starter"))
         assertEquals(setOf(Profession.FINANCE), allowed)
-        val pro = FeedPolicy.allowedProfessions(profile, LukaPlans.byId("pro"))
+        val pro = FeedPolicy.allowedProfessions(profile, LukaPlans.byId("professional"))
         assertTrue(pro.containsAll(Profession.entries))
+    }
+
+    @Test
+    fun paidPlansAreStudentThreeAndProfessionalFive() {
+        assertEquals(2, LukaPlans.paid.size)
+        assertEquals("3 $", LukaPlans.student.priceLabel)
+        assertEquals("5 $", LukaPlans.professional.priceLabel)
+        assertEquals(LukaPlans.professional, LukaPlans.byId("pro"))
+        assertEquals(LukaPlans.professional, LukaPlans.byId("elite"))
+        assertEquals(LukaPlans.professional, LukaPlans.byId("plus"))
+        val student = FeedPolicy.allowedProfessions(
+            session(profession = Profession.FINANCE).profile,
+            LukaPlans.student,
+        )
+        assertEquals(setOf(Profession.FINANCE), student)
     }
 
     @Test

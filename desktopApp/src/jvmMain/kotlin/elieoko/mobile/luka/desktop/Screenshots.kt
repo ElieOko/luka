@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.domain.model.JobOffer
 import elieoko.mobile.luka.domain.model.Profession
+import elieoko.mobile.luka.presentation.components.AccountDrawerPreview
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaOfferIcon
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
@@ -40,12 +41,11 @@ import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.PulseDot
-import elieoko.mobile.luka.presentation.components.ProPlansContent
+import elieoko.mobile.luka.presentation.components.SubscriptionPlansContent
 import elieoko.mobile.luka.presentation.theme.LukaCream
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.LukaTheme
-import elieoko.mobile.luka.presentation.theme.LukaWine
 import elieoko.mobile.luka.presentation.theme.imageByName
 import elieoko.mobile.luka.presentation.welcome.WelcomeScreen
 import org.jetbrains.skia.EncodedImageFormat
@@ -62,7 +62,8 @@ fun main() {
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
-    shot(File(outDir, "pro_upgrade.png"), height = 1400) { ProShot() }
+    shot(File(outDir, "abonnement.png"), height = 1380) { SubscriptionShot() }
+    shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }
@@ -197,10 +198,15 @@ private fun HomeShot() {
 }
 
 @Composable
-private fun ProShot() {
-    Box(Modifier.fillMaxSize().background(LukaWine)) {
-        ProPlansContent(currentPlanId = "starter", onSelect = {})
+private fun SubscriptionShot() {
+    Box(Modifier.fillMaxSize().background(Color.White).padding(top = 24.dp)) {
+        SubscriptionPlansContent(currentPlanId = "starter", onSelect = {})
     }
+}
+
+@Composable
+private fun DrawerShot() {
+    AccountDrawerPreview()
 }
 
 @Composable

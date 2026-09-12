@@ -22,7 +22,8 @@ data class UserProfile(
     val profileCompleted: Boolean = false,
     val isCertified: Boolean = false,
 ) {
-    val isPro: Boolean get() = planId == "pro" || planId == "elite"
+    val isPro: Boolean get() = LukaPlans.isProfessional(planId)
+    val isStudent: Boolean get() = LukaPlans.isStudent(planId)
 }
 
 data class UserSession(
