@@ -2,7 +2,6 @@ package elieoko.mobile.luka.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,16 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.JobOffer
 import elieoko.mobile.luka.domain.usecase.OfferFilters
 import elieoko.mobile.luka.presentation.theme.LukaCream
-import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import kotlinx.coroutines.delay
 
@@ -66,11 +60,7 @@ fun OfferCard(offer: JobOffer, index: Int = 0, onOpen: () -> Unit) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = offer.companyLogoUrl,
-                    contentDescription = offer.company,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).background(LukaMist),
-                )
+                LukaOfferIcon()
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(offer.title, style = MaterialTheme.typography.titleMedium)
