@@ -45,7 +45,6 @@ class LukaApi(
                     put("phone", phone)
                     put("isStudent", isStudent)
                     put("buildSerial", serial)
-                    put("build_serial", serial)
                 },
             )
         }
@@ -141,14 +140,12 @@ class LukaApi(
     private fun identifiantBody(identifier: String, serial: String) = buildJsonObject {
         put("identifier", identifier)
         put("buildSerial", serial)
-        put("build_serial", serial)
     }
 
     private fun verifyBody(identifier: String, code: String, serial: String) = buildJsonObject {
         put("identifier", identifier)
         put("code", code)
         put("buildSerial", serial)
-        put("build_serial", serial)
     }
 
     private fun HttpRequestBuilder.jsonBody(body: Any) {

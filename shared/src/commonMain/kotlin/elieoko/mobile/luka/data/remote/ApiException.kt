@@ -22,7 +22,8 @@ class ApiException(
         }
 
         private fun userFacing(raw: String): String = when {
-            raw.contains("build_serial", ignoreCase = true) ->
+            raw.contains("build_serial", ignoreCase = true) ||
+                raw.contains("buildSerial") ->
                 "Le code n’a pas pu être envoyé. Réessaie."
             else -> raw
         }

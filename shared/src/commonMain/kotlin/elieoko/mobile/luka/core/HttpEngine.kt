@@ -13,10 +13,8 @@ fun HttpClient.withDeviceSerial(serial: DeviceSerial): HttpClient {
     if (value.isBlank()) return this
     return config {
         install(DefaultRequest) {
-            header("build-serial", value)
-            header("X-Build-Serial", value)
-            header("build_serial", value)
-            url.parameters.append("build-serial", value)
+            header("buildSerial", value)
+            url.parameters.append("buildSerial", value)
         }
     }
 }
@@ -24,8 +22,6 @@ fun HttpClient.withDeviceSerial(serial: DeviceSerial): HttpClient {
 fun HttpRequestBuilder.applyDeviceSerialHeaders(value: String) {
     val serial = value.trim()
     if (serial.isBlank()) return
-    header("build-serial", serial)
-    header("X-Build-Serial", serial)
-    header("build_serial", serial)
-    parameter("build-serial", serial)
+    header("buildSerial", serial)
+    parameter("buildSerial", serial)
 }
