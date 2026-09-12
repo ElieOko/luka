@@ -334,7 +334,9 @@ class LukaDomainTest {
         assertEquals("nord-kivu", merged.regionId)
         assertEquals("CD", merged.countryCode)
         assertTrue(merged.isCertified)
+        assertTrue(merged.isPremium)
         assertTrue(merged.isPro)
+        assertEquals(LukaPlans.PROFESSIONAL, merged.planId)
         assertTrue(merged.profileCompleted)
     }
 

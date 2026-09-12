@@ -37,6 +37,7 @@ import elieoko.mobile.luka.presentation.components.AccountDrawerPreview
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaOfferIcon
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
+import elieoko.mobile.luka.presentation.components.LukaTopBarPreview
 import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
@@ -64,6 +65,9 @@ fun main() {
     shot(File(outDir, "home_offers.png")) { HomeShot() }
     shot(File(outDir, "abonnement.png"), height = 1380) { SubscriptionShot() }
     shot(File(outDir, "menu_drawer.png"), height = 900) { DrawerShot() }
+    shot(File(outDir, "luka_topbar.png"), height = 360) {
+        LukaTopBarPreview()
+    }
     shot(File(outDir, "orientation_backdrop.png")) { OrientationShot() }
     println("Wrote screenshots to ${outDir.absolutePath}")
 }

@@ -201,6 +201,7 @@ class SessionRepositoryImpl(
             if (profile.domainId != null) prefs[Keys.domainId] = profile.domainId else prefs.remove(Keys.domainId)
             prefs[Keys.profileCompleted] = profile.profileCompleted
             prefs[Keys.isCertified] = profile.isCertified
+            prefs[Keys.isPremium] = profile.isPremium
         }
     }
 
@@ -234,6 +235,7 @@ class SessionRepositoryImpl(
                 domainId = this[Keys.domainId],
                 profileCompleted = this[Keys.profileCompleted] ?: false,
                 isCertified = this[Keys.isCertified] ?: false,
+                isPremium = this[Keys.isPremium] ?: false,
             ),
         )
     }
@@ -278,5 +280,6 @@ class SessionRepositoryImpl(
         val pendingChannel = stringPreferencesKey("pendingChannel")
         val pendingNewAccount = booleanPreferencesKey("pendingNewAccount")
         val isCertified = booleanPreferencesKey("isCertified")
+        val isPremium = booleanPreferencesKey("isPremium")
     }
 }

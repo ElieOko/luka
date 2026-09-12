@@ -75,7 +75,7 @@ class ProfileViewModel(
     fun onProfessionalQuery(value: String) = draft.update { it.copy(professionalQuery = value) }
     fun onExtraProfession(profession: Profession) = draft.update { it.copy(extraProfession = profession) }
 
-    fun saveProfile() {
+    fun saveProfile(onDone: (() -> Unit)? = null) {
         viewModelScope.launch {
             draft.update { it.copy(saving = true, message = null) }
             runCatching {
@@ -86,7 +86,10 @@ class ProfileViewModel(
                     cityName = draft.value.cityName.ifBlank { state.value.cityName },
                 )
             }
-                .onSuccess { draft.update { it.copy(saving = false, message = "Profil mis à jour") } }
+                .onSuccess {
+                    draft.update { it.copy(saving = false, message = "Profil mis à jour") }
+                    onDone?.invoke()
+                }
                 .onFailure { error -> draft.update { it.copy(saving = false, message = error.message) } }
         }
     }

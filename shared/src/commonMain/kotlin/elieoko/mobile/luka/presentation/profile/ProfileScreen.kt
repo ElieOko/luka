@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,17 +13,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,31 +43,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.LukaPlans
-import elieoko.mobile.luka.presentation.components.FilterPill
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
-import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.components.PageBackdrop
 import elieoko.mobile.luka.presentation.components.PageBackdropTone
 import elieoko.mobile.luka.presentation.components.rememberCvPicker
+import elieoko.mobile.luka.presentation.theme.LukaGold
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import luka.shared.generated.resources.Res
 import luka.shared.generated.resources.onboarding_kinshasa_1
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
+fun ProfileScreen(
+    onEditProfile: () -> Unit,
+    viewModel: ProfileViewModel = koinViewModel(),
+) {
     val state by viewModel.state.collectAsState()
     val profile = state.profile
     val pickCv = rememberCvPicker(viewModel::saveCv)
     val plan = LukaPlans.byId(profile?.planId ?: LukaPlans.STARTER)
-    val paid = plan.id != LukaPlans.STARTER
+    val premium = profile?.isPremium == true || profile?.isPro == true
 
     PageBackdrop(Res.drawable.onboarding_kinshasa_1, tone = PageBackdropTone.Cinematic) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().statusBarsPadding(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = LukaBottomNavHeight + 88.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = LukaBottomNavHeight + 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
@@ -91,7 +90,8 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PlanBadge(plan.name, paid = paid)
+                            if (premium) PlanBadge("Premium", paid = true)
+                            else PlanBadge(plan.name, paid = plan.id != LukaPlans.STARTER)
                             if (profile?.isCertified == true) {
                                 PlanBadge("Certifié", paid = false, certified = true)
                             }
@@ -110,13 +110,29 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                             ).distinct().joinToString(" · ").ifBlank { "Complète ton profil" },
                             color = Color.White.copy(0.8f),
                         )
-                        val phone = profile?.identifier?.value.orEmpty()
-                        if (phone.isNotBlank()) {
-                            Text(
-                                phone,
-                                color = Color.White.copy(0.7f),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
+                    }
+                    IconButton(
+                        onClick = onEditProfile,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.92f)),
+                    ) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Modifier le profil", tint = LukaRed)
+                    }
+                }
+            }
+            item {
+                Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Tes informations", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        ProfileField("Nom", profile?.displayName.orEmpty().ifBlank { "—" })
+                        ProfileField("Téléphone", profile?.identifier?.value.orEmpty().ifBlank { "—" })
+                        ProfileField("E-mail", profile?.email.orEmpty().ifBlank { "—" })
+                        ProfileField("Ville", profile?.cityName.orEmpty().ifBlank { "—" })
+                        ProfileField("Pays", "${CongoCatalog.rdc.flag}  ${CongoCatalog.rdc.name}")
+                        if (profile?.bio?.isNotBlank() == true) {
+                            ProfileField("Bio", profile.bio)
                         }
                     }
                 }
@@ -125,12 +141,18 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Abonnement", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        Text(plan.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            when (plan.id) {
-                                LukaPlans.PROFESSIONAL -> "Recherche d’emploi, profil proposé aux entreprises, actif 3 mois."
-                                LukaPlans.STUDENT -> "Orientation, tendances, universités et revues scientifiques."
-                                else -> "Ouvre le menu pour choisir Étudiant (3 $) ou Professionnel (5 $)."
+                            if (premium) "Premium" else plan.name,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            when {
+                                premium || plan.id == LukaPlans.PROFESSIONAL ->
+                                    "Recherche d’emploi, profil proposé aux entreprises, actif 3 mois."
+                                plan.id == LukaPlans.STUDENT ->
+                                    "Orientation, tendances, universités et revues scientifiques."
+                                else -> "Ouvre Plus d’opportunité pour choisir Étudiant (3 $) ou Professionnel (5 $)."
                             },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
@@ -145,32 +167,6 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
                 )
             }
             item {
-                Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Identité", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(state.displayName, viewModel::onName, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
-                        OutlinedTextField(state.email, viewModel::onEmail, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
-                        OutlinedTextField(state.bio, viewModel::onBio, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(16.dp))
-                        Text("${CongoCatalog.rdc.flag}  ${CongoCatalog.rdc.name}", style = MaterialTheme.typography.titleSmall)
-                        Text("Pays verrouillé — Luka est centré sur la RDC", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        Text("Ville", style = MaterialTheme.typography.titleSmall)
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            state.cities.forEach { city ->
-                                FilterPill(city.name, state.cityName.equals(city.name, true)) { viewModel.onCity(city.name) }
-                            }
-                        }
-                        LukaPrimaryButton(
-                            if (state.saving) "Enregistrement…" else "Enregistrer",
-                            viewModel::saveProfile,
-                            enabled = !state.saving,
-                        )
-                        if (state.message != null) {
-                            Text(state.message.orEmpty(), color = LukaRed)
-                        }
-                    }
-                }
-            }
-            item {
                 TextButton(onClick = viewModel::logout, modifier = Modifier.fillMaxWidth()) {
                     Text("Se déconnecter", color = Color.White.copy(0.75f))
                 }
@@ -180,14 +176,22 @@ fun ProfileScreen(viewModel: ProfileViewModel = koinViewModel()) {
 }
 
 @Composable
+private fun ProfileField(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
+        Text(value, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
 private fun PlanBadge(label: String, paid: Boolean, certified: Boolean = false) {
     val bg = when {
-        paid -> LukaRed
+        paid -> LukaGold
         certified -> Color.White.copy(alpha = 0.92f)
         else -> Color.White.copy(alpha = 0.92f)
     }
     val fg = when {
-        paid -> Color.White
+        paid -> Color(0xFF3A2208)
         certified -> Color(0xFF1B5E20)
         else -> LukaRed
     }

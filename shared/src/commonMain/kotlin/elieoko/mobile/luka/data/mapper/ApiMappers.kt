@@ -92,6 +92,7 @@ fun UserDto.mergeInto(
         countryCode = country?.takeIf { it.isNotBlank() } ?: existing?.countryCode,
         regionId = city?.takeIf { it.isNotBlank() }?.let { CongoCatalog.regionIdFor(it, null) } ?: existing?.regionId,
         profileCompleted = profileCompleted,
+        isPremium = isPremium,
         planId = if (isPremium) LukaPlans.PROFESSIONAL else (existing?.planId ?: LukaPlans.STARTER),
         isCertified = isCertified || certified == true,
     )

@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,7 +81,7 @@ private fun PersonaPick(
     onSelect: (OrientationPersona) -> Unit,
     onLaunch: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .weight(1f)
@@ -136,7 +135,6 @@ private fun AnalysisPulse(persona: OrientationPersona?) {
     Column(
         Modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .navigationBarsPadding()
             .padding(24.dp)
             .padding(bottom = 68.dp),
@@ -184,7 +182,6 @@ private fun ResultsPane(
     Column(
         Modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
             .padding(bottom = 80.dp),
