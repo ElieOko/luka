@@ -5,3 +5,5 @@ interface CrashReporter {
     fun capture(throwable: Throwable)
     fun breadcrumb(message: String)
 }
+
+expect fun createCrashReporter(config: AppConfig): CrashReporter
