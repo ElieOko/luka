@@ -43,8 +43,12 @@ import elieoko.mobile.luka.presentation.components.PulseDot
 import elieoko.mobile.luka.domain.model.PaymentMethod
 import elieoko.mobile.luka.presentation.subscription.SubscriptionCheckoutContent
 import elieoko.mobile.luka.presentation.subscription.SubscriptionUiState
+import elieoko.mobile.luka.domain.model.LearnerContent
+import elieoko.mobile.luka.domain.model.formatNewsDate
 import elieoko.mobile.luka.presentation.theme.LukaCream
+import elieoko.mobile.luka.presentation.theme.LukaInk
 import elieoko.mobile.luka.presentation.theme.LukaMist
+import elieoko.mobile.luka.presentation.theme.LukaMuted
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.theme.LukaTheme
 import elieoko.mobile.luka.presentation.theme.imageByName
@@ -64,6 +68,8 @@ fun main() {
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
     shot(File(outDir, "auth_register.png")) { AuthRegisterShot() }
     shot(File(outDir, "privacy_policy.png")) { PrivacyPolicyScreen(onBack = {}) }
+    shot(File(outDir, "news_tabs.png")) { NewsTabsShot() }
+    shot(File(outDir, "news_article.png"), height = 1720) { NewsArticleShot() }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
     shot(File(outDir, "abonnement.png"), height = 1480) { SubscriptionShot() }
     shot(File(outDir, "abonnement_pro.png"), height = 1480) { SubscriptionProShot() }
@@ -356,5 +362,55 @@ private fun OrientationShot() {
             Spacer(Modifier.weight(1f))
             LukaPrimaryButton("Lancer l’analyse", {}, Modifier.padding(bottom = 112.dp))
         }
+    }
+}
+
+@Composable
+private fun NewsTabsShot() {
+    val tabs = listOf("Favoris", "IA", "Énergie", "Formation", "Souscrit")
+    Column(Modifier.fillMaxSize().padding(20.dp)) {
+        Text("News", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+        Text("Les articles se lisent ici, classés par domaine.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            tabs.forEach { label ->
+                val selected = label == "IA"
+                Surface(
+                    color = if (selected) LukaRed else LukaMist,
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Text(label, color = if (selected) Color.White else LukaInk, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        LearnerContent.publicNews.filter { it.domain == "IA" }.forEach { item ->
+            Surface(shape = RoundedCornerShape(18.dp), color = Color.White, shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(item.domain, color = LukaRed, fontWeight = FontWeight.Bold)
+                    Text(item.title, fontWeight = FontWeight.Bold)
+                    Text(item.excerpt, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text("${item.author} · ${formatNewsDate(item.publishedAtEpochMs)}", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NewsArticleShot() {
+    val item = LearnerContent.publicNews.first()
+    Column(Modifier.fillMaxSize().background(LukaCream).padding(22.dp)) {
+        Text(item.domain.uppercase(), color = LukaRed, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Text(item.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = LukaInk)
+        Spacer(Modifier.height(10.dp))
+        Text(item.author, fontWeight = FontWeight.SemiBold, color = LukaInk)
+        Text("Publié le ${formatNewsDate(item.publishedAtEpochMs)} · ${item.source}", color = LukaMuted)
+        Spacer(Modifier.height(16.dp))
+        item.body.split("\n\n").take(3).forEach { paragraph ->
+            Text(paragraph.trim(), style = MaterialTheme.typography.bodyLarge, color = LukaInk, modifier = Modifier.padding(bottom = 14.dp))
+        }
+        LukaPrimaryButton("Partager l’article", {})
     }
 }

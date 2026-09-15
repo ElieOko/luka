@@ -36,6 +36,7 @@ import elieoko.mobile.luka.domain.usecase.VerifyOtpUseCase
 import elieoko.mobile.luka.presentation.auth.AuthViewModel
 import elieoko.mobile.luka.presentation.explore.ExploreViewModel
 import elieoko.mobile.luka.presentation.home.HomeViewModel
+import elieoko.mobile.luka.presentation.news.NewsViewModel
 import elieoko.mobile.luka.presentation.orientation.OrientationViewModel
 import elieoko.mobile.luka.presentation.profile.ProfileViewModel
 import elieoko.mobile.luka.presentation.root.RootViewModel
@@ -104,6 +105,7 @@ val lukaModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::ExploreViewModel)
     viewModelOf(::OrientationViewModel)
+    viewModelOf(::NewsViewModel)
     viewModelOf(::ProfileViewModel)
     viewModelOf(::SubscriptionViewModel)
 }

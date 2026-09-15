@@ -197,6 +197,19 @@ class SessionRepositoryImpl(
         it.copy(cvFileName = fileName, cvMime = mimeType)
     }
 
+    override val favoriteNewsIds: Flow<Set<String>> = dataStore.data.map { prefs ->
+        prefs[Keys.favoriteNews].orEmpty().split(',').map { it.trim() }.filter { it.isNotBlank() }.toSet()
+    }
+
+    override suspend fun toggleNewsFavorite(id: String) {
+        if (id.isBlank()) return
+        dataStore.edit { prefs ->
+            val current = prefs[Keys.favoriteNews].orEmpty().split(',').map { it.trim() }.filter { it.isNotBlank() }.toMutableSet()
+            if (!current.add(id)) current.remove(id)
+            prefs[Keys.favoriteNews] = current.sorted().joinToString(",")
+        }
+    }
+
     override suspend fun resetDemo() {
         pushNotifier.logout()
         tokenStore.clear()
@@ -322,5 +335,6 @@ class SessionRepositoryImpl(
         val pendingAccountKind = stringPreferencesKey("pendingAccountKind")
         val accountKind = stringPreferencesKey("accountKind")
         val tradeTitle = stringPreferencesKey("tradeTitle")
+        val favoriteNews = stringPreferencesKey("favoriteNews")
     }
 }

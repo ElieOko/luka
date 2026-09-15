@@ -33,7 +33,30 @@ data class NewsItem(
     val imageName: String,
     val publishedAtEpochMs: Long,
     val url: String,
-)
+    val domain: String = "MIT",
+    val author: String = source,
+    val body: String = excerpt,
+    val subscribed: Boolean = false,
+) {
+    fun sharePayload(): String = buildString {
+        append(title.trim())
+        append("\n\n")
+        if (author.isNotBlank()) append("Par $author. ")
+        append(excerpt.trim())
+        append("\n\nLu dans Luka — orientation et emploi en RDC.")
+    }
+}
+
+object NewsSections {
+    const val FAVORITES = "Favoris"
+    const val SUBSCRIBED = "Souscrit"
+
+    fun publicDomains(items: List<NewsItem>): List<String> =
+        items.filter { !it.subscribed }.map { it.domain }.filter { it.isNotBlank() }.distinct()
+
+    fun tabs(items: List<NewsItem>): List<String> =
+        listOf(FAVORITES) + publicDomains(items) + SUBSCRIBED
+}
 
 data class Professional(
     val id: String,

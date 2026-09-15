@@ -237,11 +237,31 @@ class LukaDomainTest {
 
     @Test
     fun mitNewsAndAdviceAreReadyForLearnerHome() {
-        val news = elieoko.mobile.luka.domain.model.LearnerContent.mitNews
+        val news = elieoko.mobile.luka.domain.model.LearnerContent.publicNews
         val advice = elieoko.mobile.luka.domain.model.LearnerContent.advice
+        val subscribed = elieoko.mobile.luka.domain.model.LearnerContent.subscribedNews
         assertTrue(news.size >= 4)
         assertTrue(advice.size >= 4)
-        assertTrue(news.all { it.source.contains("MIT") && it.url.startsWith("https://news.mit.edu") })
+        assertTrue(subscribed.size >= 3)
+        assertTrue(news.all { it.body.isNotBlank() && it.author.isNotBlank() && it.domain.isNotBlank() && !it.subscribed })
+        assertTrue(subscribed.all { it.subscribed && it.body.isNotBlank() })
+        val tabs = elieoko.mobile.luka.domain.model.NewsSections.tabs(elieoko.mobile.luka.domain.model.LearnerContent.catalog)
+        assertEquals("Favoris", tabs.first())
+        assertEquals("Souscrit", tabs.last())
+        assertTrue(tabs.contains("IA"))
+        val article = news.first()
+        assertTrue(article.sharePayload().contains(article.title))
+        assertTrue(article.sharePayload().contains("Luka"))
+        assertTrue(elieoko.mobile.luka.domain.model.formatNewsDate(article.publishedAtEpochMs).contains("2026"))
+        val ui = elieoko.mobile.luka.presentation.news.NewsUiState(
+            articles = elieoko.mobile.luka.domain.model.LearnerContent.catalog,
+            favorites = setOf(news.first().id),
+            unlocked = false,
+        )
+        assertEquals(1, ui.visible("Favoris").size)
+        assertTrue(ui.visible("Souscrit").isEmpty())
+        assertTrue(ui.copy(unlocked = true).visible("Souscrit").isNotEmpty())
+        assertTrue(ui.visible("IA").all { it.domain == "IA" })
     }
 
     @Test
