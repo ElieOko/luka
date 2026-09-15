@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,9 +27,11 @@ import androidx.compose.ui.renderComposeScene
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.JobOffer
 import elieoko.mobile.luka.domain.model.Profession
 import elieoko.mobile.luka.presentation.components.AccountDrawerPreview
+import elieoko.mobile.luka.presentation.legal.PrivacyPolicyScreen
 import elieoko.mobile.luka.presentation.components.LukaLogo
 import elieoko.mobile.luka.presentation.components.LukaOfferIcon
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
@@ -64,6 +62,8 @@ fun main() {
         BrandLogoShot()
     }
     shot(File(outDir, "profession_picker.png")) { ProfessionShot() }
+    shot(File(outDir, "auth_register.png")) { AuthRegisterShot() }
+    shot(File(outDir, "privacy_policy.png")) { PrivacyPolicyScreen(onBack = {}) }
     shot(File(outDir, "home_offers.png")) { HomeShot() }
     shot(File(outDir, "abonnement.png"), height = 1480) { SubscriptionShot() }
     shot(File(outDir, "abonnement_pro.png"), height = 1480) { SubscriptionProShot() }
@@ -130,35 +130,78 @@ private fun BrandLogoShot() {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProfessionShot() {
+    val rows = listOf(
+        "Développement logiciel" to "Apps, APIs, produits numériques",
+        "Support système" to "Helpdesk, maintenance, postes",
+        "Cybersécurité" to "SOC, pentest, gouvernance",
+    )
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(24.dp)) {
             Text("Ton métier.", style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(8.dp))
-            Text("Un chip, un domaine. Électricité, data, mines…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Un seul métier à la fois. Coche la ligne, pas le titre de section.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        FlowRow(
-            modifier = Modifier.padding(horizontal = 20.dp).weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Profession.entries.take(16).forEach { profession ->
-                val selected = profession == Profession.ELECTRICITY
-                FilterChip(
-                    selected = selected,
-                    onClick = {},
-                    label = { Text(profession.title) },
-                    shape = RoundedCornerShape(22.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = LukaRed,
-                        selectedLabelColor = Color.White,
-                    ),
-                )
+        Text(
+            "NUMÉRIQUE",
+            color = LukaRed,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+        )
+        Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            rows.forEachIndexed { index, (title, tagline) ->
+                val selected = index == 1
+                Surface(
+                    color = if (selected) LukaRed else LukaMist,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) Color.White else Color.Unspecified)
+                        Text(tagline, color = if (selected) Color.White.copy(0.88f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
         }
+        Spacer(Modifier.weight(1f))
         LukaPrimaryButton("Continuer", {}, Modifier.padding(20.dp))
+    }
+}
+
+@Composable
+private fun AuthRegisterShot() {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        LukaLogo()
+        Spacer(Modifier.height(28.dp))
+        Text("Crée ton compte.", style = MaterialTheme.typography.headlineLarge)
+        Spacer(Modifier.height(8.dp))
+        Text("Numéro congolais. Un code SMS, puis tu restes connecté.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(20.dp))
+        Surface(color = LukaMist, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            Text("+243 81 000 0000", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.height(20.dp))
+        Text("Quel compte ?", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(10.dp))
+        AccountKind.entries.forEach { kind ->
+            val selected = kind == AccountKind.LEARNER
+            Surface(
+                color = if (selected) LukaRed else LukaMist,
+                shape = RoundedCornerShape(18.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(kind.title, fontWeight = FontWeight.Bold, color = if (selected) Color.White else Color.Unspecified)
+                    Text(kind.subtitle, color = if (selected) Color.White.copy(0.9f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("J’accepte la politique de confidentialité.")
+        Text("Lire la politique de confidentialité", color = LukaRed, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.weight(1f))
+        LukaPrimaryButton("Créer le compte", {})
     }
 }
 
