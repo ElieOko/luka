@@ -69,6 +69,7 @@ import elieoko.mobile.luka.presentation.home.HomeScreen
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.home.OffersSeeAllScreen
 import elieoko.mobile.luka.presentation.insights.InsightsScreen
+import elieoko.mobile.luka.presentation.news.NewsArticleScreen
 import elieoko.mobile.luka.presentation.news.NewsScreen
 import elieoko.mobile.luka.presentation.orientation.OrientationScreen
 import elieoko.mobile.luka.presentation.profile.ProfileEditScreen
@@ -95,6 +96,7 @@ fun MainShell() {
     var drawerOpen by rememberSaveable { mutableStateOf(false) }
     var accountPage by remember { mutableStateOf<AccountPage?>(null) }
     var editProfile by rememberSaveable { mutableStateOf(false) }
+    var newsArticleId by rememberSaveable { mutableStateOf<String?>(null) }
     var lastBackAt by remember { mutableStateOf(0L) }
     val homeVm: HomeViewModel = koinViewModel()
     val sessions: SessionRepository = koinInject()
@@ -103,11 +105,12 @@ fun MainShell() {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val exitApp = rememberAppExitRequest()
-    val chromeVisible = !showAllOffers && accountPage == null && !editProfile
+    val chromeVisible = !showAllOffers && accountPage == null && !editProfile && newsArticleId == null
 
     AppBackHandler {
         when {
             editProfile -> editProfile = false
+            newsArticleId != null -> newsArticleId = null
             accountPage != null -> accountPage = null
             drawerOpen -> drawerOpen = false
             showAllOffers -> showAllOffers = false
@@ -148,7 +151,10 @@ fun MainShell() {
                                 onUnlock = { accountPage = AccountPage.Subscription },
                                 viewModel = homeVm,
                             )
-                            MainTab.News -> NewsScreen(onUnlock = { accountPage = AccountPage.Subscription })
+                            MainTab.News -> NewsScreen(
+                                onUnlock = { accountPage = AccountPage.Subscription },
+                                onOpenArticle = { newsArticleId = it },
+                            )
                             MainTab.Trends, MainTab.Market -> TrendsScreen(
                                 realtime = !learner,
                                 onUnlock = { accountPage = AccountPage.Subscription },
@@ -186,6 +192,15 @@ fun MainShell() {
         if (editProfile) {
             Surface(Modifier.fillMaxSize(), color = Color.White) {
                 ProfileEditScreen(onBack = { editProfile = false })
+            }
+        }
+        newsArticleId?.let { id ->
+            Surface(Modifier.fillMaxSize(), color = Color.White) {
+                NewsArticleScreen(
+                    articleId = id,
+                    onBack = { newsArticleId = null },
+                    onUnlock = { accountPage = AccountPage.Subscription },
+                )
             }
         }
         SnackbarHost(

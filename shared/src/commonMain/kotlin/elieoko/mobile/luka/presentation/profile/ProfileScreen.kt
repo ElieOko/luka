@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -100,17 +101,25 @@ fun ProfileScreen(
                             )
                             if (premium) PlanBadge("Premium", paid = true)
                             else PlanBadge(plan.name, paid = plan.id != LukaPlans.STARTER)
-                            if (profile?.isCertified == true) {
-                                PlanBadge("Certifié", paid = false, certified = true)
-                            }
                         }
                         Spacer(Modifier.height(6.dp))
-                        Text(
-                            profile?.displayName.orEmpty().ifBlank { "Ton profil" },
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                profile?.displayName.orEmpty().ifBlank { "Ton profil" },
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                            )
+                            if (profile?.isCertified == true) {
+                                Spacer(Modifier.width(6.dp))
+                                Icon(
+                                    Icons.Rounded.Verified,
+                                    contentDescription = "Profil certifié",
+                                    tint = LukaGold,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
+                        }
                         Text(
                             listOfNotNull(
                                 profile?.tradeTitle?.ifBlank { null } ?: profile?.profession?.title,
@@ -266,17 +275,9 @@ private fun ProfileField(label: String, value: String) {
 }
 
 @Composable
-private fun PlanBadge(label: String, paid: Boolean, certified: Boolean = false) {
-    val bg = when {
-        paid -> LukaGold
-        certified -> Color.White.copy(alpha = 0.92f)
-        else -> Color.White.copy(alpha = 0.92f)
-    }
-    val fg = when {
-        paid -> Color(0xFF3A2208)
-        certified -> Color(0xFF1B5E20)
-        else -> LukaRed
-    }
+private fun PlanBadge(label: String, paid: Boolean) {
+    val bg = if (paid) LukaGold else Color.White.copy(alpha = 0.92f)
+    val fg = if (paid) Color(0xFF3A2208) else LukaRed
     Surface(color = bg, shape = RoundedCornerShape(99.dp)) {
         Text(
             label,

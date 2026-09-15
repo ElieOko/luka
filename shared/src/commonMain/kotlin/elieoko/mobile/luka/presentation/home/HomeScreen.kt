@@ -427,8 +427,8 @@ private fun LearnerHomeBody(
     if (profile == null || !LukaEntitlements.fullMitNews(profile)) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
             LockedFeatureCard(
-                title = "Fil MIT complet",
-                body = "Toutes les actus universités et labos, réservées à l’abonnement Étudiant.",
+                title = "Dossier Souscrit",
+                body = "Briefs de marché et infos précieuses, dans l’onglet Souscrit de News.",
                 onUnlock = onUnlock,
             )
         }

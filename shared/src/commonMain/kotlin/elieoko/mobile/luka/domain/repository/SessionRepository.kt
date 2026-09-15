@@ -21,5 +21,7 @@ interface SessionRepository {
     suspend fun updateProfile(displayName: String, bio: String, email: String = "", cityName: String? = null)
     suspend fun selectPlan(planId: String, extraProfessionIds: List<String>)
     suspend fun saveCv(fileName: String, mimeType: String)
+    val favoriteNewsIds: Flow<Set<String>>
+    suspend fun toggleNewsFavorite(id: String)
     suspend fun resetDemo()
 }
