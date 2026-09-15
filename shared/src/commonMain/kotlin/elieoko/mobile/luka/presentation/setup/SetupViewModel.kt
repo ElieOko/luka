@@ -20,6 +20,8 @@ data class SetupUiState(
     val cities: List<City> = CongoCatalog.cities,
     val selectedProfession: Profession? = null,
     val selectedDomainId: Long? = null,
+    val selectedTradeTitle: String = "",
+    val selectedTradeKey: String? = null,
     val selectedRegionId: String? = null,
     val selectedCityName: String? = null,
     val launching: Boolean = false,
@@ -56,6 +58,8 @@ class SetupViewModel(
             it.copy(
                 selectedProfession = chip.profession,
                 selectedDomainId = chip.domainId,
+                selectedTradeTitle = chip.title,
+                selectedTradeKey = chip.key(),
                 error = null,
             )
         }
@@ -64,7 +68,9 @@ class SetupViewModel(
     fun confirmProfession() {
         val profession = _state.value.selectedProfession ?: return
         viewModelScope.launch {
-            runCatching { completeProfession(profession, _state.value.selectedDomainId) }
+            runCatching {
+                completeProfession(profession, _state.value.selectedDomainId, _state.value.selectedTradeTitle)
+            }
                 .onFailure { error -> _state.update { it.copy(error = error.message) } }
         }
     }

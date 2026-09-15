@@ -13,6 +13,7 @@ import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
 import elieoko.mobile.luka.domain.usecase.ResolveDestinationUseCase
 import elieoko.mobile.luka.domain.usecase.applyFilters
 import elieoko.mobile.luka.domain.usecase.withPolicy
+import elieoko.mobile.luka.data.mapper.toTradeChips
 import elieoko.mobile.luka.data.mapper.mergeInto
 import elieoko.mobile.luka.data.mapper.requiresOtp
 import elieoko.mobile.luka.data.mapper.toAuthTokens
@@ -109,6 +110,7 @@ class LukaDomainTest {
         val reset = OfferFilters()
         assertTrue(reset.isEmpty)
         assertTrue(!OfferFilters(city = "Goma").isEmpty)
+        assertTrue(!OfferFilters(tradeKey = "1::Support système").isEmpty)
     }
 
     @Test
@@ -166,12 +168,132 @@ class LukaDomainTest {
     }
 
     @Test
+    fun tradeChipKeyIsUniqueInsideTheSameFamily() {
+        val software = elieoko.mobile.luka.domain.model.TradeChip(
+            Profession.SOFTWARE_ENGINEERING,
+            "Développement logiciel",
+            "Numérique",
+            "Apps",
+            domainId = 1,
+        )
+        val support = elieoko.mobile.luka.domain.model.TradeChip(
+            Profession.SOFTWARE_ENGINEERING,
+            "Support système",
+            "Numérique",
+            "Helpdesk",
+            domainId = 1,
+        )
+        assertTrue(software.key() != support.key())
+        assertEquals("1::Développement logiciel", software.key())
+        val selected = software.key()
+        assertFalse(selected == support.key())
+        assertTrue(
+            listOf(software, support).count { it.key() == selected } == 1,
+        )
+    }
+
+    @Test
+    fun accountKindDefaultsAndStudentPlanMapsToLearner() {
+        assertEquals(
+            elieoko.mobile.luka.domain.model.AccountKind.PROFESSIONAL,
+            elieoko.mobile.luka.domain.model.AccountKind.fromId(null),
+        )
+        assertEquals(
+            elieoko.mobile.luka.domain.model.AccountKind.LEARNER,
+            elieoko.mobile.luka.domain.model.AccountKind.fromId("apprenant"),
+        )
+        assertEquals(
+            elieoko.mobile.luka.domain.model.AccountKind.LEARNER,
+            elieoko.mobile.luka.domain.model.AccountKind.fromId(null, LukaPlans.STUDENT),
+        )
+    }
+
+    @Test
+    fun entitlementsGateLearnerAndProfessionalPacks() {
+        val freeLearner = session().profile.copy(
+            accountKind = elieoko.mobile.luka.domain.model.AccountKind.LEARNER,
+            planId = LukaPlans.STARTER,
+        )
+        val paidLearner = freeLearner.copy(planId = LukaPlans.STUDENT)
+        val freePro = session().profile.copy(
+            accountKind = elieoko.mobile.luka.domain.model.AccountKind.PROFESSIONAL,
+            planId = LukaPlans.STARTER,
+        )
+        val paidPro = freePro.copy(planId = LukaPlans.PROFESSIONAL)
+        val E = elieoko.mobile.luka.domain.model.LukaEntitlements
+        assertEquals(1, E.advicePreviewLimit(freeLearner))
+        assertEquals(2, E.newsPreviewLimit(freeLearner))
+        assertFalse(E.fullOrientation(freeLearner))
+        assertTrue(E.fullMitNews(paidLearner))
+        assertTrue(E.fullOrientation(paidLearner))
+        assertEquals(5, E.offerPreviewLimit(freePro))
+        assertFalse(E.cvAnalysis(freePro))
+        assertFalse(E.realtimeMarket(freePro))
+        assertTrue(E.cvAnalysis(paidPro))
+        assertTrue(E.offerAnalysis(paidPro))
+        assertTrue(E.realtimeMarket(paidPro))
+        assertTrue(E.allOffers(paidPro))
+    }
+
+    @Test
+    fun mitNewsAndAdviceAreReadyForLearnerHome() {
+        val news = elieoko.mobile.luka.domain.model.LearnerContent.mitNews
+        val advice = elieoko.mobile.luka.domain.model.LearnerContent.advice
+        assertTrue(news.size >= 4)
+        assertTrue(advice.size >= 4)
+        assertTrue(news.all { it.source.contains("MIT") && it.url.startsWith("https://news.mit.edu") })
+    }
+
+    @Test
+    fun mergeIntoKeepsLocalAccountKindAndTradeTitle() {
+        val existing = session().profile.copy(
+            accountKind = elieoko.mobile.luka.domain.model.AccountKind.LEARNER,
+            tradeTitle = "Support système",
+        )
+        val dto = elieoko.mobile.luka.data.remote.dto.UserDto(
+            userId = 9,
+            username = "Patrick",
+            phone = "+243810000001",
+            city = "Goma",
+            country = "CD",
+            isPremium = false,
+            isCertified = false,
+            profileCompleted = false,
+        )
+        val merged = dto.mergeInto(
+            identifier = AuthIdentifier(AuthChannel.PHONE, "+243810000001"),
+            existing = existing,
+        )
+        assertEquals(elieoko.mobile.luka.domain.model.AccountKind.LEARNER, merged.accountKind)
+        assertEquals("Support système", merged.tradeTitle)
+    }
+
+    @Test
     fun catalogNamesMapToLocalProfessions() {
         assertEquals(Profession.SOFTWARE_ENGINEERING, Profession.fromCatalogName("Développement logiciel"))
         assertEquals(Profession.CYBER_SECURITY, Profession.fromCatalogName("Cybersécurité"))
         assertEquals(Profession.TELECOM, Profession.fromCatalogName("Télécom & réseaux"))
         assertEquals(Profession.HUMAN_RESOURCES, Profession.fromCatalogName("Ressources humaines"))
         assertEquals(Profession.SALES, Profession.fromCatalogName("Commercial"))
+    }
+
+    @Test
+    fun apiTradesKeepUniqueKeysWhenMappedToSameProfession() {
+        val chips = listOf(
+            elieoko.mobile.luka.data.remote.dto.SearchDomainDto(
+                id = 1,
+                name = "Numérique",
+                professions = listOf(
+                    elieoko.mobile.luka.data.remote.dto.DomainProfessionDto(1, 1, "Développement logiciel"),
+                    elieoko.mobile.luka.data.remote.dto.DomainProfessionDto(2, 1, "Support système"),
+                ),
+            ),
+        ).toTradeChips()
+        val keys = chips.map { it.key() }
+        assertEquals(keys.size, keys.toSet().size)
+        assertEquals(2, chips.count { it.domainId == 1L })
+        assertTrue(chips.any { it.title == "Développement logiciel" })
+        assertTrue(chips.any { it.title == "Support système" })
     }
 
     @Test

@@ -2,7 +2,6 @@ package elieoko.mobile.luka.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,7 +53,7 @@ fun OfferCard(offer: JobOffer, index: Int = 0, onOpen: () -> Unit) {
         ready = true
     }
     Surface(
-        modifier = Modifier.fillMaxWidth().scale(scale).clickable(onClick = onOpen),
+        modifier = Modifier.fillMaxWidth().scale(scale),
         shape = RoundedCornerShape(22.dp),
         shadowElevation = 1.dp,
     ) {
@@ -70,7 +69,12 @@ fun OfferCard(offer: JobOffer, index: Int = 0, onOpen: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             Text(offer.summary, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(10.dp))
-            Text(offer.contract, color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(offer.contract, color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                TextButton(onClick = onOpen) {
+                    Text("Voir l’offre", color = LukaRed, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
@@ -82,7 +86,7 @@ fun FilterBottomSheet(
     query: String,
     onQuery: (String) -> Unit,
     onCity: (String?) -> Unit,
-    onProfession: (String?) -> Unit,
+    onProfession: (elieoko.mobile.luka.domain.model.TradeChip?) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
     cities: List<elieoko.mobile.luka.domain.model.City> = CongoCatalog.cities,
@@ -135,9 +139,9 @@ fun FilterBottomSheet(
                 TextButton(onClick = { onProfession(null) }) { Text("Tous", color = LukaRed) }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(trades, key = { "${it.family}-${it.title}-${it.domainId}" }) { chip ->
-                    FilterPill(chip.title, filters.professionId == chip.profession.id) {
-                        onProfession(chip.profession.id)
+                items(trades, key = { it.key() }) { chip ->
+                    FilterPill(chip.title, filters.tradeKey == chip.key()) {
+                        onProfession(chip)
                     }
                 }
             }

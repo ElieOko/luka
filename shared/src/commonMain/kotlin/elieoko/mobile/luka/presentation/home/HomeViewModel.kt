@@ -79,8 +79,10 @@ class HomeViewModel(
                     liveOffer = liveOffer,
                     query = q,
                     filters = currentFilters,
-                    previewOffers = offers.take(5),
-                    allOffers = offers,
+                    previewOffers = offers.take(
+                        minOf(5, elieoko.mobile.luka.domain.model.LukaEntitlements.offerPreviewLimit(session.profile).coerceAtMost(5)),
+                    ),
+                    allOffers = offers.take(elieoko.mobile.luka.domain.model.LukaEntitlements.offerPreviewLimit(session.profile)),
                     cities = catalogUi.first,
                     trades = catalogUi.second,
                     refreshing = catalogUi.third,
@@ -102,7 +104,10 @@ class HomeViewModel(
 
     fun onRegion(id: String?) = filters.update { it.copy(regionId = id, city = null) }
     fun onCity(name: String?) = filters.update { it.copy(city = name) }
-    fun onProfession(id: String?) = filters.update { it.copy(professionId = id) }
+    fun onProfession(chip: TradeChip?) = filters.update {
+        if (chip == null) it.copy(professionId = null, tradeKey = null)
+        else it.copy(professionId = chip.profession.id, tradeKey = chip.key())
+    }
 
     fun resetFilters() {
         filters.value = OfferFilters()

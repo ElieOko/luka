@@ -71,6 +71,8 @@ data class TradeChip(
     val tagline: String,
     val domainId: Long?,
 ) {
+    fun key(): String = "${domainId ?: "local"}::$title"
+
     companion object {
         fun fromLocal(): List<TradeChip> = Profession.entries.map {
             TradeChip(it, it.title, it.family, it.tagline, domainId = null)

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,7 +42,9 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.CongoCatalog
+import elieoko.mobile.luka.domain.model.LukaEntitlements
 import elieoko.mobile.luka.domain.model.LukaPlans
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.PageBackdrop
@@ -57,6 +60,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ProfileScreen(
     onEditProfile: () -> Unit,
+    onPrivacy: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -90,6 +94,10 @@ fun ProfileScreen(
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PlanBadge(
+                                if (profile?.isLearner == true) AccountKind.LEARNER.title else AccountKind.PROFESSIONAL.title,
+                                paid = false,
+                            )
                             if (premium) PlanBadge("Premium", paid = true)
                             else PlanBadge(plan.name, paid = plan.id != LukaPlans.STARTER)
                             if (profile?.isCertified == true) {
@@ -105,7 +113,7 @@ fun ProfileScreen(
                         )
                         Text(
                             listOfNotNull(
-                                profile?.profession?.title,
+                                profile?.tradeTitle?.ifBlank { null } ?: profile?.profession?.title,
                                 profile?.cityName,
                             ).distinct().joinToString(" · ").ifBlank { "Complète ton profil" },
                             color = Color.White.copy(0.8f),
@@ -124,13 +132,53 @@ fun ProfileScreen(
             }
             item {
                 Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Type de compte", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Tu peux passer d’apprenant à professionnel sans recréer le compte.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AccountKind.entries.forEach { kind ->
+                                val selected = profile?.accountKind == kind
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (selected) LukaRed else LukaMist,
+                                    modifier = Modifier.weight(1f).clickable { viewModel.switchAccountKind(kind) },
+                                ) {
+                                    Column(Modifier.padding(12.dp)) {
+                                        Text(
+                                            kind.title,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Text(
+                                            if (kind == AccountKind.LEARNER) "Études, MIT, orientation" else "Offres, CV, marché",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (selected) Color.White.copy(0.9f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            item {
+                Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Tes informations", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         ProfileField("Nom", profile?.displayName.orEmpty().ifBlank { "—" })
                         ProfileField("Téléphone", profile?.identifier?.value.orEmpty().ifBlank { "—" })
                         ProfileField("E-mail", profile?.email.orEmpty().ifBlank { "—" })
+                        ProfileField("Métier", profile?.tradeTitle?.ifBlank { null } ?: profile?.profession?.title.orEmpty().ifBlank { "—" })
                         ProfileField("Ville", profile?.cityName.orEmpty().ifBlank { "—" })
                         ProfileField("Pays", "${CongoCatalog.rdc.flag}  ${CongoCatalog.rdc.name}")
+                        ProfileField(
+                            "Compte",
+                            if (profile?.isLearner == true) "Apprenant" else "Professionnel",
+                        )
                         if (profile?.bio?.isNotBlank() == true) {
                             ProfileField("Bio", profile.bio)
                         }
@@ -148,12 +196,43 @@ fun ProfileScreen(
                         )
                         Text(
                             when {
+                                profile?.isLearner == true && LukaEntitlements.learnerUnlocked(profile) ->
+                                    "Tendances, MIT, orientation et conseils réguliers débloqués."
+                                profile?.isLearner == true ->
+                                    "Abonnement Étudiant (3 $) : tendances, news MIT, orientation, conseils."
                                 premium || plan.id == LukaPlans.PROFESSIONAL ->
-                                    "Recherche d’emploi, profil proposé aux entreprises, actif 3 mois."
-                                plan.id == LukaPlans.STUDENT ->
-                                    "Orientation, tendances, universités et revues scientifiques."
-                                else -> "Ouvre Plus d’opportunité pour choisir Étudiant (3 $) ou Professionnel (5 $)."
+                                    "Offres, analyse CV, analyse des offres, marché temps réel."
+                                else -> "Abonnement Professionnel (5 $) : offres illimitées et analyses."
                             },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            }
+            item {
+                val learner = profile?.isLearner == true
+                val checks = buildList {
+                    add(!profile?.displayName.isNullOrBlank())
+                    add(!profile?.cityName.isNullOrBlank())
+                    add(profile?.profession != null || profile?.tradeTitle?.isNotBlank() == true)
+                    add(profile?.email?.contains("@") == true)
+                    if (!learner) add(profile?.cvFileName?.isNotBlank() == true)
+                }
+                val completeness = checks.count { it }
+                val total = checks.size
+                Surface(shape = RoundedCornerShape(22.dp), color = Color.White) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Profil", color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("$completeness / $total éléments remplis", fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(
+                            progress = { if (total == 0) 0f else completeness / total.toFloat() },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = LukaRed,
+                        )
+                        Text(
+                            if (learner) "Nom, ville, métier, e-mail. L’orientation sera plus juste."
+                            else "Nom, ville, métier, e-mail, CV. Plus c’est complet, plus Luka est précis.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -167,6 +246,9 @@ fun ProfileScreen(
                 )
             }
             item {
+                TextButton(onClick = onPrivacy, modifier = Modifier.fillMaxWidth()) {
+                    Text("Politique de confidentialité", color = Color.White.copy(0.85f), fontWeight = FontWeight.Bold)
+                }
                 TextButton(onClick = viewModel::logout, modifier = Modifier.fillMaxWidth()) {
                     Text("Se déconnecter", color = Color.White.copy(0.75f))
                 }

@@ -39,6 +39,7 @@ import elieoko.mobile.luka.presentation.theme.LukaRed
 fun OffersSeeAllScreen(
     onBack: () -> Unit,
     viewModel: HomeViewModel,
+    showBack: Boolean = true,
 ) {
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
@@ -69,8 +70,10 @@ fun OffersSeeAllScreen(
                 }
             },
             navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Retour")
+                if (showBack) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Retour")
+                    }
                 }
             },
             actions = {

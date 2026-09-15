@@ -24,20 +24,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Whatshot
+import androidx.compose.material.icons.outlined.WorkOutline
+import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Whatshot
+import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,12 +60,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import elieoko.mobile.luka.core.AppBackHandler
 import elieoko.mobile.luka.core.rememberAppExitRequest
+import elieoko.mobile.luka.domain.model.AccountKind
+import elieoko.mobile.luka.domain.repository.SessionRepository
 import elieoko.mobile.luka.presentation.components.AccountMenuHost
 import elieoko.mobile.luka.presentation.components.AccountPage
 import elieoko.mobile.luka.presentation.components.LukaTopBar
 import elieoko.mobile.luka.presentation.home.HomeScreen
 import elieoko.mobile.luka.presentation.home.HomeViewModel
 import elieoko.mobile.luka.presentation.home.OffersSeeAllScreen
+import elieoko.mobile.luka.presentation.insights.InsightsScreen
 import elieoko.mobile.luka.presentation.news.NewsScreen
 import elieoko.mobile.luka.presentation.orientation.OrientationScreen
 import elieoko.mobile.luka.presentation.profile.ProfileEditScreen
@@ -68,11 +76,12 @@ import elieoko.mobile.luka.presentation.profile.ProfileScreen
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import elieoko.mobile.luka.presentation.trends.TrendsScreen
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-enum class MainTab { Home, News, Trends, Orientation, Profile }
+enum class MainTab { Home, News, Trends, Orientation, Offers, Insights, Market, Profile }
 
 private val TikTokBar = Color(0xFF121212)
 private val TikTokMuted = Color(0xFF8A8A8A)
@@ -88,6 +97,9 @@ fun MainShell() {
     var editProfile by rememberSaveable { mutableStateOf(false) }
     var lastBackAt by remember { mutableStateOf(0L) }
     val homeVm: HomeViewModel = koinViewModel()
+    val sessions: SessionRepository = koinInject()
+    val session by sessions.session.collectAsState(null)
+    val learner = session?.profile?.accountKind == AccountKind.LEARNER
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val exitApp = rememberAppExitRequest()
@@ -130,19 +142,33 @@ fun MainShell() {
                         when (current) {
                             MainTab.Home -> HomeScreen(
                                 onSeeAllOffers = { showAllOffers = true },
-                                onOpenNews = { tab = MainTab.News },
-                                onOpenTrends = { tab = MainTab.Trends },
-                                onOpenOrientation = { tab = MainTab.Orientation },
+                                onOpenNews = { tab = if (learner) MainTab.News else MainTab.Offers },
+                                onOpenTrends = { tab = if (learner) MainTab.Trends else MainTab.Market },
+                                onOpenOrientation = { tab = if (learner) MainTab.Orientation else MainTab.Insights },
+                                onUnlock = { accountPage = AccountPage.Subscription },
                                 viewModel = homeVm,
                             )
-                            MainTab.News -> NewsScreen()
-                            MainTab.Trends -> TrendsScreen()
-                            MainTab.Orientation -> OrientationScreen()
-                            MainTab.Profile -> ProfileScreen(onEditProfile = { editProfile = true })
+                            MainTab.News -> NewsScreen(onUnlock = { accountPage = AccountPage.Subscription })
+                            MainTab.Trends, MainTab.Market -> TrendsScreen(
+                                realtime = !learner,
+                                onUnlock = { accountPage = AccountPage.Subscription },
+                            )
+                            MainTab.Orientation -> OrientationScreen(onUnlock = { accountPage = AccountPage.Subscription })
+                            MainTab.Offers -> OffersSeeAllScreen(
+                                onBack = { tab = MainTab.Home },
+                                viewModel = homeVm,
+                                showBack = false,
+                            )
+                            MainTab.Insights -> InsightsScreen(onUnlock = { accountPage = AccountPage.Subscription })
+                            MainTab.Profile -> ProfileScreen(
+                                onEditProfile = { editProfile = true },
+                                onPrivacy = { accountPage = AccountPage.Privacy },
+                            )
                         }
                     }
                     TikTokBottomBar(
                         tab = tab,
+                        learner = learner,
                         onTab = { tab = it },
                         modifier = Modifier.align(Alignment.BottomCenter),
                     )
@@ -175,6 +201,7 @@ fun MainShell() {
 @Composable
 private fun TikTokBottomBar(
     tab: MainTab,
+    learner: Boolean,
     onTab: (MainTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -196,21 +223,41 @@ private fun TikTokBottomBar(
                 filled = Icons.Rounded.Home,
                 onClick = { onTab(MainTab.Home) },
             )
-            TikTokItem(
-                selected = tab == MainTab.News,
-                label = "News",
-                outlined = Icons.AutoMirrored.Outlined.MenuBook,
-                filled = Icons.AutoMirrored.Rounded.MenuBook,
-                onClick = { onTab(MainTab.News) },
-            )
+            if (learner) {
+                TikTokItem(
+                    selected = tab == MainTab.News,
+                    label = "News",
+                    outlined = Icons.AutoMirrored.Outlined.MenuBook,
+                    filled = Icons.AutoMirrored.Rounded.MenuBook,
+                    onClick = { onTab(MainTab.News) },
+                )
+            } else {
+                TikTokItem(
+                    selected = tab == MainTab.Offers,
+                    label = "Offres",
+                    outlined = Icons.Outlined.WorkOutline,
+                    filled = Icons.Rounded.Work,
+                    onClick = { onTab(MainTab.Offers) },
+                )
+            }
             Spacer(Modifier.weight(1f))
-            TikTokItem(
-                selected = tab == MainTab.Orientation,
-                label = "Orientation",
-                outlined = Icons.Outlined.School,
-                filled = Icons.Rounded.School,
-                onClick = { onTab(MainTab.Orientation) },
-            )
+            if (learner) {
+                TikTokItem(
+                    selected = tab == MainTab.Orientation,
+                    label = "Orientation",
+                    outlined = Icons.Outlined.School,
+                    filled = Icons.Rounded.School,
+                    onClick = { onTab(MainTab.Orientation) },
+                )
+            } else {
+                TikTokItem(
+                    selected = tab == MainTab.Insights,
+                    label = "Analyses",
+                    outlined = Icons.Outlined.Analytics,
+                    filled = Icons.Rounded.Analytics,
+                    onClick = { onTab(MainTab.Insights) },
+                )
+            }
             TikTokItem(
                 selected = tab == MainTab.Profile,
                 label = "Profil",
@@ -226,19 +273,19 @@ private fun TikTokBottomBar(
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                ) { onTab(MainTab.Trends) },
+                ) { onTab(if (learner) MainTab.Trends else MainTab.Market) },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 Modifier
-                    .size(if (tab == MainTab.Trends) 48.dp else 44.dp)
+                    .size(if (tab == MainTab.Trends || tab == MainTab.Market) 48.dp else 44.dp)
                     .shadow(8.dp, CircleShape)
                     .clip(CircleShape)
                     .background(LukaRed),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    if (tab == MainTab.Trends) Icons.Rounded.Whatshot else Icons.Outlined.Whatshot,
+                    if (tab == MainTab.Trends || tab == MainTab.Market) Icons.Rounded.Whatshot else Icons.Outlined.Whatshot,
                     contentDescription = "Tendances",
                     tint = Color.White,
                     modifier = Modifier.size(22.dp),

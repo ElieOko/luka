@@ -58,8 +58,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.LearnerContent
+import elieoko.mobile.luka.domain.model.LukaEntitlements
 import elieoko.mobile.luka.domain.model.PlatformAd
+import elieoko.mobile.luka.domain.model.UserProfile
 import elieoko.mobile.luka.presentation.components.FilterBottomSheet
+import elieoko.mobile.luka.presentation.components.LockedFeatureCard
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
 import elieoko.mobile.luka.presentation.components.OfferCard
 import elieoko.mobile.luka.presentation.components.PageBackdrop
@@ -80,6 +84,7 @@ fun HomeScreen(
     onOpenNews: () -> Unit,
     onOpenTrends: () -> Unit,
     onOpenOrientation: () -> Unit,
+    onUnlock: () -> Unit = {},
     viewModel: HomeViewModel,
 ) {
     val state by viewModel.state.collectAsState()
@@ -87,8 +92,9 @@ fun HomeScreen(
     var showFilters by rememberSaveable { mutableStateOf(false) }
     val isFree = state.profile?.isPremium != true &&
         (state.profile?.planId.isNullOrBlank() || state.profile?.planId == "starter")
+    val learner = state.profile?.isLearner == true
 
-    if (showFilters) {
+    if (showFilters && !learner) {
         FilterBottomSheet(
             filters = state.filters,
             query = state.query,
@@ -123,49 +129,66 @@ fun HomeScreen(
                     )
                 },
             ) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = LukaBottomNavHeight + 72.dp),
-            ) {
-            HomeHeader(
-                firstName = state.profile?.firstName().orEmpty(),
-                isFree = isFree,
-                filterActive = !state.filters.isEmpty || state.query.isNotBlank(),
-                onSearch = { showFilters = true },
-            )
-            HomeQuickRow(
-                onNews = onOpenNews,
-                onTrends = onOpenTrends,
-                onOpenOrientation = onOpenOrientation,
-            )
-            SectionTitle(
-                title = "Offres pour toi",
-                action = "Voir tout",
-                onAction = onSeeAllOffers,
-            )
-            Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                state.previewOffers.forEachIndexed { index, offer ->
-                    OfferCard(offer, index) {
-                        runCatching { uriHandler.openUri(offer.applyUrl) }
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = LukaBottomNavHeight + 72.dp),
+                ) {
+                    HomeHeader(
+                        firstName = state.profile?.firstName().orEmpty(),
+                        isFree = isFree,
+                        filterActive = !state.filters.isEmpty || state.query.isNotBlank(),
+                        onSearch = { if (!learner) showFilters = true },
+                        showSearch = !learner,
+                        subtitle = if (learner) {
+                            "Tendances, news MIT, orientation — un conseil à la fois."
+                        } else {
+                            "L’emploi vient à toi. 5 pistes, puis tout voir."
+                        },
+                    )
+                    if (learner) {
+                        LearnerHomeBody(
+                            profile = state.profile,
+                            onNews = onOpenNews,
+                            onTrends = onOpenTrends,
+                            onOpenOrientation = onOpenOrientation,
+                            onUnlock = onUnlock,
+                        )
+                    } else {
+                        HomeQuickRow(
+                            onNews = onOpenNews,
+                            onTrends = onOpenTrends,
+                            onOpenOrientation = onOpenOrientation,
+                            learner = false,
+                        )
+                        SectionTitle(
+                            title = "Offres pour toi",
+                            action = "Voir tout",
+                            onAction = onSeeAllOffers,
+                        )
+                        Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            state.previewOffers.forEachIndexed { index, offer ->
+                                OfferCard(offer, index) {
+                                    runCatching { uriHandler.openUri(offer.applyUrl) }
+                                }
+                            }
+                        }
+                        if (state.previewOffers.isEmpty()) {
+                            Text(
+                                "Aucune offre pour ces filtres. Change de ville ou de métier, ou réinitialise.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(0.85f),
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            )
+                        }
+                        if (state.feed?.ads.orEmpty().isNotEmpty()) {
+                            SectionTitle(title = "Pubs partenaires")
+                            AdsCarousel(state.feed?.ads.orEmpty())
+                        }
+                        Spacer(Modifier.height(12.dp))
                     }
                 }
-            }
-            if (state.previewOffers.isEmpty()) {
-                Text(
-                    "Aucune offre pour ces filtres. Change de ville ou de métier, ou réinitialise.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(0.85f),
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                )
-            }
-            if (state.feed?.ads.orEmpty().isNotEmpty()) {
-            SectionTitle(title = "Pubs partenaires")
-            AdsCarousel(state.feed?.ads.orEmpty())
-            }
-            Spacer(Modifier.height(12.dp))
-            }
             }
         }
     }
@@ -180,6 +203,8 @@ private fun HomeHeader(
     isFree: Boolean,
     filterActive: Boolean,
     onSearch: () -> Unit,
+    showSearch: Boolean = true,
+    subtitle: String = "L’emploi vient à toi. 5 pistes, puis tout voir.",
 ) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
@@ -200,11 +225,12 @@ private fun HomeHeader(
             }
             Text("Bonjour $firstName", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White)
             Text(
-                "L’emploi vient à toi. 5 pistes, puis tout voir.",
+                subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(0.85f),
             )
         }
+        if (showSearch) {
         IconButton(onClick = onSearch) {
             Box {
                 Icon(Icons.Outlined.Search, contentDescription = "Recherche et filtres", tint = Color.White)
@@ -219,6 +245,7 @@ private fun HomeHeader(
                 }
             }
         }
+        }
     }
 }
 
@@ -227,14 +254,21 @@ private fun HomeQuickRow(
     onNews: () -> Unit,
     onTrends: () -> Unit,
     onOpenOrientation: () -> Unit,
+    learner: Boolean = true,
 ) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        QuickTile("Nouveautés", "Presse tech", Icons.AutoMirrored.Outlined.MenuBook, onNews, Modifier.weight(1f))
-        QuickTile("Tendances", "Demandés", Icons.AutoMirrored.Outlined.ShowChart, onTrends, Modifier.weight(1f))
-        QuickTile("Orientation", "Chiffres", Icons.Outlined.School, onOpenOrientation, Modifier.weight(1f))
+        if (learner) {
+            QuickTile("News MIT", "Universités", Icons.AutoMirrored.Outlined.MenuBook, onNews, Modifier.weight(1f))
+            QuickTile("Tendances", "Marché", Icons.AutoMirrored.Outlined.ShowChart, onTrends, Modifier.weight(1f))
+            QuickTile("Orientation", "Filières", Icons.Outlined.School, onOpenOrientation, Modifier.weight(1f))
+        } else {
+            QuickTile("Offres", "Ouvertes", Icons.Outlined.Search, onNews, Modifier.weight(1f))
+            QuickTile("Marché", "Temps réel", Icons.AutoMirrored.Outlined.ShowChart, onTrends, Modifier.weight(1f))
+            QuickTile("Analyses", "CV & offres", Icons.Outlined.School, onOpenOrientation, Modifier.weight(1f))
+        }
     }
 }
 
@@ -341,4 +375,63 @@ private fun AdsCarousel(ads: List<PlatformAd>) {
             }
         }
     }
+}
+
+@Composable
+private fun LearnerHomeBody(
+    profile: UserProfile?,
+    onNews: () -> Unit,
+    onTrends: () -> Unit,
+    onOpenOrientation: () -> Unit,
+    onUnlock: () -> Unit,
+) {
+    val unlockedAdvice = profile != null && LukaEntitlements.regularAdvice(profile)
+    val advice = LearnerContent.advice.take(
+        if (profile == null) 1 else LukaEntitlements.advicePreviewLimit(profile).coerceAtMost(LearnerContent.advice.size),
+    )
+    HomeQuickRow(onNews = onNews, onTrends = onTrends, onOpenOrientation = onOpenOrientation)
+    SectionTitle(title = "Conseil du moment")
+    Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        advice.forEach { item ->
+            Surface(shape = RoundedCornerShape(18.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(item.title, fontWeight = FontWeight.Bold)
+                    Text(item.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        if (!unlockedAdvice) {
+            LockedFeatureCard(
+                title = "Conseils réguliers",
+                body = "Chaque semaine : un geste concret pour ton orientation et tes études.",
+                onUnlock = onUnlock,
+            )
+        }
+    }
+    SectionTitle(title = "News MIT", action = "Voir", onAction = onNews)
+    val mit = LearnerContent.mitNews.first()
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(mit.source, color = LukaRed, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+            Text(mit.title, fontWeight = FontWeight.Bold)
+            Text(mit.excerpt, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = onNews) {
+                Text("Voir les news", color = LukaRed, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+    if (profile == null || !LukaEntitlements.fullMitNews(profile)) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+            LockedFeatureCard(
+                title = "Fil MIT complet",
+                body = "Toutes les actus universités et labos, réservées à l’abonnement Étudiant.",
+                onUnlock = onUnlock,
+            )
+        }
+    }
+    SectionTitle(title = "Tendances du marché", action = "Analyser", onAction = onTrends)
 }

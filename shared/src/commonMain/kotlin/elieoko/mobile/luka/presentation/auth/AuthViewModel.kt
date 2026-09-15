@@ -2,6 +2,7 @@ package elieoko.mobile.luka.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.AuthStartResult
 import elieoko.mobile.luka.domain.usecase.RequestOtpUseCase
@@ -21,6 +22,9 @@ data class AuthUiState(
     val identifier: AuthIdentifier? = null,
     val info: String? = null,
     val newAccount: Boolean = false,
+    val accountKind: AccountKind? = null,
+    val privacyAccepted: Boolean = false,
+    val showPrivacy: Boolean = false,
 ) {
     enum class Step { Identifier, Otp }
 }
@@ -37,13 +41,27 @@ class AuthViewModel(
     fun onOtp(value: String) = _state.update { it.copy(otp = value.filter { ch -> ch.isDigit() }.take(6), error = null) }
 
     fun toggleNewAccount() = _state.update {
-        it.copy(newAccount = !it.newAccount, error = null, info = null, step = AuthUiState.Step.Identifier, otp = "")
+        it.copy(newAccount = !it.newAccount, error = null, info = null, step = AuthUiState.Step.Identifier, otp = "", accountKind = null, privacyAccepted = false)
     }
 
+    fun selectAccountKind(kind: AccountKind) = _state.update { it.copy(accountKind = kind, error = null) }
+    fun togglePrivacy() = _state.update { it.copy(privacyAccepted = !it.privacyAccepted, error = null) }
+    fun openPrivacy() = _state.update { it.copy(showPrivacy = true) }
+    fun closePrivacy() = _state.update { it.copy(showPrivacy = false) }
+
     fun submitIdentifier() {
+        val current = _state.value
+        if (current.newAccount && current.accountKind == null) {
+            _state.update { it.copy(error = "Choisis un compte apprenant ou professionnel.") }
+            return
+        }
+        if (current.newAccount && !current.privacyAccepted) {
+            _state.update { it.copy(error = "Accepte la politique de confidentialité pour continuer.") }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, info = null) }
-            runCatching { requestOtp(_state.value.input, _state.value.newAccount) }
+            runCatching { requestOtp(current.input, current.newAccount, current.accountKind) }
                 .onSuccess { result ->
                     when (result) {
                         is AuthStartResult.SignedIn -> _state.update {

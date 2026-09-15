@@ -1,11 +1,10 @@
 package elieoko.mobile.luka.presentation.setup
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +14,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,18 +26,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import elieoko.mobile.luka.domain.model.TradeChip
 import elieoko.mobile.luka.presentation.components.BottomCtaBar
 import elieoko.mobile.luka.presentation.components.LukaPrimaryButton
 import elieoko.mobile.luka.presentation.theme.LukaMist
 import elieoko.mobile.luka.presentation.theme.LukaRed
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
@@ -56,7 +56,7 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
             Text("Ton métier.", style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(6.dp))
             Text(
-                "Un chip, un domaine. Tu pourras en débloquer d’autres avec un forfait.",
+                "Un seul métier à la fois. Coche la ligne, pas le titre de section.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(14.dp))
@@ -68,14 +68,12 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                 shape = RoundedCornerShape(18.dp),
                 singleLine = true,
             )
-            state.selectedProfession?.let { selected ->
-                val chip = state.trades.firstOrNull { it.profession == selected && it.domainId == state.selectedDomainId }
-                    ?: state.trades.firstOrNull { it.profession == selected }
+            state.trades.firstOrNull { it.key() == state.selectedTradeKey }?.let { chip ->
                 Spacer(Modifier.height(12.dp))
                 Surface(color = LukaMist, shape = RoundedCornerShape(18.dp)) {
                     Column(Modifier.padding(14.dp)) {
-                        Text(chip?.title ?: selected.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(chip?.tagline ?: selected.tagline, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(chip.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(chip.family, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -94,23 +92,12 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 14.dp, bottom = 6.dp),
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     professions.forEach { chip ->
-                        val selected = state.selectedProfession == chip.profession && state.selectedDomainId == chip.domainId
-                        val scale by animateFloatAsState(if (selected) 1.04f else 1f)
-                        val selectedColor by animateColorAsState(if (selected) LukaRed else LukaMist)
-                        FilterChip(
-                            selected = selected,
-                            onClick = { viewModel.selectProfession(chip) },
-                            label = { Text(chip.title) },
-                            modifier = Modifier.scale(scale),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = selectedColor,
-                                selectedContainerColor = LukaRed,
-                                selectedLabelColor = Color.White,
-                                labelColor = MaterialTheme.colorScheme.onSurface,
-                            ),
+                        UniqueTradeRow(
+                            chip = chip,
+                            selected = chip.key() == state.selectedTradeKey,
+                            onSelect = { viewModel.selectProfession(chip) },
                         )
                     }
                 }
@@ -118,7 +105,45 @@ fun ProfessionScreen(viewModel: SetupViewModel = koinViewModel()) {
             Spacer(Modifier.height(16.dp))
         }
         BottomCtaBar {
-            LukaPrimaryButton("Continuer", viewModel::confirmProfession, enabled = state.selectedProfession != null)
+            LukaPrimaryButton("Continuer", viewModel::confirmProfession, enabled = state.selectedTradeKey != null)
+        }
+    }
+}
+
+@Composable
+private fun UniqueTradeRow(
+    chip: TradeChip,
+    selected: Boolean,
+    onSelect: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (selected) LukaRed else LukaMist)
+            .clickable(onClick = onSelect)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onSelect,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color.White,
+                unselectedColor = LukaRed,
+            ),
+        )
+        Column(Modifier.weight(1f).padding(end = 12.dp, top = 8.dp, bottom = 8.dp)) {
+            Text(
+                chip.title,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                chip.tagline,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (selected) Color.White.copy(0.88f) else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
