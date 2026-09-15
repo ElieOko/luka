@@ -31,11 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import elieoko.mobile.luka.presentation.components.LukaBottomNavHeight
@@ -53,9 +54,19 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
-fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
+fun NewsScreen(
+    onUnlock: () -> Unit = {},
+    viewModel: ExploreViewModel = koinViewModel(),
+    sessions: elieoko.mobile.luka.domain.repository.SessionRepository = org.koin.compose.koinInject(),
+) {
     val feed by viewModel.feed.collectAsState()
-    val items = feed?.news.orEmpty()
+    val session by sessions.session.collectAsState(null)
+    val profile = session?.profile
+    val unlocked = profile != null && elieoko.mobile.luka.domain.model.LukaEntitlements.fullMitNews(profile)
+    val mit = elieoko.mobile.luka.domain.model.LearnerContent.mitNews
+    val server = feed?.news.orEmpty()
+    val items = if (unlocked) mit + server else mit.take(2)
+    val uriHandler = LocalUriHandler.current
     PageBackdrop(Res.drawable.onboarding_kinshasa_2, tone = PageBackdropTone.Cinematic) {
     Column(
         Modifier
@@ -72,7 +83,7 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                 Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
                 Text("Nouveautés numériques", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 Text(
-                    "Les actualités publiées par le serveur, quand il y en a.",
+                    "MIT News et les actus publiées par le serveur.",
                     color = Color.White.copy(0.85f),
                 )
             }
@@ -80,7 +91,7 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
         Spacer(Modifier.height(16.dp))
         if (items.isEmpty()) {
             Text(
-                "Pas de nouveautés côté serveur pour l’instant.",
+                "Pas de nouveautés pour l’instant.",
                 color = Color.White.copy(0.85f),
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
@@ -115,11 +126,30 @@ fun NewsScreen(viewModel: ExploreViewModel = koinViewModel()) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 14.dp),
                 )
-                Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(item.source, color = LukaRed, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     Text("·", color = MaterialTheme.colorScheme.outline)
                     Text(daysAgo(item.publishedAtEpochMs), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.weight(1f))
+                    if (item.url.isNotBlank()) {
+                        TextButton(onClick = { runCatching { uriHandler.openUri(item.url) } }) {
+                            Text("Lire", color = LukaRed, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
+            }
+        }
+        if (!unlocked) {
+            Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                elieoko.mobile.luka.presentation.components.LockedFeatureCard(
+                    title = "News MIT et universités",
+                    body = "Le fil complet et les revues, avec l’abonnement Étudiant.",
+                    onUnlock = onUnlock,
+                )
             }
         }
     }

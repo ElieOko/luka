@@ -5,8 +5,8 @@ import elieoko.mobile.luka.domain.repository.CatalogRepository
 import elieoko.mobile.luka.domain.repository.SessionRepository
 
 class CompleteProfessionUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(profession: Profession, domainId: Long? = null) {
-        sessions.saveProfession(profession.id, domainId)
+    suspend operator fun invoke(profession: Profession, domainId: Long? = null, tradeTitle: String = "") {
+        sessions.saveProfession(profession.id, domainId, tradeTitle)
     }
 }
 

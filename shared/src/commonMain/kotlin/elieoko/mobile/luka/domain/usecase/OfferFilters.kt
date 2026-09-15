@@ -7,8 +7,9 @@ data class OfferFilters(
     val regionId: String? = null,
     val city: String? = null,
     val professionId: String? = null,
+    val tradeKey: String? = null,
 ) {
-    val isEmpty: Boolean get() = regionId == null && city == null && professionId == null
+    val isEmpty: Boolean get() = regionId == null && city == null && professionId == null && tradeKey == null
 }
 
 fun List<JobOffer>.applyFilters(filters: OfferFilters): List<JobOffer> = filter { offer ->

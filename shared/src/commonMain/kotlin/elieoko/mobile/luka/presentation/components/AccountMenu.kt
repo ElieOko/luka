@@ -39,8 +39,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -57,7 +60,7 @@ import elieoko.mobile.luka.presentation.theme.LukaRed
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
-enum class AccountPage { Subscription, Notifications, Settings }
+enum class AccountPage { Subscription, Notifications, Settings, Privacy }
 
 @Composable
 fun AccountMenuHost(
@@ -70,6 +73,7 @@ fun AccountMenuHost(
 ) {
     val sessions: SessionRepository = koinInject()
     val scope = rememberCoroutineScope()
+    var privacyReturn by remember { mutableStateOf<AccountPage?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         if (showOpportunityFab) {
@@ -127,6 +131,16 @@ fun AccountMenuHost(
                         onLogout = {
                             scope.launch { sessions.resetDemo() }
                             onPageChange(null)
+                        },
+                        onPrivacy = {
+                            privacyReturn = AccountPage.Settings
+                            onPageChange(AccountPage.Privacy)
+                        },
+                    )
+                    AccountPage.Privacy -> elieoko.mobile.luka.presentation.legal.PrivacyPolicyScreen(
+                        onBack = {
+                            onPageChange(privacyReturn)
+                            privacyReturn = null
                         },
                     )
                 }
@@ -242,6 +256,7 @@ private fun NotificationsPage(onBack: () -> Unit) {
 private fun SettingsPage(
     onBack: () -> Unit,
     onLogout: () -> Unit,
+    onPrivacy: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         OverlayTopBar(title = "Paramètres", onBack = onBack)
@@ -250,7 +265,11 @@ private fun SettingsPage(
             Spacer(Modifier.height(8.dp))
             Text("Pays", fontWeight = FontWeight.SemiBold, color = LukaInk)
             Text("République démocratique du Congo", color = LukaMuted, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+            TextButton(onClick = onPrivacy, modifier = Modifier.fillMaxWidth()) {
+                Text("Politique de confidentialité", color = LukaInk, fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.height(8.dp))
             TextButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
                 Text("Se déconnecter", color = LukaRed, fontWeight = FontWeight.SemiBold)
             }

@@ -15,6 +15,7 @@ import elieoko.mobile.luka.data.mapper.toAuthTokens
 import elieoko.mobile.luka.data.remote.LukaApi
 import elieoko.mobile.luka.data.remote.TokenStore
 import elieoko.mobile.luka.data.remote.dto.LooseEnvelope
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.AuthStartResult
@@ -47,15 +48,20 @@ class SessionRepositoryImpl(
 
     override suspend fun current(): UserSession? = session.first()
 
-    override suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean): AuthStartResult {
+    override suspend fun requestOtp(identifier: AuthIdentifier, newAccount: Boolean, accountKind: AccountKind?): AuthStartResult {
         check(identifier.channel == AuthChannel.PHONE) { "Indique un numéro congolais." }
         val phone = PhoneNumbers.normalize(identifier.value)
         crashReporter.breadcrumb("otp_requested:PHONE")
-        val payload = if (newAccount) api.registerPhone(phone) else api.requestLoginOtp(phone)
+        val payload = if (newAccount) {
+            api.registerPhone(phone, isStudent = accountKind == AccountKind.LEARNER)
+        } else {
+            api.requestLoginOtp(phone)
+        }
         dataStore.edit { prefs ->
             prefs[Keys.pendingValue] = phone
             prefs[Keys.pendingChannel] = AuthChannel.PHONE.name
             prefs[Keys.pendingNewAccount] = newAccount
+            if (accountKind != null) prefs[Keys.pendingAccountKind] = accountKind.id else prefs.remove(Keys.pendingAccountKind)
         }
         if (!payload.data.requiresOtp()) {
             val session = persistFromAuthPayload(phone, payload, skipOnboarding = true)
@@ -88,6 +94,8 @@ class SessionRepositoryImpl(
         val tokens = payload.data.toAuthTokens()
         tokenStore.set(tokens.accessToken, tokens.refreshToken)
         val existing = current()
+        val pendingKind = dataStore.data.first()[Keys.pendingAccountKind]
+            ?.let { AccountKind.fromId(it, existing?.profile?.planId ?: LukaPlans.STARTER) }
         val profile = tokens.user.mergeInto(
             identifier = AuthIdentifier(AuthChannel.PHONE, tokens.user.phone ?: phone),
             existing = existing?.profile,
@@ -95,6 +103,7 @@ class SessionRepositoryImpl(
             id = tokens.user.userId?.toString() ?: existing?.profile?.id ?: Uuid.random().toString(),
             welcomeSeen = true,
             analysisLaunched = skipOnboarding || existing?.profile?.analysisLaunched == true,
+            accountKind = pendingKind ?: existing?.profile?.accountKind ?: AccountKind.PROFESSIONAL,
         )
         val session = UserSession(
             token = tokens.accessToken,
@@ -112,8 +121,14 @@ class SessionRepositoryImpl(
 
     override suspend fun markWelcomeSeen() = update { it.copy(welcomeSeen = true) }
 
-    override suspend fun saveProfession(professionId: String, domainId: Long?) {
-        update { it.copy(profession = Profession.fromId(professionId), domainId = domainId) }
+    override suspend fun saveProfession(professionId: String, domainId: Long?, tradeTitle: String) {
+        update {
+            it.copy(
+                profession = Profession.fromId(professionId),
+                domainId = domainId,
+                tradeTitle = tradeTitle,
+            )
+        }
         if (domainId != null) {
             runCatching { api.savePreferences(listOf(domainId)) }
                 .onFailure { crashReporter.capture(it) }
@@ -136,6 +151,8 @@ class SessionRepositoryImpl(
     }
 
     override suspend fun markAnalysisLaunched() = update { it.copy(analysisLaunched = true) }
+
+    override suspend fun saveAccountKind(kind: AccountKind) = update { it.copy(accountKind = kind) }
 
     override suspend fun updateProfile(displayName: String, bio: String, email: String, cityName: String?) {
         val profile = current()?.profile ?: return
@@ -219,6 +236,8 @@ class SessionRepositoryImpl(
             prefs[Keys.profileCompleted] = profile.profileCompleted
             prefs[Keys.isCertified] = profile.isCertified
             prefs[Keys.isPremium] = profile.isPremium
+            prefs[Keys.accountKind] = profile.accountKind.id
+            prefs[Keys.tradeTitle] = profile.tradeTitle
         }
     }
 
@@ -253,6 +272,8 @@ class SessionRepositoryImpl(
                 profileCompleted = this[Keys.profileCompleted] ?: false,
                 isCertified = this[Keys.isCertified] ?: false,
                 isPremium = this[Keys.isPremium] ?: false,
+                accountKind = AccountKind.fromId(this[Keys.accountKind], this[Keys.plan] ?: LukaPlans.STARTER),
+                tradeTitle = this[Keys.tradeTitle].orEmpty(),
             ),
         )
     }
@@ -298,5 +319,8 @@ class SessionRepositoryImpl(
         val pendingNewAccount = booleanPreferencesKey("pendingNewAccount")
         val isCertified = booleanPreferencesKey("isCertified")
         val isPremium = booleanPreferencesKey("isPremium")
+        val pendingAccountKind = stringPreferencesKey("pendingAccountKind")
+        val accountKind = stringPreferencesKey("accountKind")
+        val tradeTitle = stringPreferencesKey("tradeTitle")
     }
 }

@@ -2,6 +2,7 @@ package elieoko.mobile.luka.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.City
 import elieoko.mobile.luka.domain.model.CongoCatalog
 import elieoko.mobile.luka.domain.model.Profession
@@ -109,6 +110,14 @@ class ProfileViewModel(
         viewModelScope.launch {
             runCatching { sessions.saveCv(document.fileName, document.mimeType) }
                 .onSuccess { draft.update { it.copy(message = "CV ${document.fileName} enregistré") } }
+                .onFailure { error -> draft.update { it.copy(message = error.message) } }
+        }
+    }
+
+    fun switchAccountKind(kind: AccountKind) {
+        viewModelScope.launch {
+            runCatching { sessions.saveAccountKind(kind) }
+                .onSuccess { draft.update { it.copy(message = "${kind.title} activé") } }
                 .onFailure { error -> draft.update { it.copy(message = error.message) } }
         }
     }

@@ -56,14 +56,23 @@ import luka.shared.generated.resources.onboarding_kinshasa_3
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun OrientationScreen(viewModel: OrientationViewModel = koinViewModel()) {
+fun OrientationScreen(
+    onUnlock: () -> Unit = {},
+    viewModel: OrientationViewModel = koinViewModel(),
+    sessions: elieoko.mobile.luka.domain.repository.SessionRepository = org.koin.compose.koinInject(),
+) {
     val state by viewModel.state.collectAsState()
+    val session by sessions.session.collectAsState(null)
+    val unlocked = session?.profile?.let { elieoko.mobile.luka.domain.model.LukaEntitlements.fullOrientation(it) } == true
     PageBackdrop(Res.drawable.onboarding_kinshasa_3, tone = PageBackdropTone.Cinematic) {
         when (state.phase) {
             OrientationPhase.Pick -> PersonaPick(
                 selected = state.persona,
                 onSelect = viewModel::select,
-                onLaunch = viewModel::analyze,
+                onLaunch = {
+                    if (unlocked) viewModel.analyze() else onUnlock()
+                },
+                locked = !unlocked,
             )
             OrientationPhase.Analyzing -> AnalysisPulse(persona = state.persona)
             OrientationPhase.Results -> ResultsPane(
@@ -80,6 +89,7 @@ private fun PersonaPick(
     selected: OrientationPersona?,
     onSelect: (OrientationPersona) -> Unit,
     onLaunch: () -> Unit,
+    locked: Boolean,
 ) {
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -118,7 +128,11 @@ private fun PersonaPick(
                 .navigationBarsPadding()
                 .padding(start = 20.dp, end = 20.dp, bottom = 68.dp, top = 8.dp),
         ) {
-            LukaPrimaryButton("Lancer l’analyse", onLaunch, enabled = selected != null)
+            LukaPrimaryButton(
+                if (locked) "Débloquer l’orientation" else "Lancer l’analyse",
+                onLaunch,
+                enabled = selected != null || locked,
+            )
         }
     }
 }

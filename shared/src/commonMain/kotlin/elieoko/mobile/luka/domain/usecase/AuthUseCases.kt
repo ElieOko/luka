@@ -1,5 +1,6 @@
 package elieoko.mobile.luka.domain.usecase
 
+import elieoko.mobile.luka.domain.model.AccountKind
 import elieoko.mobile.luka.domain.model.AuthChannel
 import elieoko.mobile.luka.domain.model.AuthIdentifier
 import elieoko.mobile.luka.domain.model.AuthStartResult
@@ -8,9 +9,9 @@ import elieoko.mobile.luka.domain.model.UserSession
 import elieoko.mobile.luka.domain.repository.SessionRepository
 
 class RequestOtpUseCase(private val sessions: SessionRepository) {
-    suspend operator fun invoke(raw: String, newAccount: Boolean = false): AuthStartResult {
+    suspend operator fun invoke(raw: String, newAccount: Boolean = false, accountKind: AccountKind? = null): AuthStartResult {
         val identifier = parseIdentifier(raw)
-        return sessions.requestOtp(identifier, newAccount)
+        return sessions.requestOtp(identifier, newAccount, accountKind)
     }
 
     companion object {

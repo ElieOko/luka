@@ -22,9 +22,12 @@ data class UserProfile(
     val profileCompleted: Boolean = false,
     val isCertified: Boolean = false,
     val isPremium: Boolean = false,
+    val accountKind: AccountKind = AccountKind.PROFESSIONAL,
+    val tradeTitle: String = "",
 ) {
     val isPro: Boolean get() = isPremium || LukaPlans.isProfessional(planId)
     val isStudent: Boolean get() = LukaPlans.isStudent(planId)
+    val isLearner: Boolean get() = accountKind == AccountKind.LEARNER
 }
 
 data class UserSession(
