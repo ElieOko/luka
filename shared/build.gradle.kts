@@ -45,12 +45,18 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
-            implementation(libs.ktor.client.okhttp)
-            implementation(libs.onesignal)
-            implementation(libs.androidx.activity.compose)
+        androidMain {
+            // Sentry KMP tire sentry-cocoa : on ne le compile pas dans iosMain
+            // (sinon Xcode échoue : Undefined symbol _sentrycrashsc_initWithBacktrace).
+            kotlin.srcDir("src/jvmAndAndroidMain/kotlin")
+            dependencies {
+                implementation(libs.compose.uiToolingPreview)
+                implementation(libs.compose.uiTooling)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.onesignal)
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.sentry.kmp)
+            }
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -79,7 +85,6 @@ kotlin {
             implementation(libs.ktor.client.websockets)
             implementation(libs.krossbow.stomp.core)
             implementation(libs.krossbow.websocket.ktor)
-            implementation(libs.sentry.kmp)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
             implementation(libs.kotlinx.coroutines.core)
@@ -91,8 +96,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
         val jvmMain by getting {
+            kotlin.srcDir("src/jvmAndAndroidMain/kotlin")
             dependencies {
                 implementation(libs.ktor.client.cio)
+                implementation(libs.sentry.kmp)
             }
         }
     }

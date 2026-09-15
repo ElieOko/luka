@@ -4,6 +4,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import elieoko.mobile.luka.core.AppConfig
 import elieoko.mobile.luka.core.CrashReporter
+import elieoko.mobile.luka.core.createCrashReporter
 import elieoko.mobile.luka.core.createDeviceSerial
 import elieoko.mobile.luka.core.createHttpClient
 import elieoko.mobile.luka.core.createPushNotifier
@@ -13,7 +14,6 @@ import elieoko.mobile.luka.data.local.LukaDatabase
 import elieoko.mobile.luka.data.local.MIGRATION_1_2
 import elieoko.mobile.luka.data.local.createLukaDatabaseBuilder
 import elieoko.mobile.luka.data.local.createSessionDataStore
-import elieoko.mobile.luka.data.platform.SentryCrashReporter
 import elieoko.mobile.luka.data.remote.LukaApi
 import elieoko.mobile.luka.data.remote.OfferStream
 import elieoko.mobile.luka.data.remote.StompOfferStream
@@ -73,7 +73,7 @@ val lukaModule = module {
     single { createDeviceSerial().memoized() }
     single { createHttpClient().withDeviceSerial(get()) }
     single { LukaApi(get(), get(), get(), get(), get()) }
-    single<CrashReporter> { SentryCrashReporter(get()) }
+    single<CrashReporter> { createCrashReporter(get()) }
     single { createPushNotifier(get()) }
     single { createSessionDataStore() }
     single {
