@@ -1,0 +1,153 @@
+:root {
+  --luka-red: #e31b23;
+  --luka-red-deep: #9b1020;
+  --luka-wine: #4a0710;
+  --luka-ink: #1a0a0c;
+  --luka-cream: #fff6f5;
+  --luka-mist: #f8e8e9;
+  --luka-muted: #7a5c5f;
+  --luka-gold: #e8b86d;
+  --luka-outline: #e2c9cb;
+  --luka-mark: #141414;
+  --luka-accent: #e0301e;
+  --bar: #121212;
+  --bar-muted: #8a8a8a;
+  --radius: 18px;
+  --radius-lg: 22px;
+  --shadow: 0 12px 40px rgba(74, 7, 16, 0.12);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Outfit, system-ui, sans-serif;
+  background: var(--luka-cream);
+  color: var(--luka-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.38s var(--ease), transform 0.38s var(--ease);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.28s var(--ease);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+.slide-enter-from {
+  transform: translateX(-24px);
+  opacity: 0;
+}
+.slide-leave-to {
+  transform: translateX(24px);
+  opacity: 0;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.35s var(--ease);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes kenburns {
+  0% {
+    transform: scale(1.08) translateX(0);
+  }
+  100% {
+    transform: scale(1.16) translateX(-2%);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
