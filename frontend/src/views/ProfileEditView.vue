@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LukaButton from '@/components/ui/LukaButton.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
 
@@ -38,15 +39,13 @@ async function save() {
 </script>
 
 <template>
-  <main class="edit">
-    <header>
-      <button type="button" @click="router.back()">←</button>
-      <h1>Modifier le profil</h1>
-    </header>
-    <label>Nom<input v-model="displayName" /></label>
-    <label>E-mail<input v-model="email" type="email" /></label>
-    <label>Bio<textarea v-model="bio" rows="4" /></label>
-    <label>
+  <div>
+    <PageHeader title="Modifier le compte" />
+    <div class="form">
+    <label class="field">Nom<input v-model="displayName" /></label>
+    <label class="field">E-mail<input v-model="email" type="email" /></label>
+    <label class="field">Bio<textarea v-model="bio" rows="4" /></label>
+    <label class="field">
       Ville
       <select v-model="cityName">
         <option value="">Choisir</option>
@@ -55,51 +54,20 @@ async function save() {
     </label>
     <p v-if="error" class="error">{{ error }}</p>
     <LukaButton :loading="loading" @click="save">Enregistrer</LukaButton>
-  </main>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.edit {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 16px 20px 40px;
+.form {
+  max-width: 520px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
   background: #fff;
-  min-height: 100%;
-}
-header {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-h1 {
-  font-size: 20px;
-  margin: 0;
-}
-button {
-  border: 0;
-  background: none;
-  font-size: 20px;
-}
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 600;
-  color: var(--luka-muted);
-}
-input,
-textarea,
-select {
-  height: 52px;
-  border-radius: 16px;
-  border: 1px solid var(--luka-outline);
-  padding: 12px 14px;
-  font: inherit;
-  color: var(--luka-ink);
-}
-textarea {
-  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
 }
 .error {
   color: var(--luka-red-deep);

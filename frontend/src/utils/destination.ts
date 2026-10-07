@@ -1,13 +1,26 @@
 import type { AppDestination, UserSession } from '@/domain/models'
 import { isAuthenticated } from '@/domain/models'
 
-export function resolveDestination(session: UserSession | null, welcomeConsumed: boolean): AppDestination {
-  if (!isAuthenticated(session)) return welcomeConsumed ? 'auth' : 'welcome'
+export function resolveDestination(session: UserSession | null): AppDestination {
+  if (!isAuthenticated(session)) return 'landing'
   const profile = session!.profile
   if (!profile.profession && !profile.cityName) return 'profession'
   if (!profile.countryCode || !profile.regionId) return 'location'
   if (!profile.analysisLaunched) return 'analysis'
   return 'home'
+}
+
+const DESTINATION_PATH: Record<AppDestination, string> = {
+  landing: '/',
+  auth: '/auth',
+  profession: '/setup/metier',
+  location: '/setup/ville',
+  analysis: '/setup/analyse',
+  home: '/app/accueil',
+}
+
+export function pathForDestination(destination: AppDestination): string {
+  return DESTINATION_PATH[destination]
 }
 
 export function demandFrom(offers: { profession: { id: string; title: string; family: string; tagline: string; emoji: string; imageName: string } }[]) {

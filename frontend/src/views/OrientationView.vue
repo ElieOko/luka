@@ -2,8 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LukaButton from '@/components/ui/LukaButton.vue'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
-import RadarPulse from '@/components/ui/RadarPulse.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { PERSONAS } from '@/data/learner'
 import { learnerUnlocked } from '@/data/plans'
 import type { NationalInsight, OrientationPersona } from '@/domain/models'
@@ -38,133 +37,123 @@ function launch() {
         detail: `${stat.openings} offres ouvertes — ${persona.lens}.`,
       }))
     phase.value = 'results'
-  }, 1800)
+  }, 1400)
 }
 </script>
 
 <template>
-  <PageBackdrop image="/images/onboarding_kinshasa_3.jpg" cinematic>
-    <div v-if="phase === 'pick'" class="wrap">
-      <h1>Orientation</h1>
-      <p>Informatif, comme les offres : on analyse le marché national selon qui tu es.</p>
-      <button
-        v-for="persona in PERSONAS"
-        :key="persona.id"
-        type="button"
-        class="persona"
-        :class="{ on: selected?.id === persona.id }"
-        @click="selected = persona"
-      >
-        <strong>{{ persona.title }}</strong>
-        <span>{{ persona.subtitle }}</span>
-      </button>
-      <LukaButton :disabled="!selected && unlocked" @click="launch">
-        {{ unlocked ? 'Lancer l’analyse' : 'Débloquer l’orientation' }}
-      </LukaButton>
+  <div>
+    <PageHeader title="Orientation" subtitle="Lecture nationale du marché selon qui tu es." />
+    <div v-if="phase === 'pick'">
+      <div class="personas">
+        <button
+          v-for="persona in PERSONAS"
+          :key="persona.id"
+          type="button"
+          :class="{ on: selected?.id === persona.id }"
+          @click="selected = persona"
+        >
+          <strong>{{ persona.title }}</strong>
+          <span>{{ persona.subtitle }}</span>
+        </button>
+      </div>
+      <div class="cta">
+        <LukaButton :disabled="!selected && unlocked" @click="launch">
+          {{ unlocked ? 'Lancer l’analyse' : 'Débloquer l’orientation' }}
+        </LukaButton>
+      </div>
     </div>
-    <div v-else-if="phase === 'analyzing'" class="wrap center">
-      <h1>Analyse nationale</h1>
-      <p>
-        {{
-          selected?.id === 'eleve'
-            ? 'Lecture des filières d’études supérieures les plus demandées…'
-            : selected?.id === 'etudiant'
-              ? 'Lecture des premiers emplois après les études…'
-              : selected?.id === 'employe'
-                ? 'Lecture des reconversions et autres emplois…'
-                : selected?.id === 'employeur'
-                  ? 'Lecture des domaines où investir…'
-                  : 'Scan du marché congolais…'
-        }}
-      </p>
-      <RadarPulse />
-      <p>À partir des offres actuellement ouvertes sur le serveur.</p>
+    <div v-else-if="phase === 'analyzing'" class="center">
+      <div class="bar wide"><i /></div>
+      <p>Lecture des offres ouvertes sur le serveur…</p>
     </div>
-    <div v-else class="wrap">
-      <p class="kicker">{{ selected?.title }}</p>
-      <h1>{{ selected?.resultTitle }}</h1>
-      <p>Chiffres tirés des offres actuellement ouvertes sur Luka.</p>
+    <div v-else>
+      <h2>{{ selected?.resultTitle }}</h2>
       <article v-for="item in insights" :key="item.label" class="result">
-        <div class="head">
-          <b>{{ item.rank }}</b>
-          <div>
-            <strong>{{ item.label }}</strong>
-            <small>{{ item.sharePercent }} % · {{ item.detail }}</small>
-          </div>
+        <b>{{ item.rank }}</b>
+        <div>
+          <strong>{{ item.label }}</strong>
+          <small>{{ item.sharePercent }} % · {{ item.detail }}</small>
+          <div class="bar"><i :style="{ width: `${item.sharePercent}%` }" /></div>
         </div>
-        <div class="bar"><i :style="{ width: `${item.sharePercent}%` }" /></div>
       </article>
       <p v-if="!insights.length">Pas encore assez d’offres pour un diagnostic.</p>
-      <button class="ghost" type="button" @click="phase = 'pick'">Changer de profil</button>
+      <button class="text" type="button" @click="phase = 'pick'">Changer de profil</button>
     </div>
-  </PageBackdrop>
+  </div>
 </template>
 
 <style scoped>
-.wrap {
-  padding: 20px;
-  max-width: 720px;
-  margin: 0 auto;
+.personas {
   display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  color: #fff;
 }
-.center {
-  text-align: center;
-  justify-items: center;
-}
-h1 {
-  margin: 0;
-  font-weight: 900;
-}
-.persona {
+.personas button {
   text-align: left;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  border-radius: 20px;
-  padding: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
   display: grid;
   gap: 4px;
 }
-.persona.on {
-  background: var(--luka-red);
-  border-color: transparent;
+.personas span {
+  color: var(--luka-muted);
+}
+.personas .on {
+  border-color: var(--luka-red);
+  background: #fff5f5;
+}
+.center {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.wide {
+  width: min(420px, 90%);
+}
+.wide i {
+  width: 40%;
+  animation: fill 1.2s var(--ease) infinite alternate;
 }
 .result {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  padding: 16px;
-}
-.head {
   display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.head small {
-  display: block;
-  opacity: 0.8;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
 }
 .bar {
-  height: 10px;
-  margin-top: 10px;
+  height: 8px;
+  background: var(--luka-mist);
   border-radius: 99px;
-  background: rgba(227, 27, 35, 0.22);
+  overflow: hidden;
+  margin-top: 8px;
 }
 .bar i {
   display: block;
   height: 100%;
   background: var(--luka-red);
-  border-radius: 99px;
 }
-.ghost {
+.cta {
+  margin-top: 16px;
+}
+.text {
   border: 0;
   background: none;
-  color: #fff;
+  color: var(--luka-red);
   font-weight: 700;
 }
-.kicker {
-  font-weight: 700;
-  margin: 0;
+@media (max-width: 700px) {
+  .personas {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

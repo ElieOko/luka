@@ -1,37 +1,38 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import LukaLogo from '@/components/brand/LukaLogo.vue'
 import LukaButton from '@/components/ui/LukaButton.vue'
 import OtpBoxes from '@/components/ui/OtpBoxes.vue'
 import { ACCOUNT_KINDS, type AccountKindId } from '@/domain/models'
 import { useSessionStore } from '@/stores/session'
+import { pathForDestination, resolveDestination } from '@/utils/destination'
 
 const session = useSessionStore()
 const router = useRouter()
+const route = useRoute()
 
 const step = ref<'id' | 'otp'>('id')
 const input = ref('')
 const otp = ref('')
-const newAccount = ref(false)
+const newAccount = ref(route.query.signup === '1')
 const accountKind = ref<AccountKindId | null>(null)
 const privacyAccepted = ref(false)
-const showPrivacy = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const info = ref<string | null>(null)
 const phoneShown = ref('')
 
 const headline = computed(() => {
-  if (step.value === 'otp') return 'Confirme que c’est toi.'
-  return newAccount.value ? 'Crée ton compte.' : 'Entre sans mot de passe.'
+  if (step.value === 'otp') return 'Code de confirmation'
+  return newAccount.value ? 'Créer un compte Luka' : 'Connexion'
 })
 
 const cta = computed(() => {
   if (loading.value) return 'Un instant…'
-  if (step.value === 'id' && newAccount.value) return 'Créer le compte'
+  if (step.value === 'id' && newAccount.value) return 'Recevoir le code'
   if (step.value === 'id') return 'Recevoir le code'
-  return 'Continuer'
+  return 'Entrer sur la plateforme'
 })
 
 async function submit() {
@@ -50,7 +51,7 @@ async function submit() {
     try {
       const result = await session.requestOtp(input.value, newAccount.value, accountKind.value)
       if (result.kind === 'signed-in') {
-        await router.replace('/app/accueil')
+        await router.replace(pathForDestination(resolveDestination(session.session)))
       } else {
         phoneShown.value = result.phone
         step.value = 'otp'
@@ -66,7 +67,7 @@ async function submit() {
   loading.value = true
   try {
     await session.verifyOtp(otp.value)
-    await router.replace('/app/accueil')
+    await router.replace(pathForDestination(resolveDestination(session.session)))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Code invalide.'
   } finally {
@@ -100,168 +101,194 @@ function toggleMode() {
 </script>
 
 <template>
-  <main class="auth">
-    <section v-if="showPrivacy" class="privacy">
-      <button class="back" type="button" @click="showPrivacy = false">← Retour</button>
-      <h1>Politique de confidentialité</h1>
-      <p class="muted">Dernière mise à jour : septembre 2026</p>
-      <p>Luka est une application d’orientation et d’emploi centrée sur la RDC. Nous n’utilisons tes données que pour te connecter aux offres, analyses et conseils.</p>
-    </section>
-    <template v-else>
-      <div class="body">
-        <LukaLogo />
+  <main class="split">
+    <aside class="brand">
+      <RouterLink to="/" class="back">← Accueil</RouterLink>
+      <img src="/images/onboarding_kinshasa_2.jpg" alt="" />
+      <div class="overlay">
+        <LukaLogo light :height="32" />
+        <blockquote>
+          « Luka trouve les offres pour des millions de jeunes qui ne savent pas où chercher. »
+        </blockquote>
+        <p>Kinshasa · Lubumbashi · Goma</p>
+      </div>
+    </aside>
+    <section class="panel">
+      <div class="card">
+        <LukaLogo :height="28" />
         <h1>{{ headline }}</h1>
         <p class="lead">
           {{
             step === 'id'
-              ? 'Numéro congolais. Un code SMS, puis tu restes connecté.'
-              : `Code envoyé par SMS à ${phoneShown}.`
+              ? 'Numéro congolais. Un code SMS, sans mot de passe.'
+              : `Code envoyé au ${phoneShown}.`
           }}
         </p>
         <template v-if="step === 'id'">
-          <label>
+          <label class="field">
             Téléphone
             <input v-model="input" type="tel" placeholder="+243 81 000 0000" autocomplete="tel" />
           </label>
           <template v-if="newAccount">
-            <h2>Quel compte ?</h2>
-            <button
-              v-for="kind in ACCOUNT_KINDS"
-              :key="kind.id"
-              type="button"
-              class="kind"
-              :class="{ on: accountKind === kind.id }"
-              @click="accountKind = kind.id"
-            >
-              <strong>{{ kind.title }}</strong>
-              <span>{{ kind.subtitle }}</span>
-            </button>
+            <p class="label">Type de compte</p>
+            <div class="kinds">
+              <button
+                v-for="kind in ACCOUNT_KINDS"
+                :key="kind.id"
+                type="button"
+                :class="{ on: accountKind === kind.id }"
+                @click="accountKind = kind.id"
+              >
+                <strong>{{ kind.title }}</strong>
+                <span>{{ kind.subtitle }}</span>
+              </button>
+            </div>
             <label class="check">
               <input v-model="privacyAccepted" type="checkbox" />
               <span>
-                J’accepte la politique de confidentialité.
-                <button type="button" class="link" @click="showPrivacy = true">Lire la politique de confidentialité</button>
+                J’accepte la
+                <RouterLink to="/confidentialite">politique de confidentialité</RouterLink>.
               </span>
             </label>
           </template>
-          <button class="ghost" type="button" @click="toggleMode">
-            {{ newAccount ? 'Déjà inscrit ? Se connecter' : 'Pas encore de compte ? Créer un compte' }}
-          </button>
         </template>
         <template v-else>
-          <h2>Code à 6 chiffres</h2>
           <OtpBoxes v-model="otp" />
-          <button class="ghost" type="button" :disabled="loading" @click="resend">Renvoyer le code</button>
+          <button class="text" type="button" :disabled="loading" @click="resend">Renvoyer le code</button>
         </template>
         <p v-if="info && !error" class="info">{{ info }}</p>
         <p v-if="error" class="error">{{ error }}</p>
+        <LukaButton block :loading="loading" :disabled="loading" @click="submit">{{ cta }}</LukaButton>
+        <button v-if="step === 'id'" class="text" type="button" @click="toggleMode">
+          {{ newAccount ? 'Déjà un compte ? Se connecter' : 'Pas encore de compte ? Créer un compte' }}
+        </button>
       </div>
-      <div class="cta">
-        <LukaButton :loading="loading" :disabled="loading" @click="submit">{{ cta }}</LukaButton>
-      </div>
-    </template>
+    </section>
   </main>
 </template>
 
 <style scoped>
-.auth {
+.split {
   min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+}
+.brand {
+  position: relative;
+  overflow: hidden;
+  background: var(--luka-wine);
+}
+.brand img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(1200px 500px at 50% -10%, rgba(227, 27, 35, 0.12), transparent),
-    var(--luka-cream);
+  justify-content: flex-end;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(20, 6, 8, 0.78));
 }
-.body,
-.privacy {
-  flex: 1;
-  padding: 28px 24px 16px;
-  max-width: 560px;
-  width: 100%;
-  margin: 0 auto;
+.back {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  z-index: 2;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+blockquote {
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 18px 0 8px;
+}
+.panel {
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+  background: var(--canvas);
+}
+.card {
+  width: min(440px, 100%);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
 }
 h1 {
-  font-size: 30px;
-  margin: 28px 0 8px;
-  font-weight: 800;
+  margin: 8px 0 0;
+  font-size: 28px;
+  letter-spacing: -0.03em;
 }
 .lead,
-.muted {
+.info {
   color: var(--luka-muted);
-  margin-top: 0;
+  margin: 0;
 }
-label {
-  display: block;
-  font-weight: 600;
-  margin: 20px 0 8px;
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--luka-muted);
+  margin: 4px 0 0;
 }
-input[type='tel'] {
-  width: 100%;
-  margin-top: 8px;
-  height: 56px;
-  border-radius: 16px;
-  border: 1px solid var(--luka-outline);
-  padding: 0 16px;
-  background: #fff;
-  font-size: 16px;
+.kinds {
+  display: grid;
+  gap: 8px;
 }
-h2 {
-  margin: 22px 0 10px;
-  font-size: 16px;
-}
-.kind {
-  width: 100%;
+.kinds button {
   text-align: left;
-  border: 1px solid transparent;
-  border-radius: 18px;
-  padding: 14px;
-  margin-bottom: 8px;
-  background: var(--luka-mist);
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
   display: grid;
   gap: 4px;
-  transition: background 0.2s, color 0.2s, transform 0.2s var(--ease);
 }
-.kind span {
+.kinds button span {
   color: var(--luka-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
-.kind.on {
-  background: var(--luka-red);
-  color: #fff;
-}
-.kind.on span {
-  color: rgba(255, 255, 255, 0.9);
+.kinds .on {
+  border-color: var(--luka-red);
+  background: #fff5f5;
 }
 .check {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
-  font-weight: 400;
+  font-size: 14px;
 }
-.link,
-.ghost {
-  background: none;
+.check a {
+  color: var(--luka-red);
+}
+.text {
   border: 0;
+  background: none;
   color: var(--luka-red);
   font-weight: 700;
-  padding: 8px 0;
-}
-.cta {
-  padding: 16px 24px 28px;
-  max-width: 560px;
-  width: 100%;
-  margin: 0 auto;
+  justify-self: start;
+  padding: 0;
 }
 .error {
   color: var(--luka-red-deep);
+  margin: 0;
 }
-.info {
-  color: var(--luka-muted);
-}
-.back {
-  border: 0;
-  background: none;
-  font-weight: 700;
-  padding: 0 0 12px;
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .brand {
+    min-height: 180px;
+  }
 }
 </style>

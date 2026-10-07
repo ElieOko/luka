@@ -45,133 +45,83 @@ async function confirm() {
 </script>
 
 <template>
-  <main class="setup">
-    <header>
-      <h1>Ton métier.</h1>
-      <p>Un seul métier à la fois. Coche la ligne, pas le titre de section.</p>
-      <input v-model="query" placeholder="Électricité, data, mines…" />
-      <div v-if="selected" class="picked">
-        <strong>{{ selected.title }}</strong>
-        <span>{{ selected.family }}</span>
-      </div>
-    </header>
+  <section class="panel">
+    <h1>Quel métier suivre ?</h1>
+    <p>Un seul à la fois. Le domaine est enregistré dans tes préférences API.</p>
+    <input v-model="query" class="input" placeholder="Électricité, data, mines…" />
+    <p v-if="selected" class="picked">Sélection : <strong>{{ selected.title }}</strong> · {{ selected.family }}</p>
     <div class="list">
       <section v-for="[family, professions] in grouped" :key="family">
         <h2>{{ family }}</h2>
-        <button
-          v-for="chip in professions"
-          :key="tradeKey(chip)"
-          type="button"
-          class="row"
-          :class="{ on: selected && tradeKey(selected) === tradeKey(chip) }"
-          @click="selected = chip"
-        >
-          <span class="radio" />
-          <span>
+        <div class="rows">
+          <button
+            v-for="chip in professions"
+            :key="tradeKey(chip)"
+            type="button"
+            :class="{ on: selected && tradeKey(selected) === tradeKey(chip) }"
+            @click="selected = chip"
+          >
             <strong>{{ chip.title }}</strong>
             <small>{{ chip.tagline }}</small>
-          </span>
-        </button>
+          </button>
+        </div>
       </section>
     </div>
-    <footer>
-      <LukaButton :disabled="!selected || saving" :loading="saving" @click="confirm">Continuer</LukaButton>
-    </footer>
-  </main>
+    <LukaButton :disabled="!selected || saving" :loading="saving" @click="confirm">Continuer</LukaButton>
+  </section>
 </template>
 
 <style scoped>
-.setup {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: var(--luka-cream);
-}
-header,
-footer {
-  padding: 24px;
-  max-width: 720px;
-  width: 100%;
-  margin: 0 auto;
+.panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
 }
 h1 {
-  margin: 0 0 6px;
-  font-size: 30px;
-  font-weight: 800;
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.03em;
 }
 p {
-  color: var(--luka-muted);
-  margin-top: 0;
-}
-input {
-  width: 100%;
-  height: 56px;
-  border-radius: 18px;
-  border: 1px solid var(--luka-outline);
-  padding: 0 16px;
-  font-size: 16px;
-}
-.picked {
-  margin-top: 12px;
-  background: var(--luka-mist);
-  border-radius: 18px;
-  padding: 14px;
-  display: grid;
-}
-.picked span {
+  margin: 0;
   color: var(--luka-muted);
 }
 .list {
-  flex: 1;
+  max-height: 46vh;
   overflow: auto;
-  padding: 0 20px 16px;
-  max-width: 720px;
-  width: 100%;
-  margin: 0 auto;
+  display: grid;
+  gap: 16px;
 }
 h2 {
+  margin: 0 0 8px;
   color: var(--luka-red);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin: 14px 0 6px;
 }
-.row {
-  width: 100%;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  text-align: left;
-  border: 0;
-  border-radius: 16px;
-  background: var(--luka-mist);
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  transition: background 0.2s, color 0.2s, transform 0.2s var(--ease);
-}
-.row span {
+.rows {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.rows button {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
 }
 small {
   color: var(--luka-muted);
 }
-.radio {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--luka-red);
-  flex-shrink: 0;
-}
-.row.on {
-  background: var(--luka-red);
-  color: #fff;
-}
-.row.on small {
-  color: rgba(255, 255, 255, 0.88);
-}
-.row.on .radio {
-  border-color: #fff;
-  box-shadow: inset 0 0 0 4px #fff;
-  background: var(--luka-red);
+.rows .on {
+  border-color: var(--luka-red);
+  background: #fff5f5;
 }
 </style>

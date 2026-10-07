@@ -8,32 +8,46 @@ defineEmits<{ unlock: [] }>()
 
 <template>
   <article class="lock">
-    <div class="icon" aria-hidden="true">🔒</div>
-    <h3>{{ title }}</h3>
-    <p>{{ body }}</p>
+    <div>
+      <h3>{{ title }}</h3>
+      <p>{{ body }}</p>
+    </div>
     <button type="button" @click="$emit('unlock')">Débloquer</button>
   </article>
 </template>
 
 <style scoped>
 .lock {
-  background: linear-gradient(180deg, #fff, var(--luka-mist));
-  border-radius: 18px;
-  padding: 16px;
-  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  border: 1px dashed var(--luka-red);
+  border-radius: var(--radius);
+  padding: 16px 18px;
 }
 h3 {
-  margin: 8px 0 4px;
+  margin: 0 0 4px;
 }
 p {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--luka-muted);
 }
 button {
   border: 0;
-  background: transparent;
-  color: var(--luka-red);
+  background: var(--luka-red);
+  color: #fff;
+  border-radius: 999px;
+  height: 40px;
+  padding: 0 16px;
   font-weight: 700;
-  padding: 0;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .lock {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

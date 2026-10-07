@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import LockedCard from '@/components/ui/LockedCard.vue'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { learnerUnlocked, proUnlocked } from '@/data/plans'
 import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
@@ -19,91 +19,68 @@ const stats = computed(() => (unlocked.value ? catalog.stats : catalog.stats.sli
 </script>
 
 <template>
-  <PageBackdrop image="/images/onboarding_kinshasa_2.jpg" cinematic>
-    <div class="wrap">
-      <h1>{{ realtime ? 'Marché en temps réel' : 'Tendances' }}</h1>
-      <p>
-        {{
-          realtime
-            ? 'Les ouvertures qui bougent maintenant, à partir des offres du serveur.'
-            : 'Les métiers les plus demandés cette semaine'
-        }}
-      </p>
-      <p v-if="!stats.length" class="empty">Les tendances se construisent à partir des offres du backend.</p>
-      <article v-for="(item, i) in stats" :key="item.profession.id" class="stat" :style="{ animationDelay: `${i * 70}ms` }">
+  <div>
+    <PageHeader
+      :title="realtime ? 'Marché' : 'Tendances'"
+      :subtitle="realtime ? 'Ouvertures agrégées à partir du flux serveur.' : 'Métiers les plus demandés cette semaine.'"
+    />
+    <p v-if="!stats.length" class="empty">Les tendances se construisent à partir des offres du backend.</p>
+    <div class="grid">
+      <article v-for="item in stats" :key="item.profession.id">
         <div class="head">
           <strong>{{ item.profession.emoji }} {{ item.profession.title }}</strong>
           <span>{{ item.sharePercent }} %</span>
         </div>
         <p>{{ item.trend }}</p>
-        <div class="bar">
-          <i :style="{ width: `${item.sharePercent}%` }" />
-        </div>
+        <div class="bar"><i :style="{ width: `${item.sharePercent}%` }" /></div>
       </article>
-      <LockedCard
-        v-if="!unlocked"
-        :title="realtime ? 'Marché temps réel' : 'Tendances complètes'"
-        body="L’abonnement ouvre le diagnostic entier, pas seulement les deux premiers métiers."
-        @unlock="router.push('/app/abonnement')"
-      />
     </div>
-  </PageBackdrop>
+    <LockedCard
+      v-if="!unlocked"
+      :title="realtime ? 'Marché temps réel' : 'Tendances complètes'"
+      body="L’abonnement ouvre le diagnostic entier."
+      @unlock="router.push('/app/abonnement')"
+    />
+  </div>
 </template>
 
 <style scoped>
-.wrap {
-  padding: 24px 20px 40px;
-  max-width: 880px;
-  margin: 0 auto;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
 }
-h1 {
-  color: #fff;
-  margin: 0;
-  font-weight: 900;
-}
-p {
-  color: rgba(255, 255, 255, 0.85);
-}
-.stat {
+article {
   background: #fff;
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 10px;
-  animation: rise 0.5s var(--ease) both;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
 }
 .head {
   display: flex;
   justify-content: space-between;
 }
-.stat p {
+p,
+.empty {
   color: var(--luka-muted);
-  margin: 6px 0 10px;
 }
 .bar {
-  height: 10px;
+  height: 8px;
   border-radius: 99px;
-  background: rgba(227, 27, 35, 0.22);
+  background: var(--luka-mist);
   overflow: hidden;
+  margin-top: 10px;
 }
 .bar i {
   display: block;
   height: 100%;
   background: var(--luka-red);
-  border-radius: 99px;
-  animation: fill 0.8s var(--ease) both;
+  animation: fill 0.7s var(--ease) both;
 }
-.empty {
-  color: #fff;
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-@keyframes fill {
-  from {
-    width: 0 !important;
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -165,7 +165,7 @@ export interface UserSession {
   profile: UserProfile
 }
 
-export type AppDestination = 'welcome' | 'auth' | 'profession' | 'location' | 'analysis' | 'home'
+export type AppDestination = 'landing' | 'auth' | 'profession' | 'location' | 'analysis' | 'home'
 
 export function isAuthenticated(session: UserSession | null): boolean {
   return Boolean(session?.token)
