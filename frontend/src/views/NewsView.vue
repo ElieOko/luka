@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LockedCard from '@/components/ui/LockedCard.vue'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { NEWS, formatNewsDate, newsTabs } from '@/data/learner'
 import { learnerUnlocked } from '@/data/plans'
 import { imageUrl } from '@/domain/models'
@@ -19,136 +19,146 @@ const visible = computed(() => {
   if (tab.value === 'Souscrit') return NEWS.filter((item) => item.subscribed)
   return NEWS.filter((item) => !item.subscribed && item.domain === tab.value)
 })
+const featured = computed(() => visible.value[0] ?? null)
+const rest = computed(() => visible.value.slice(1))
 </script>
 
 <template>
-  <PageBackdrop image="/images/onboarding_kinshasa_2.jpg" cinematic>
-    <div class="wrap">
-      <h1>News</h1>
-      <p>Les articles se lisent ici, classés par domaine.</p>
-      <div class="tabs">
-        <button
-          v-for="label in tabs"
-          :key="label"
-          type="button"
-          :class="{ on: tab === label }"
-          @click="tab = label"
-        >
-          {{ label }}
-        </button>
+  <div>
+    <PageHeader title="News" subtitle="Articles classés par domaine — lecture magazine, pas un fil vertical." />
+    <div class="tabs">
+      <button v-for="label in tabs" :key="label" type="button" :class="{ on: tab === label }" @click="tab = label">
+        {{ label }}
+      </button>
+    </div>
+    <LockedCard
+      v-if="tab === 'Souscrit' && !unlocked"
+      title="Dossier Souscrit"
+      body="Briefs de marché et pipelines de stages, avec l’abonnement."
+      @unlock="router.push('/app/abonnement')"
+    />
+    <article v-if="featured" class="featured" @click="router.push(`/app/news/${featured.id}`)">
+      <img :src="imageUrl(featured.imageName)" :alt="featured.title" />
+      <div>
+        <span>{{ featured.domain }}</span>
+        <h2>{{ featured.title }}</h2>
+        <p>{{ featured.excerpt }}</p>
+        <small>{{ featured.author }} · {{ formatNewsDate(featured.publishedAtEpochMs) }}</small>
       </div>
-      <LockedCard
-        v-if="tab === 'Souscrit' && !unlocked"
-        title="Dossier Souscrit"
-        body="Briefs de marché, contrats, pipelines de stages : les infos précieuses, avec l’abonnement."
-        @unlock="router.push('/app/abonnement')"
-      />
-      <article
-        v-for="item in visible"
-        :key="item.id"
-        class="card"
-        @click="router.push(`/app/news/${item.id}`)"
-      >
+    </article>
+    <div class="grid">
+      <article v-for="item in rest" :key="item.id" @click="router.push(`/app/news/${item.id}`)">
         <img :src="imageUrl(item.imageName)" :alt="item.title" />
         <div>
-          <strong class="domain">{{ item.domain }}</strong>
-          <h2>{{ item.title }}</h2>
+          <span>{{ item.domain }}</span>
+          <h3>{{ item.title }}</h3>
           <p>{{ item.excerpt }}</p>
           <small>{{ item.author }} · {{ formatNewsDate(item.publishedAtEpochMs) }}</small>
         </div>
-        <button
-          type="button"
-          class="fav"
-          @click.stop="session.toggleNewsFavorite(item.id)"
-        >
-          {{ session.favoriteNewsIds.includes(item.id) ? '★' : '☆' }}
-        </button>
       </article>
-      <p v-if="!visible.length && tab !== 'Souscrit'" class="empty">Rien ici pour l’instant.</p>
     </div>
-  </PageBackdrop>
+    <p v-if="!visible.length && tab !== 'Souscrit'" class="empty">Rien dans cet onglet.</p>
+  </div>
 </template>
 
 <style scoped>
-.wrap {
-  padding: 20px;
-  max-width: 880px;
-  margin: 0 auto;
-}
-h1 {
-  color: #fff;
-  margin: 0;
-  font-weight: 900;
-}
-p {
-  color: rgba(255, 255, 255, 0.85);
-}
 .tabs {
   display: flex;
   gap: 8px;
-  overflow: auto;
-  margin: 12px 0;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
 }
 .tabs button {
-  border: 0;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  border-radius: 99px;
-  padding: 8px 12px;
-  font-weight: 600;
-  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 650;
 }
 .tabs .on {
   background: var(--luka-red);
+  color: #fff;
+  border-color: var(--luka-red);
 }
-.card {
-  position: relative;
+.featured {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 0;
   background: #fff;
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   overflow: hidden;
-  margin-bottom: 12px;
+  cursor: pointer;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.featured img {
+  height: 280px;
+  width: 100%;
+  object-fit: cover;
+}
+.featured > div,
+.grid article > div {
+  padding: 22px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.grid article {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
   cursor: pointer;
   display: grid;
-  animation: rise 0.4s var(--ease) both;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s;
 }
-.card img {
+.grid article:hover,
+.featured:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+.grid img {
   height: 140px;
   width: 100%;
   object-fit: cover;
 }
-.card div {
-  padding: 14px 16px 16px;
-}
-.domain {
+span {
   color: var(--luka-red);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+h2,
+h3 {
+  margin: 0;
 }
 h2 {
-  margin: 4px 0;
-  font-size: 18px;
+  font-size: 28px;
+  letter-spacing: -0.03em;
 }
-.card p {
-  color: var(--luka-muted);
-  margin: 0 0 6px;
+h3 {
+  font-size: 17px;
 }
-.fav {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: 0;
-  background: rgba(255, 255, 255, 0.92);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  color: var(--luka-red);
-  font-size: 18px;
-}
+p,
+small,
 .empty {
-  color: #fff;
+  color: var(--luka-muted);
+  margin: 0;
 }
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+@media (max-width: 980px) {
+  .featured,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .featured img {
+    height: 180px;
   }
 }
 </style>

@@ -1,18 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
-import { resolveDestination } from '@/utils/destination'
+import { pathForDestination, resolveDestination } from '@/utils/destination'
 
 const router = createRouter({
   history: createWebHistory(),
-  scrollBehavior() {
+  scrollBehavior(to) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return { top: 0 }
   },
   routes: [
-    { path: '/', name: 'welcome', component: () => import('@/views/WelcomeView.vue'), meta: { guest: true } },
-    { path: '/auth', name: 'auth', component: () => import('@/views/AuthView.vue'), meta: { guest: true } },
-    { path: '/setup/metier', name: 'profession', component: () => import('@/views/ProfessionView.vue'), meta: { auth: true } },
-    { path: '/setup/ville', name: 'location', component: () => import('@/views/LocationView.vue'), meta: { auth: true } },
-    { path: '/setup/analyse', name: 'analysis', component: () => import('@/views/AnalysisView.vue'), meta: { auth: true } },
+    { path: '/', name: 'landing', component: () => import('@/views/LandingView.vue'), meta: { public: true } },
+    { path: '/auth', name: 'auth', component: () => import('@/views/AuthView.vue'), meta: { public: true } },
+    { path: '/confidentialite', name: 'privacy', component: () => import('@/views/PrivacyView.vue'), meta: { public: true } },
+    {
+      path: '/setup',
+      component: () => import('@/views/shell/SetupShell.vue'),
+      meta: { auth: true },
+      children: [
+        { path: '', redirect: '/setup/metier' },
+        { path: 'metier', name: 'profession', component: () => import('@/views/ProfessionView.vue') },
+        { path: 'ville', name: 'location', component: () => import('@/views/LocationView.vue') },
+        { path: 'analyse', name: 'analysis', component: () => import('@/views/AnalysisView.vue') },
+      ],
+    },
     {
       path: '/app',
       component: () => import('@/views/shell/AppShell.vue'),
@@ -29,35 +39,28 @@ const router = createRouter({
         { path: 'profil', name: 'profile', component: () => import('@/views/ProfileView.vue') },
         { path: 'profil/edit', name: 'profile-edit', component: () => import('@/views/ProfileEditView.vue') },
         { path: 'abonnement', name: 'subscription', component: () => import('@/views/SubscriptionView.vue') },
-        { path: 'confidentialite', name: 'privacy', component: () => import('@/views/PrivacyView.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })
 
-const destinationRoute: Record<ReturnType<typeof resolveDestination>, string> = {
-  welcome: '/',
-  auth: '/auth',
-  profession: '/setup/metier',
-  location: '/setup/ville',
-  analysis: '/setup/analyse',
-  home: '/app/accueil',
-}
-
 router.beforeEach((to) => {
   const session = useSessionStore()
   session.restoreToken()
-  const destination = resolveDestination(session.session, session.welcomeConsumed)
-  const target = destinationRoute[destination]
+  const destination = resolveDestination(session.session)
 
-  if (destination !== 'home' && to.path.startsWith('/app')) return target
-  if (destination === 'home' && (to.meta.guest || to.path.startsWith('/setup'))) return '/app/accueil'
-  if (destination === 'welcome' && to.name !== 'welcome') return '/'
-  if (destination === 'auth' && to.name !== 'auth' && to.name !== 'privacy') return '/auth'
-  if (destination === 'profession' && to.name !== 'profession') return '/setup/metier'
-  if (destination === 'location' && to.name !== 'location') return '/setup/ville'
-  if (destination === 'analysis' && to.name !== 'analysis') return '/setup/analyse'
+  if (destination === 'landing') {
+    return to.meta.public ? true : '/auth'
+  }
+
+  if (destination === 'home') {
+    if (to.meta.public || to.path.startsWith('/setup')) return pathForDestination('home')
+    return true
+  }
+
+  const setupPath = pathForDestination(destination)
+  if (to.path !== setupPath && to.name !== destination) return setupPath
   return true
 })
 

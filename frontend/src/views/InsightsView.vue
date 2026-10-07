@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import LockedCard from '@/components/ui/LockedCard.vue'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { proUnlocked } from '@/data/plans'
 import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
@@ -12,7 +12,6 @@ const catalog = useCatalogStore()
 const router = useRouter()
 const profile = computed(() => session.profile)
 const cvOk = computed(() => Boolean(profile.value && proUnlocked(profile.value)))
-const offerOk = computed(() => cvOk.value)
 const completeness = computed(() => {
   const p = profile.value
   const checks = [
@@ -27,10 +26,9 @@ const completeness = computed(() => {
 </script>
 
 <template>
-  <PageBackdrop image="/images/onboarding_kinshasa_2.jpg" cinematic>
-    <div class="wrap">
-      <h1>Analyses</h1>
-      <p>CV, offres et signaux du marché — pour viser juste.</p>
+  <div>
+    <PageHeader title="Analyses" subtitle="CV, offres et signaux — pour viser juste." />
+    <div class="grid">
       <LockedCard
         v-if="!cvOk"
         title="Analyse de CV"
@@ -41,65 +39,48 @@ const completeness = computed(() => {
         <h2>Analyse de CV</h2>
         <p>Complétude estimée à {{ Math.round(completeness * 100) }} %.</p>
         <div class="bar"><i :style="{ width: `${completeness * 100}%` }" /></div>
-        <p>
-          {{
-            profile?.cvFileName
-              ? `Fichier chargé : ${profile.cvFileName}`
-              : 'Ajoute un CV dans le profil pour un matching plus précis.'
-          }}
-        </p>
+        <p>{{ profile?.cvFileName ? `Fichier : ${profile.cvFileName}` : 'Ajoute un CV dans le compte.' }}</p>
       </article>
       <LockedCard
-        v-if="!offerOk"
+        v-if="!cvOk"
         title="Analyse des offres"
-        body="Lis le marché de ton métier : contrats, villes, volume sur les offres ouvertes."
+        body="Contrats, villes, volume sur les ouvertures de ton métier."
         @unlock="router.push('/app/abonnement')"
       />
       <article v-else class="card">
         <h2>Analyse des offres</h2>
-        <p>
-          {{ catalog.filteredOffers.length }} offres ouvertes
-          {{ profile?.tradeTitle ? `autour de ${profile.tradeTitle}` : '' }}.
-        </p>
+        <p>{{ catalog.filteredOffers.length }} offres ouvertes {{ profile?.tradeTitle ? `autour de ${profile.tradeTitle}` : '' }}.</p>
         <p>{{ catalog.stats[0]?.profession.title }} mène le volume cette semaine.</p>
       </article>
     </div>
-  </PageBackdrop>
+  </div>
 </template>
 
 <style scoped>
-.wrap {
-  padding: 20px;
-  max-width: 880px;
-  margin: 0 auto;
+.grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
-h1 {
-  color: #fff;
-  margin: 0;
-  font-weight: 900;
-}
-p {
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0;
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 .card {
   background: #fff;
-  border-radius: 22px;
-  padding: 18px;
-  color: var(--luka-ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
 }
-.card p {
+p {
   color: var(--luka-muted);
-  margin-top: 8px;
 }
 .bar {
-  height: 10px;
-  border-radius: 99px;
+  height: 8px;
   background: var(--luka-mist);
+  border-radius: 99px;
   overflow: hidden;
-  margin-top: 10px;
 }
 .bar i {
   display: block;

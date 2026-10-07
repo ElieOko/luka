@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import LukaLogo from '@/components/brand/LukaLogo.vue'
+import { firstName } from '@/domain/models'
 import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
 
@@ -9,32 +10,49 @@ const session = useSessionStore()
 const catalog = useCatalogStore()
 const route = useRoute()
 const router = useRouter()
-const drawer = ref(false)
+const menu = ref(false)
 
 const learner = computed(() => session.isLearner)
-
-const tabs = computed(() => {
+const kindLabel = computed(() => (learner.value ? 'Apprenant' : 'Professionnel'))
+const links = computed(() => {
   if (learner.value) {
     return [
-      { to: '/app/accueil', label: 'Accueil', icon: '⌂' },
-      { to: '/app/news', label: 'News', icon: '☰' },
-      { to: '/app/tendances', label: 'Tendances', icon: '▲', center: true },
-      { to: '/app/orientation', label: 'Orientation', icon: '✦' },
-      { to: '/app/profil', label: 'Profil', icon: '●' },
+      { to: '/app/accueil', label: 'Tableau de bord' },
+      { to: '/app/news', label: 'News' },
+      { to: '/app/tendances', label: 'Tendances' },
+      { to: '/app/orientation', label: 'Orientation' },
     ]
   }
   return [
-    { to: '/app/accueil', label: 'Accueil', icon: '⌂' },
-    { to: '/app/offres', label: 'Offres', icon: '☐' },
-    { to: '/app/tendances', label: 'Marché', icon: '▲', center: true },
-    { to: '/app/analyses', label: 'Analyses', icon: '▣' },
-    { to: '/app/profil', label: 'Profil', icon: '●' },
+    { to: '/app/accueil', label: 'Tableau de bord' },
+    { to: '/app/offres', label: 'Offres' },
+    { to: '/app/tendances', label: 'Marché' },
+    { to: '/app/analyses', label: 'Analyses' },
   ]
 })
 
-function isActive(path: string) {
+function active(path: string) {
   return route.path === path || (path !== '/app/accueil' && route.path.startsWith(path))
 }
+
+function logout() {
+  session.logout()
+  void router.push('/')
+}
+
+function onSearch(value: string) {
+  catalog.onQuery(value)
+  if (!learner.value && !route.path.startsWith('/app/offres')) {
+    void router.push('/app/offres')
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    menu.value = false
+  },
+)
 
 onMounted(() => {
   void catalog.bootstrap()
@@ -42,29 +60,50 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="shell-root">
-  <div class="shell">
-    <aside class="sidebar">
-      <LukaLogo :height="32" />
+  <div class="app">
+    <div v-if="menu" class="scrim" @click="menu = false" />
+    <aside :class="{ open: menu }">
+      <RouterLink to="/app/accueil" class="brand"><LukaLogo :height="28" /></RouterLink>
+      <p class="group">Espace</p>
       <nav>
         <RouterLink
-          v-for="tab in tabs"
-          :key="tab.to"
-          :to="tab.to"
-          class="side-link"
-          :class="{ on: isActive(tab.to), hot: tab.center }"
+          v-for="link in links"
+          :key="link.to"
+          :to="link.to"
+          :class="{ on: active(link.to) }"
         >
-          <span>{{ tab.icon }}</span>
-          {{ tab.label }}
+          {{ link.label }}
         </RouterLink>
       </nav>
-      <button class="ghost" type="button" @click="router.push('/app/abonnement')">Abonnement</button>
+      <p class="group">Compte</p>
+      <nav>
+        <RouterLink to="/app/abonnement" :class="{ on: active('/app/abonnement') }">Abonnement</RouterLink>
+        <RouterLink to="/app/profil" :class="{ on: active('/app/profil') }">Compte</RouterLink>
+      </nav>
+      <div class="bottom">
+        <RouterLink to="/app/profil" class="user">
+          <span>{{ firstName(session.profile).slice(0, 1) }}</span>
+          <div>
+            <strong>{{ firstName(session.profile) }}</strong>
+            <small>{{ kindLabel }}</small>
+          </div>
+        </RouterLink>
+        <button type="button" class="out" @click="logout">Se déconnecter</button>
+      </div>
     </aside>
     <div class="main">
       <header class="top">
-        <button class="menu" type="button" @click="drawer = true">☰</button>
-        <LukaLogo :height="28" />
-        <button class="bell" type="button" @click="router.push('/app/abonnement')">★</button>
+        <button class="burger" type="button" @click="menu = !menu">Menu</button>
+        <input
+          class="search"
+          :value="catalog.query"
+          :placeholder="learner ? 'Rechercher dans Luka…' : 'Rechercher un poste, une entreprise, une ville…'"
+          @input="onSearch(($event.target as HTMLInputElement).value)"
+        />
+        <RouterLink to="/app/profil" class="chip">
+          <span>{{ firstName(session.profile).slice(0, 1) }}</span>
+          {{ firstName(session.profile) }}
+        </RouterLink>
       </header>
       <div class="page">
         <RouterView v-slot="{ Component }">
@@ -73,188 +112,188 @@ onMounted(() => {
           </Transition>
         </RouterView>
       </div>
-      <nav class="bar">
-        <RouterLink
-          v-for="tab in tabs"
-          :key="tab.to"
-          :to="tab.to"
-          class="item"
-          :class="{ on: isActive(tab.to), center: tab.center }"
-        >
-          <span class="ico">{{ tab.icon }}</span>
-          <small>{{ tab.label }}</small>
-        </RouterLink>
-      </nav>
     </div>
-    <Transition name="fade">
-      <div v-if="drawer" class="overlay" @click="drawer = false">
-        <aside class="drawer" @click.stop>
-          <LukaLogo :height="32" />
-          <p>{{ session.profile?.displayName || 'Ton profil' }}</p>
-          <RouterLink to="/app/abonnement" @click="drawer = false">Abonnement</RouterLink>
-          <RouterLink to="/app/confidentialite" @click="drawer = false">Confidentialité</RouterLink>
-          <RouterLink to="/app/profil" @click="drawer = false">Profil</RouterLink>
-          <button type="button" @click="session.logout(); drawer = false; router.push('/')">Se déconnecter</button>
-        </aside>
-      </div>
-    </Transition>
-  </div>
   </div>
 </template>
 
 <style scoped>
-.shell {
+.app {
   min-height: 100dvh;
   display: grid;
-  background: var(--luka-cream);
+  grid-template-columns: var(--sidebar) 1fr;
+  background: var(--canvas);
 }
-.sidebar {
-  display: none;
-}
-.main {
-  min-width: 0;
+aside {
+  background: #fff;
+  border-right: 1px solid var(--line);
+  padding: 22px 14px;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-}
-.top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
   position: sticky;
   top: 0;
-  z-index: 5;
-  background: rgba(255, 246, 245, 0.86);
-  backdrop-filter: blur(12px);
+  height: 100dvh;
+  overflow: auto;
 }
-.menu,
-.bell,
-.ghost {
-  border: 0;
-  background: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 16px;
+.brand {
+  padding: 2px 10px 18px;
 }
-.page {
-  flex: 1;
-  padding-bottom: 88px;
+.group {
+  margin: 12px 10px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b09a9d;
 }
-.bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 64px;
-  background: var(--bar);
+nav {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  align-items: end;
-  padding-bottom: 8px;
-  z-index: 8;
+  gap: 2px;
 }
-.item {
-  color: var(--bar-muted);
+nav a {
   text-decoration: none;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
   font-weight: 600;
+  color: var(--luka-muted);
 }
-.item.on {
-  color: #fff;
+nav a.on,
+nav a:hover {
+  background: var(--luka-mist);
+  color: var(--luka-ink);
 }
-.item.center .ico {
-  width: 44px;
-  height: 44px;
+nav a.on {
+  color: var(--luka-red);
+}
+.bottom {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+.user {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 12px;
+}
+.user:hover {
+  background: var(--luka-mist);
+}
+.user span,
+.chip span {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: var(--luka-red);
   color: #fff;
   display: grid;
   place-items: center;
-  transform: translateY(-8px);
-  box-shadow: 0 8px 18px rgba(227, 27, 35, 0.4);
+  font-weight: 800;
+  flex-shrink: 0;
 }
-.ico {
-  font-size: 18px;
-  line-height: 1;
+.user strong,
+.user small {
+  display: block;
 }
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 4, 6, 0.45);
-  z-index: 20;
+.user small {
+  color: var(--luka-muted);
+  font-weight: 500;
+  font-size: 12px;
 }
-.drawer {
-  width: min(320px, 86vw);
-  height: 100%;
-  background: #fff;
-  padding: 28px 20px;
-  display: grid;
-  align-content: start;
-  gap: 14px;
-}
-.drawer a,
-.drawer button {
-  text-align: left;
-  background: none;
+.out {
   border: 0;
-  font-weight: 700;
-  color: var(--luka-ink);
+  background: none;
+  color: var(--luka-muted);
+  font-weight: 650;
+  text-align: left;
+  padding: 6px 8px;
+}
+.out:hover {
+  color: var(--luka-red);
+}
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(12px);
+}
+.search {
+  flex: 1;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 0 16px;
+  background: var(--canvas);
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   text-decoration: none;
+  font-weight: 700;
 }
-.shell-root {
-  min-height: 100dvh;
+.burger,
+.scrim {
+  display: none;
 }
-@media (min-width: 980px) {
-  .shell {
-    grid-template-columns: 240px 1fr;
+.page {
+  padding: 32px 28px 56px;
+  max-width: 1120px;
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
   }
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding: 28px 20px;
-    background: #fff;
-    border-right: 1px solid var(--luka-mist);
-    position: sticky;
+  aside {
+    position: fixed;
+    left: 0;
     top: 0;
-    height: 100dvh;
+    z-index: 30;
+    width: min(280px, 86vw);
+    transform: translateX(-105%);
+    transition: transform 0.24s var(--ease);
+    box-shadow: var(--shadow);
   }
-  .side-link {
-    display: flex;
-    gap: 10px;
+  aside.open {
+    transform: none;
+  }
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 6, 8, 0.4);
+    z-index: 25;
+  }
+  .burger {
+    display: inline-flex;
     align-items: center;
-    text-decoration: none;
-    padding: 10px 12px;
-    border-radius: 14px;
-    font-weight: 600;
-    color: var(--luka-muted);
-  }
-  .side-link.on,
-  .side-link.hot.on {
-    background: var(--luka-mist);
-    color: var(--luka-red);
-  }
-  .side-link.hot {
-    color: var(--luka-red);
-  }
-  .ghost {
-    width: auto;
-    border-radius: 14px;
-    margin-top: auto;
-    background: var(--luka-red);
-    color: #fff;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 10px;
+    height: 42px;
+    padding: 0 12px;
     font-weight: 700;
   }
-  .top,
-  .bar {
+  .chip span + * {
     display: none;
   }
   .page {
-    padding-bottom: 0;
+    padding: 24px 16px 40px;
   }
 }
 </style>

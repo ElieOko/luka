@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
 import { NEWS, formatNewsDate } from '@/data/learner'
 import { learnerUnlocked } from '@/data/plans'
 import { imageUrl } from '@/domain/models'
@@ -18,62 +17,79 @@ const locked = computed(
 
 <template>
   <div>
-  <PageBackdrop v-if="item" :image="imageUrl(item.imageName)" cinematic>
-    <article class="article">
-      <button type="button" @click="router.back()">← Retour</button>
-      <span>{{ item.domain.toUpperCase() }}</span>
-      <h1>{{ item.title }}</h1>
-      <p class="meta">{{ item.author }} · {{ formatNewsDate(item.publishedAtEpochMs) }}</p>
-      <div v-if="locked" class="lock">
-        <p>Ce dossier est réservé aux abonnés.</p>
-        <button type="button" @click="router.push('/app/abonnement')">Débloquer</button>
-      </div>
-      <p v-for="(para, i) in item.body.split('\n\n')" v-else :key="i">{{ para }}</p>
-    </article>
-  </PageBackdrop>
-  <div v-else class="missing">
+  <article v-if="item" class="read">
+    <button type="button" @click="router.push('/app/news')">← News</button>
+    <p class="domain">{{ item.domain }}</p>
+    <h1>{{ item.title }}</h1>
+    <p class="meta">{{ item.author }} · {{ formatNewsDate(item.publishedAtEpochMs) }}</p>
+    <img :src="imageUrl(item.imageName)" :alt="item.title" />
+    <div v-if="locked" class="lock">
+      <p>Ce dossier est réservé aux abonnés.</p>
+      <button class="cta" type="button" @click="router.push('/app/abonnement')">Débloquer</button>
+    </div>
+    <p v-for="(para, i) in item.body.split('\n\n')" v-else :key="i">{{ para }}</p>
+  </article>
+  <div v-else>
     <p>Article introuvable.</p>
-    <button type="button" @click="router.push('/app/news')">Retour aux news</button>
+    <button type="button" @click="router.push('/app/news')">Retour</button>
   </div>
   </div>
 </template>
 
 <style scoped>
-.article {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px 20px 48px;
-  color: #fff;
+.read {
+  max-width: 760px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px 32px 40px;
+  box-shadow: var(--shadow);
+}
+img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 8px 0 18px;
+}
+.domain {
+  color: var(--luka-red);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
 }
 h1 {
   font-size: clamp(28px, 4vw, 40px);
-  font-weight: 900;
-  margin: 8px 0;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
 }
-span {
-  color: var(--luka-red);
-  font-weight: 800;
+.meta,
+p {
+  color: var(--luka-ink);
+  line-height: 1.6;
+  font-size: 17px;
 }
 .meta {
-  color: rgba(255, 255, 255, 0.75);
-}
-p {
-  font-size: 17px;
-  line-height: 1.55;
+  color: var(--luka-muted);
 }
 button {
   border: 0;
   background: none;
-  color: #fff;
   font-weight: 700;
-  padding: 0 0 16px;
+  color: var(--luka-muted);
+}
+.cta {
+  background: var(--luka-red);
+  color: #fff;
+  border-radius: 999px;
+  height: 40px;
+  padding: 0 16px;
 }
 .lock {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
+  background: #fff;
+  border: 1px dashed var(--luka-red);
+  border-radius: 14px;
   padding: 16px;
-}
-.missing {
-  padding: 40px 20px;
 }
 </style>

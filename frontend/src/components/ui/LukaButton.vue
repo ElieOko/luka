@@ -1,12 +1,17 @@
 <script setup lang="ts">
-defineProps<{
-  disabled?: boolean
-  loading?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    disabled?: boolean
+    loading?: boolean
+    variant?: 'primary' | 'ghost' | 'soft'
+    block?: boolean
+  }>(),
+  { variant: 'primary', block: false },
+)
 </script>
 
 <template>
-  <button class="btn" type="button" :disabled="disabled || loading">
+  <button class="btn" :class="[variant, { block }]" type="button" :disabled="disabled || loading">
     <span v-if="loading" class="spinner" aria-hidden="true" />
     <slot />
   </button>
@@ -18,22 +23,33 @@ defineProps<{
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 100%;
-  height: 56px;
+  height: 46px;
+  padding: 0 18px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 999px;
   background: var(--luka-red);
   color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  transition: transform 0.2s var(--ease), filter 0.2s var(--ease), opacity 0.2s;
+  font-size: 15px;
+  font-weight: 650;
+  transition: transform 0.2s var(--ease), filter 0.2s var(--ease), opacity 0.2s, background 0.2s;
+}
+.btn.block {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--luka-ink);
+  border: 1px solid var(--line);
+}
+.btn.soft {
+  background: var(--luka-mist);
+  color: var(--luka-red);
 }
 .btn:hover:not(:disabled) {
-  filter: brightness(1.05);
+  filter: brightness(1.04);
   transform: translateY(-1px);
-}
-.btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
 }
 .btn:disabled {
   opacity: 0.55;

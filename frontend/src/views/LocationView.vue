@@ -28,63 +28,56 @@ async function confirm() {
 </script>
 
 <template>
-  <main class="setup">
-    <div class="body">
-      <h1>Où vis-tu ?</h1>
-      <p>Pour l’instant, Luka ne propose que des offres en RDC. Choisis ta ville.</p>
-      <div class="country">
-        <strong>{{ RDC.flag }} {{ RDC.name }}</strong>
-        <span>Pays verrouillé — d’autres arriveront plus tard.</span>
-      </div>
-      <h2>Ta ville</h2>
-      <div class="pills">
-        <FilterPill
-          v-for="city in catalog.cities"
-          :key="city.id"
-          :label="city.name"
-          :selected="selected?.name === city.name"
-          @click="selected = city"
-        />
-      </div>
+  <section class="panel">
+    <h1>Où travailles-tu ?</h1>
+    <p>Luka ne propose pour l’instant que des offres en RDC.</p>
+    <div class="country">
+      <strong>{{ RDC.flag }} {{ RDC.name }}</strong>
+      <span>Pays verrouillé — d’autres arriveront plus tard.</span>
     </div>
-    <footer>
-      <LukaButton :disabled="!selected || saving" :loading="saving" @click="confirm">Continuer</LukaButton>
-    </footer>
-  </main>
+    <h2>Ville</h2>
+    <div class="pills">
+      <FilterPill
+        v-for="city in catalog.cities"
+        :key="city.id"
+        :label="city.name"
+        :selected="selected?.name === city.name"
+        @click="selected = city"
+      />
+    </div>
+    <LukaButton :disabled="!selected || saving" :loading="saving" @click="confirm">Continuer</LukaButton>
+  </section>
 </template>
 
 <style scoped>
-.setup {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: var(--luka-cream);
-}
-.body,
-footer {
-  padding: 24px;
-  max-width: 720px;
-  width: 100%;
-  margin: 0 auto;
-}
-.body {
-  flex: 1;
+.panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
 }
 h1 {
-  font-size: 30px;
-  margin: 0 0 8px;
-  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.03em;
 }
 p,
 .country span {
   color: var(--luka-muted);
+  margin: 0;
 }
 .country {
-  background: var(--luka-mist);
-  border-radius: 20px;
-  padding: 16px;
+  background: var(--canvas);
+  border-radius: 12px;
+  padding: 14px;
   display: grid;
   gap: 4px;
+}
+h2 {
+  margin: 0;
+  font-size: 15px;
 }
 .pills {
   display: flex;

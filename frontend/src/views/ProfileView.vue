@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import PageBackdrop from '@/components/ui/PageBackdrop.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { RDC } from '@/data/catalog'
 import { learnerUnlocked, planById, proUnlocked } from '@/data/plans'
 import { ACCOUNT_KINDS } from '@/domain/models'
@@ -33,24 +33,18 @@ function onCv(event: Event) {
 </script>
 
 <template>
-  <PageBackdrop image="/images/onboarding_kinshasa_1.jpg" cinematic>
-    <div v-if="profile" class="wrap">
-      <header>
-        <div class="avatar">{{ profile.displayName.slice(0, 1).toUpperCase() || 'L' }}</div>
-        <div>
-          <div class="badges">
-            <span>{{ profile.accountKind === 'learner' ? 'Apprenant' : 'Professionnel' }}</span>
-            <span :class="{ gold: premium }">{{ premium ? 'Premium' : plan.name }}</span>
-          </div>
-          <h1>{{ profile.displayName || 'Ton profil' }} {{ profile.isCertified ? '✓' : '' }}</h1>
-          <p>{{ [profile.tradeTitle || profile.profession?.title, profile.cityName].filter(Boolean).join(' · ') || 'Complète ton profil' }}</p>
-        </div>
-        <button class="edit" type="button" @click="router.push('/app/profil/edit')">✎</button>
-      </header>
+  <div v-if="profile">
+    <PageHeader :title="profile.displayName || 'Compte'" :subtitle="[profile.tradeTitle || profile.profession?.title, profile.cityName].filter(Boolean).join(' · ')">
+      <template #actions>
+        <button class="ghost" type="button" @click="router.push('/app/profil/edit')">Modifier</button>
+        <button class="ghost" type="button" @click="session.logout(); router.push('/')">Déconnexion</button>
+      </template>
+    </PageHeader>
 
-      <section>
+    <div class="grid">
+      <section class="card">
         <h2>Type de compte</h2>
-        <p>Tu peux passer d’apprenant à professionnel sans recréer le compte.</p>
+        <p>Passe d’apprenant à professionnel sans recréer le compte.</p>
         <div class="kinds">
           <button
             v-for="kind in ACCOUNT_KINDS"
@@ -64,134 +58,76 @@ function onCv(event: Event) {
           </button>
         </div>
       </section>
-
-      <section>
-        <h2>Tes informations</h2>
+      <section class="card">
+        <h2>Informations</h2>
         <dl>
-          <div><dt>Nom</dt><dd>{{ profile.displayName || '—' }}</dd></div>
           <div><dt>Téléphone</dt><dd>{{ profile.identifier.value || '—' }}</dd></div>
           <div><dt>E-mail</dt><dd>{{ profile.email || '—' }}</dd></div>
-          <div><dt>Métier</dt><dd>{{ profile.tradeTitle || profile.profession?.title || '—' }}</dd></div>
           <div><dt>Ville</dt><dd>{{ profile.cityName || '—' }}</dd></div>
           <div><dt>Pays</dt><dd>{{ RDC.flag }} {{ RDC.name }}</dd></div>
         </dl>
       </section>
-
-      <section>
+      <section class="card">
         <h2>Abonnement</h2>
-        <strong>{{ premium ? 'Premium' : plan.name }}</strong>
+        <p><strong>{{ premium ? 'Premium' : plan.name }}</strong></p>
         <p>
           {{
             profile.accountKind === 'learner' && learnerUnlocked(profile)
-              ? 'Tendances, MIT, orientation et conseils réguliers débloqués.'
+              ? 'Tendances, MIT, orientation et conseils débloqués.'
               : profile.accountKind === 'learner'
-                ? 'Abonnement Étudiant (3 $) : tendances, news MIT, orientation, conseils.'
+                ? 'Offre Étudiant (3 $).'
                 : premium
-                  ? 'Offres, analyse CV, analyse des offres, marché temps réel.'
-                  : 'Abonnement Professionnel (5 $) : offres illimitées et analyses.'
+                  ? 'Offres et analyses débloquées.'
+                  : 'Offre Professionnel (5 $).'
           }}
         </p>
+        <button class="link" type="button" @click="router.push('/app/abonnement')">Gérer l’abonnement</button>
       </section>
-
-      <section>
-        <h2>Profil</h2>
-        <p>{{ completeness.done }} / {{ completeness.total }} éléments remplis</p>
+      <section class="card">
+        <h2>Complétude</h2>
+        <p>{{ completeness.done }} / {{ completeness.total }}</p>
         <div class="bar"><i :style="{ width: `${(completeness.done / completeness.total) * 100}%` }" /></div>
+        <label class="cv">
+          <input type="file" accept=".pdf,.doc,.docx" hidden @change="onCv" />
+          {{ profile.cvFileName || 'Charger un CV (PDF, DOC)' }}
+        </label>
       </section>
-
-      <label class="cv" :class="{ ok: profile.cvFileName }">
-        <input type="file" accept=".pdf,.doc,.docx" hidden @change="onCv" />
-        <strong>{{ profile.cvFileName ? 'CV chargé' : 'Charger ton CV' }}</strong>
-        <span>{{ profile.cvFileName || 'PDF, DOC ou DOCX — un tap, c’est envoyé' }}</span>
-      </label>
-
-      <button class="ghost" type="button" @click="router.push('/app/confidentialite')">Politique de confidentialité</button>
-      <button class="ghost" type="button" @click="session.logout(); router.push('/')">Se déconnecter</button>
     </div>
-  </PageBackdrop>
+  </div>
 </template>
 
 <style scoped>
-.wrap {
-  padding: 20px;
-  max-width: 760px;
-  margin: 0 auto;
+.grid {
   display: grid;
-  gap: 16px;
-  color: #fff;
-}
-header {
-  display: flex;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
-  align-items: center;
 }
-.avatar {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--luka-red), #7a0c18);
-  display: grid;
-  place-items: center;
-  font-size: 28px;
-  font-weight: 900;
-}
-.badges {
-  display: flex;
-  gap: 8px;
-}
-.badges span {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--luka-red);
-  border-radius: 99px;
-  padding: 4px 10px;
-  font-weight: 700;
-  font-size: 13px;
-}
-.badges .gold {
-  background: var(--luka-gold);
-  color: #3a2208;
-}
-h1 {
-  margin: 6px 0 0;
-  font-weight: 900;
-}
-.edit {
-  margin-left: auto;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
+.card {
   background: #fff;
-  color: var(--luka-red);
-  font-size: 18px;
-}
-section {
-  background: #fff;
-  color: var(--luka-ink);
-  border-radius: 22px;
-  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
 }
 h2 {
-  color: var(--luka-red);
   margin: 0 0 8px;
   font-size: 14px;
+  color: var(--luka-red);
 }
 .kinds {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 .kinds button {
-  border: 0;
-  border-radius: 16px;
-  background: var(--luka-mist);
-  padding: 12px;
   text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
   display: grid;
 }
 .kinds .on {
-  background: var(--luka-red);
-  color: #fff;
+  border-color: var(--luka-red);
+  background: #fff5f5;
 }
 dl {
   display: grid;
@@ -200,17 +136,33 @@ dl {
 }
 dt {
   color: var(--luka-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: 650;
+}
+.ghost {
+  border: 1px solid var(--line);
+  background: #fff;
+  height: 40px;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+.link {
+  border: 0;
+  background: none;
+  color: var(--luka-red);
+  font-weight: 700;
+  padding: 0;
 }
 .bar {
   height: 8px;
   background: var(--luka-mist);
   border-radius: 99px;
   overflow: hidden;
+  margin: 8px 0 12px;
 }
 .bar i {
   display: block;
@@ -218,24 +170,17 @@ dd {
   background: var(--luka-red);
 }
 .cv {
-  display: grid;
-  place-items: center;
-  gap: 6px;
-  padding: 20px;
-  border-radius: 22px;
-  background: var(--luka-mist);
-  color: var(--luka-ink);
-  border: 2px dashed var(--luka-red);
+  display: block;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 12px;
   cursor: pointer;
+  text-align: center;
+  font-weight: 650;
 }
-.cv.ok {
-  background: #e8f5e9;
-  border-color: #2e7d32;
-}
-.ghost {
-  border: 0;
-  background: none;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 700;
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
