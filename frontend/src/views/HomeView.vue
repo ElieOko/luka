@@ -45,6 +45,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <div class="home-root">
   <PageBackdrop image="/images/onboarding_kinshasa_1.jpg" cinematic>
     <div class="home">
       <header>
@@ -163,9 +164,13 @@ onBeforeUnmount(() => {
       </div>
     </div>
   </Teleport>
+  </div>
 </template>
 
 <style scoped>
+.home-root {
+  min-height: 100%;
+}
 .home {
   padding: 16px 20px 40px;
   max-width: 880px;

@@ -101,7 +101,13 @@ onBeforeUnmount(() => {
 .gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(74, 7, 16, 0.55) 45%, rgba(74, 7, 16, 0.92));
+  background: linear-gradient(
+    180deg,
+    rgba(26, 10, 12, 0.28),
+    transparent 28%,
+    rgba(74, 7, 16, 0.55) 52%,
+    rgba(74, 7, 16, 0.94)
+  );
 }
 .inner {
   position: relative;

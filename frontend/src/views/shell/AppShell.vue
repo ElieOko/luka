@@ -42,6 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="shell-root">
   <div class="shell">
     <aside class="sidebar">
       <LukaLogo :height="32" />
@@ -97,6 +98,7 @@ onMounted(() => {
         </aside>
       </div>
     </Transition>
+  </div>
   </div>
 </template>
 
@@ -202,6 +204,9 @@ onMounted(() => {
   font-weight: 700;
   color: var(--luka-ink);
   text-decoration: none;
+}
+.shell-root {
+  min-height: 100dvh;
 }
 @media (min-width: 980px) {
   .shell {

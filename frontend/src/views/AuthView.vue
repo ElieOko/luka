@@ -168,7 +168,9 @@ function toggleMode() {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--luka-cream);
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(227, 27, 35, 0.12), transparent),
+    var(--luka-cream);
 }
 .body,
 .privacy {

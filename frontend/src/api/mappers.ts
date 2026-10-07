@@ -179,9 +179,15 @@ function parseEpoch(value?: string | null): number {
   return Number.isNaN(date) ? 0 : date
 }
 
+function cleanText(value?: string | null): string {
+  const text = value?.trim() ?? ''
+  if (!text || text === 'null' || text === 'undefined') return ''
+  return text
+}
+
 export function offerFromDto(dto: StoredJobOfferDto): JobOffer {
-  const cityName = dto.city?.split(',')[0]?.trim() || 'RDC'
-  const apply = dto.applicationUrl?.trim() || dto.advertisementUrl || ''
+  const cityName = cleanText(dto.city?.split(',')[0]) || 'RDC'
+  const apply = cleanText(dto.applicationUrl) || dto.advertisementUrl || ''
   const remote = [dto.opportunityType, dto.city, dto.title].some(
     (value) =>
       value?.toLowerCase().includes('télétravail') ||
@@ -196,9 +202,11 @@ export function offerFromDto(dto: StoredJobOfferDto): JobOffer {
     profession: inferProfession(dto.title, skills, dto.searchAgent),
     regionId: regionIdFor(cityName, dto.province),
     city: cityName,
-    contract: dto.contractType?.trim() || dto.opportunityType || 'Emploi',
+    contract: cleanText(dto.contractType) || cleanText(dto.opportunityType) || 'Emploi',
     salary: '',
-    summary: skills.slice(0, 6).join(' · ') || [dto.opportunityType, dto.city].filter(Boolean).join(' · '),
+    summary:
+      skills.map(cleanText).filter(Boolean).slice(0, 6).join(' · ') ||
+      [cleanText(dto.opportunityType), cleanText(dto.city)].filter(Boolean).join(' · '),
     applyUrl: apply,
     postedAtEpochMs: parseEpoch(dto.publicationDate) || parseEpoch(dto.collectedAt),
     isRemote: Boolean(remote),

@@ -17,6 +17,7 @@ const locked = computed(
 </script>
 
 <template>
+  <div>
   <PageBackdrop v-if="item" :image="imageUrl(item.imageName)" cinematic>
     <article class="article">
       <button type="button" @click="router.back()">← Retour</button>
@@ -33,6 +34,7 @@ const locked = computed(
   <div v-else class="missing">
     <p>Article introuvable.</p>
     <button type="button" @click="router.push('/app/news')">Retour aux news</button>
+  </div>
   </div>
 </template>
 
